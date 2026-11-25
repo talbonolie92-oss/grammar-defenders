@@ -57,29 +57,7 @@ function startSoloSetup() {
     else battleScene.events.once("create", () => battleScene.startBattle(settings));
   });
 
-  const makeStudentLink = async () => {
-    const link = new URL(window.location.href);
-    link.search = "";
-    link.searchParams.set("student", "1");
-    link.searchParams.set("mode", document.getElementById("setup-mode")?.value || "endless");
-    link.searchParams.set("minutes", document.getElementById("setup-time")?.value || "10");
-    link.searchParams.set("interval", document.getElementById("setup-interval")?.value || "45");
-    link.searchParams.set("difficulty", document.getElementById("setup-difficulty")?.value || "normal");
-    const field = document.getElementById("student-link");
-    const status = document.getElementById("setup-status");
-    const qrWrap = document.getElementById("student-qr-wrap");
-    const qr = document.getElementById("student-qr");
-    if (qr && window.QRCode) {
-      qr.innerHTML = "";
-      new window.QRCode(qr, { text: link.toString(), width: 190, height: 190, colorDark: "#10243c", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.M });
-      qrWrap?.classList.remove("hidden");
-    }
-    if (field) { field.value = link.toString(); field.classList.remove("hidden"); field.select(); }
-    try { await navigator.clipboard.writeText(link.toString()); if (status) status.textContent = "Student link copied and QR code generated."; }
-    catch (_) { if (status) status.textContent = "Student link is ready below. Select and copy it to share."; }
-  };
-  document.getElementById("copy-student-link")?.addEventListener("click", makeStudentLink);
-  document.getElementById("generate-student-qr")?.addEventListener("click", makeStudentLink);
+
 }
 startSoloSetup();
 
