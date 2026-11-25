@@ -13,7 +13,9 @@ A landscape-first fantasy lane-defense classroom game. Students deploy ten disti
 - Endless Survival and Fixed Waves modes.
 - Teacher-selected duration, difficulty, and grammar-question interval.
 - Regular grammar questions and harder boss challenges.
-- Original synthesized background music and separate sound effects controls.
+- Original synthesized sound effects and optional background music controls.
+- Progressive enemy waves with scaling health, armor, speed, and attack strength; lane guard lives; and an energy-producing Sunwell defender.
+- A fantasy illustrated landing page introducing the defenders, keep, and enemy army.
 
 ## Teacher dashboard
 
@@ -23,7 +25,8 @@ The dashboard is designed for authenticated teachers and includes:
 
 - Email/password teacher sign-in.
 - Create, list, search, rename, edit, start, end, and delete your own sessions.
-- Session settings: title, grade, class/section, topic, game mode, time limit, question interval, and difficulty.
+- Session settings: title, grade, class/section, subject, topic, game mode, time limit, question interval, and difficulty.
+- Reusable question banks for any subject, with JSON/CSV import, a downloadable CSV template, and manual question authoring. Selected question sets are copied into the session so students receive the correct lesson questions.
 - Session-specific student QR code and shareable joining link.
 - Live student roster.
 - Fix a student's name or class/section; remove a student from a session.
