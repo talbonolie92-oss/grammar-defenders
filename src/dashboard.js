@@ -41,7 +41,10 @@ function watchQuestionBanks(){
 function normalizeBankQuestion(raw, subject, topic){
   const q=String(raw.q??raw.question??"").trim();
   const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1??raw.optiona??raw.choicea,raw.answer2??raw.optionb??raw.choiceb,raw.answer3??raw.optionc??raw.choicec,raw.answer4??raw.optiond??raw.choiced].filter(v=>v!==undefined&&v!==null&&String(v).trim()!==""));
-  const a=answers.map(v=>String(v).trim()).filter(Boolean);
+  const a=answers.map(v=>String(v??"").trim());
+  while(a.length>2&&!a[a.length-1])a.pop();
+  if(a.some(v=>!v))throw new Error("Answer choices cannot contain blank gaps. Fill each choice or remove unused choices at the end.");
+  if(new Set(a.map(v=>v.toLowerCase())).size!==a.length)throw new Error("Answer choices must be different from one another.");
   let correct=raw.correct??raw.correctAnswer??raw.answer??0;
   if(typeof correct==="string"){
     const value=correct.trim().toUpperCase();
@@ -72,8 +75,9 @@ $("bank-load-file").addEventListener("click",async()=>{
     if(file.name.toLowerCase().endsWith(".json")){const parsed=JSON.parse(source);raw=Array.isArray(parsed)?parsed:parsed.questions;}
     else raw=parseQuestionCsv(source);
     if(!Array.isArray(raw)||!raw.length)throw new Error("No question records found in this file.");
+    if(raw.length>300)throw new Error("This question set contains "+raw.length+" questions. The limit is 300; split the file into smaller sets.");
     const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
-    const imported=raw.slice(0,300).map(item=>normalizeBankQuestion(item,subject,topic));
+    const imported=raw.map(item=>normalizeBankQuestion(item,subject,topic));
     bankDraft=imported;updateBankDraftCount();setStatus("bank-status","Loaded "+imported.length+" questions. Review the draft, then save the question set.");
   }catch(error){setStatus("bank-status",error.message||"Could not read this file.");}
 });
