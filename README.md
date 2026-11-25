@@ -4,17 +4,27 @@
 
 An educational fantasy tower-defense game. Students deploy defenders, protect five battlefield lanes, and activate tactical powers by answering grammar challenges.
 
-## Current milestone
+## Current playable build
 
-The first browser prototype includes:
-- Five-lane battlefield
-- Defender selection and tile deployment
-- Energy generation and deployment cost
-- Automatically attacking defenders
-- Enemies that advance toward the keep
-- Base health and defeat condition
-- Timed grammar challenges with tactical rewards
-- Responsive layout for desktop and mobile
+The browser game currently includes:
+- Five-lane battlefield with tile-based defender placement
+- Three selectable defender classes: Grammar Sprout, Rune Archer, and Frost Mage
+- Energy costs, automatic attacks, ranged projectiles, and enemy rewards
+- Three enemy archetypes: Grunt, Runner, and Brute, each with different combat behavior
+- Ten-wave survival structure with escalating enemy strength
+- Gatekeeper boss encounters on waves 5 and 10, including multi-phase behavior
+- Keep health, defeat/victory conditions, and restart flow
+- Twenty-four categorized grammar questions across middle- and upper-secondary topics
+- Correct-answer tactical power and optional synthesized battle sound effects
+- Responsive HTML/CSS shell and Phaser 3 battlefield
+
+## Controls
+
+1. Select a defender in the Defender Deck.
+2. Click or tap an empty battlefield tile to deploy it.
+3. Defenders automatically attack enemies in their own lane.
+4. Answer grammar challenges to trigger a battlefield power.
+5. Protect the keep until the final wave is cleared.
 
 ## Run locally
 
@@ -26,28 +36,21 @@ python -m http.server 8000
 
 Then visit http://localhost:8000.
 
-## Controls
+## Development roadmap
 
-1. Select Grammar Sprout in the Defender Deck.
-2. Click or tap an empty battlefield tile to deploy it (50 energy).
-3. Defenders automatically attack enemies in their lane.
-4. Answer grammar challenges correctly to trigger a battlefield power.
-5. Keep enemies away from the keep.
-
-## Planned development
-
-1. Core battle prototype and visual polish
-2. Defender and enemy roster, abilities, balancing
-3. Question bank and teacher-controlled topics
-4. Individual and cooperative classroom sessions
-5. Teacher dashboard, QR/link joining, reports and progression
+1. Complete and polish the core battle experience
+2. Expand and balance defender/enemy abilities and progression
+3. Add configurable question sets and teacher-controlled topics
+4. Add individual and cooperative classroom sessions
+5. Build teacher dashboard, QR/link joining, class rosters, reports, and progression
+6. Connect Firebase Realtime Database and harden classroom data access
 
 ## Technology
 
 - Phaser 3
 - JavaScript ES modules
 - HTML and CSS
-- GitHub Pages hosting (planned)
-- Firebase Realtime Database (planned for classroom features)
+- GitHub Pages deployment
+- Firebase Realtime Database planned for classroom data and multiplayer
 
-This is an early prototype. Classroom accounts, multiplayer, teacher tools, saving, and full audio are not implemented yet.
+The current build is an active development milestone. Teacher tools, cloud saving, student joining, and multiplayer are not yet implemented.
