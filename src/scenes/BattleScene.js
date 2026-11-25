@@ -291,12 +291,6 @@ export function createGameScene() {
           this.upgradeModeButton?.setAttribute("aria-pressed", "false");
           this.removeModeButton?.classList.remove("active");
           this.removeModeButton?.setAttribute("aria-pressed", "false");
-          this.upgradeMode = false;
-          this.removeMode = false;
-          this.upgradeModeButton?.classList.remove("active");
-          this.upgradeModeButton?.setAttribute("aria-pressed", "false");
-          this.removeModeButton?.classList.remove("active");
-          this.removeModeButton?.setAttribute("aria-pressed", "false");
           this.selectedUnit = card.dataset.unit;
           this.unitCards.forEach(c => {
             const selected = c === card;
