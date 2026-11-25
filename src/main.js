@@ -70,7 +70,7 @@ function startButtonSetup() {
     else battleScene.events.once("create", () => battleScene.startBattle(settings));
   });
 
-  const makeStudentLink = () => {
+  const makeStudentLink = async () => {
     const link = new URL(window.location.href);
     link.search = "";
     link.searchParams.set("student", "1");
