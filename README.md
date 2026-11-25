@@ -2,13 +2,13 @@
 
 **Defend. Strategize. Master Grammar.**
 
-A landscape-first fantasy lane-defense classroom game. Students deploy ten distinct defenders across five lanes, fight ten enemy types, and answer grammar challenges to activate battle powers.
+A landscape-first fantasy lane-defense classroom game. Students deploy eleven distinct defenders across five lanes, fight ten enemy types, and answer grammar challenges to activate battle powers.
 
 ## Game
 
 - Landscape-first five-lane battlefield.
 - Compact, horizontally scrolling defender deck above the battlefield.
-- Ten defender characters with distinct battlefield silhouettes, palettes, costs, and roles.
+- Eleven defender characters with distinct battlefield silhouettes, palettes, costs, and roles, including the Sunwell energy producer.
 - Ten enemy types with different colors, shapes, health, and combat behaviors.
 - Endless Survival and Fixed Waves modes.
 - Teacher-selected duration, difficulty, and grammar-question interval.
