@@ -915,7 +915,8 @@ export function createGameScene() {
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2),
         specialCooldown: isBoss && this.wave >= 10 ? Phaser.Math.FloatBetween(4.2, 5.2) : 0,
         specialWindup: 0,
-        specialRing: null
+        specialRing: null,
+        laneAlert: null
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
@@ -1214,10 +1215,13 @@ export function createGameScene() {
             if (e.specialRing?.active) {
               const chargeRatio = 1 - e.specialWindup / 1.15;
               e.specialRing.setScale(1 + chargeRatio * .45).setAlpha(.12 + chargeRatio * .5);
+              if (e.laneAlert?.active) e.laneAlert.setAlpha(.05 + chargeRatio * .2).setScale(1, 1 + chargeRatio * .025);
             }
             if (e.specialWindup === 0) {
               if (e.specialRing?.active) e.specialRing.destroy();
+              if (e.laneAlert?.active) e.laneAlert.destroy();
               e.specialRing = null;
+              e.laneAlert = null;
               const pulseDamage = 8 + Math.floor(this.wave / 5) * 2 + (e.phase - 1) * 3;
               let defendersHit = 0;
               for (let i = this.defenders.length - 1; i >= 0; i--) {
@@ -1249,6 +1253,9 @@ export function createGameScene() {
                 .setStrokeStyle(3, 0xff9bc8, .95);
               e.group.add(e.specialRing);
               e.specialRing.setScale(1).setAlpha(.12);
+              const laneY = GRID_Y + e.lane * TILE_H + TILE_H / 2;
+              e.laneAlert = this.add.rectangle(GRID_X + GRID_W / 2, laneY, GRID_W - 6, TILE_H - 7, 0xff4f95, .05)
+                .setStrokeStyle(2, 0xff9bc8, .85).setDepth(6);
               this.message.textContent = "RIFT PULSE CHARGING — defend lane " + (e.lane + 1) + "!";
             }
           }
@@ -1356,6 +1363,7 @@ export function createGameScene() {
       enemy.group.setScale(1.12);
       this.tweens.add({ targets: enemy.group, scale: 1, duration: 120 });
       if (enemy.hp <= 0) {
+        if (enemy.laneAlert?.active) enemy.laneAlert.destroy();
         const burst = this.add.circle(enemy.x, enemy.y, 12, 0xffd58c, .8);
         this.tweens.add({ targets: burst, scale: 2.8, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
         enemy.group.destroy();
@@ -1368,6 +1376,7 @@ export function createGameScene() {
     }
 
     damageBase(enemy) {
+      if (enemy.laneAlert?.active) enemy.laneAlert.destroy();
       enemy.group.destroy();
       this.enemies = this.enemies.filter(e => e !== enemy);
       const lane = enemy.lane;
