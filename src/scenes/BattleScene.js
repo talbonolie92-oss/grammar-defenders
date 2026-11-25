@@ -30,6 +30,7 @@ export function createGameScene() {
       this.soundOn = false;
       this.battleStarted = false;
       this.enemyPressureUntil = 0;
+      this.passiveEnergyClock = 0;
       this.questionIntervalSeconds = 45;
       this.difficulty = "normal";
       this.musicNodes = [];
@@ -811,6 +812,12 @@ export function createGameScene() {
     update(time, delta) {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
       const dt = Math.min(delta / 1000, 0.05);
+      // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
+      this.passiveEnergyClock += dt;
+      while (this.passiveEnergyClock >= 1) {
+        this.passiveEnergyClock -= 1;
+        this.energy = Math.min(300, this.energy + 1);
+      }
       this.defenders.forEach(d => {
         if (d.stats.energyRate) {
           d.energyClock = (d.energyClock || 0) + dt;
@@ -871,7 +878,10 @@ export function createGameScene() {
       }
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
-        if (!e.group.active) return;
+        if (!e.group.active) {
+          this.enemies.splice(enemyIndex, 1);
+          continue;
+        }
         let blocker = null;
         for (let i = 0; i < this.defenders.length; i++) {
           const candidate = this.defenders[i];
