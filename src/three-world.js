@@ -214,6 +214,9 @@ export async function createThreeWorld(container) {
       add(new THREE.TorusGeometry(0.68,0.075,5,18), gold, 0, 1.55, 0).rotation.x = Math.PI/2;
       root.scale.setScalar(1.28);
     } else root.scale.setScalar(enemy ? 0.72 : 0.82);
+    root.userData.baseScale = root.scale.x;
+    root.userData.lastHp = Number.isFinite(actor.hp) ? actor.hp : null;
+    root.userData.hitFlashUntil = 0;
     scene.add(root);
     return root;
   };
@@ -239,6 +242,14 @@ export async function createThreeWorld(container) {
       mesh.position.set((px - 480) / 50, 0.02 + bob, (py - 170) / 50);
       mesh.rotation.y = isEnemy ? Math.PI : 0;
       mesh.rotation.z = Math.sin(now * 0.0025 + (actor.bobOffset || 0)) * 0.025;
+      const hp = Number.isFinite(actor.hp) ? actor.hp : null;
+      if (hp !== null && mesh.userData.lastHp !== null && hp < mesh.userData.lastHp) {
+        mesh.userData.hitFlashUntil = now + 135;
+      }
+      if (hp !== null) mesh.userData.lastHp = hp;
+      const hitPulse = now < mesh.userData.hitFlashUntil ? 1.13 : 1;
+      const idlePulse = 1 + Math.sin(now * 0.003 + (actor.bobOffset || 0)) * 0.012;
+      mesh.scale.setScalar(mesh.userData.baseScale * hitPulse * idlePulse);
       mesh.visible = true;
       seen.add(actor);
     });
