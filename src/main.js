@@ -42,6 +42,8 @@ const game = new Phaser.Game(config);
 startButtonSetup();
 function startButtonSetup() {
   document.getElementById("start-game")?.addEventListener("click", async () => {
+    const battleScene = game.scene.getScene("BattleScene");
+    battleScene?.enableMusic?.();
     const settings = {
       mode: document.getElementById("setup-mode")?.value || "endless",
       timeLimitMinutes: Number(document.getElementById("setup-time")?.value || 10),
@@ -64,12 +66,11 @@ function startButtonSetup() {
     setupScreen?.classList.add("hidden");
     gameLayout?.classList.remove("hidden");
     requestAnimationFrame(() => game.scale.refresh());
-    const battleScene = game.scene.getScene("BattleScene");
     if (battleScene.message) battleScene.startBattle(settings);
     else battleScene.events.once("create", () => battleScene.startBattle(settings));
   });
 
-  document.getElementById("copy-student-link")?.addEventListener("click", async () => {
+  const makeStudentLink = () => {
     const link = new URL(window.location.href);
     link.search = "";
     link.searchParams.set("student", "1");
@@ -79,6 +80,13 @@ function startButtonSetup() {
     link.searchParams.set("difficulty", document.getElementById("setup-difficulty")?.value || "normal");
     const field = document.getElementById("student-link");
     const status = document.getElementById("setup-status");
+    const qrWrap = document.getElementById("student-qr-wrap");
+    const qr = document.getElementById("student-qr");
+    if (qr && window.QRCode) {
+      qr.innerHTML = "";
+      new window.QRCode(qr, { text: link.toString(), width: 190, height: 190, colorDark: "#10243c", colorLight: "#ffffff", correctLevel: window.QRCode.CorrectLevel.M });
+      qrWrap?.classList.remove("hidden");
+    }
     if (field) {
       field.value = link.toString();
       field.classList.remove("hidden");
@@ -86,11 +94,13 @@ function startButtonSetup() {
     }
     try {
       await navigator.clipboard.writeText(link.toString());
-      if (status) status.textContent = "Student link copied. Share this link or turn it into a QR code.";
+      if (status) status.textContent = "Student link copied and QR code generated. Students can scan to join.";
     } catch (_) {
       if (status) status.textContent = "Student link is ready below. Select and copy it to share.";
     }
-  });
+  };
+  document.getElementById("copy-student-link")?.addEventListener("click", makeStudentLink);
+  document.getElementById("generate-student-qr")?.addEventListener("click", makeStudentLink);
 }
 
 document.addEventListener("visibilitychange", () => {
