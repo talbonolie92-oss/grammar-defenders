@@ -1030,7 +1030,11 @@ export function createGameScene() {
         specialCooldown: isBoss && this.wave >= 10 ? Phaser.Math.FloatBetween(4.2, 5.2) : 0,
         specialWindup: 0,
         specialRing: null,
-        laneAlert: null
+        laneAlert: null,
+        // Dread Beasts periodically telegraph and perform a short lane charge.
+        chargeCooldown: enemyType === "Dread Beast" && this.wave >= 8 ? Phaser.Math.FloatBetween(3.5, 5.5) : 0,
+        chargeRemaining: 0,
+        charging: false
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
@@ -1319,7 +1323,27 @@ export function createGameScene() {
           const slowed = e.slowUntil && this.time.now < e.slowUntil;
           const pressured = this.time.now < this.enemyPressureUntil;
           const pressureFactor = pressured ? (e.isBoss ? 1.1 : 1.18) : 1;
-          e.x -= stunned ? 0 : e.speed * (slowed ? 0.38 : 1) * pressureFactor * dt;
+          if (e.enemyType === "Dread Beast" && e.chargeCooldown > 0 && !stunned) {
+            e.chargeCooldown -= dt;
+            if (e.chargeCooldown <= 0 && !e.charging) {
+              e.charging = true;
+              e.chargeRemaining = .8;
+              e.chargeCooldown = Phaser.Math.FloatBetween(6.5, 8.5);
+              if (e.aura?.active) e.aura.setFillStyle(0xff8d6b, .3);
+              if (e.body?.active) e.body.setStrokeStyle(4, 0xffd27a);
+              this.message.textContent = "DREAD BEAST CHARGING — reinforce lane " + (e.lane + 1) + "!";
+            }
+          }
+          if (e.charging) {
+            e.chargeRemaining = Math.max(0, e.chargeRemaining - dt);
+            if (e.chargeRemaining === 0) {
+              e.charging = false;
+              if (e.aura?.active) e.aura.setFillStyle(0xf08ba7, .07);
+              if (e.body?.active) e.body.setStrokeStyle(3, 0x421c3b);
+            }
+          }
+          const chargeFactor = e.charging ? 2.15 : 1;
+          e.x -= stunned ? 0 : e.speed * chargeFactor * (slowed ? 0.38 : 1) * pressureFactor * dt;
         }
         // From the second boss onward, the Dark Overlord charges a lane-targeted
         // Rift Pulse. The expanding ring gives players time to react; a boss freeze
