@@ -90,7 +90,7 @@ async function deleteSession(s){
 }
 function openSession(s){
   selectedSession=s;$("session-detail").classList.remove("hidden");renderDetail();
-  if(stopPlayers)stopPlayers();if(stopResults)stopResults();
+  if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();
   stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};renderPlayers();},err=>console.warn(err));
   stopResults=dbWatch("sessions/"+s.id+"/results",snap=>{selectedSession.results=snap.val()||{};renderReport();},err=>console.warn(err));
   stopAttempts=dbWatch("sessions/"+s.id+"/attempts",snap=>{selectedSession.attempts=snap.val()||{};renderReport();},err=>console.warn(err));
@@ -120,10 +120,17 @@ $("detail-actions").addEventListener("click",async e=>{
 });
 async function editSession(s){
   const title=prompt("Session title:",s.title||"");if(title===null)return;
+  const grade=prompt("Grade:",s.grade||"Grade 10");if(grade===null)return;
   const topic=prompt("Topic:",s.topic||"");if(topic===null)return;
   const section=prompt("Class / section:",s.section||"");if(section===null)return;
+  const mode=prompt("Mode: endless or fixed",s.mode||"endless");if(mode===null)return;
+  const minutes=Number(prompt("Time limit in minutes (5–90):",String(s.timeLimitMinutes||10)));if(!Number.isFinite(minutes)||minutes<5||minutes>90)return alert("Enter a time limit from 5 to 90 minutes.");
+  const interval=Number(prompt("Question interval in seconds (30, 45, 60, 90):",String(s.questionIntervalSeconds||45)));if(![30,45,60,90].includes(interval))return alert("Choose 30, 45, 60, or 90 seconds.");
+  const difficulty=prompt("Difficulty: easy, normal, hard",s.difficulty||"normal");if(difficulty===null)return;
+  if(!["endless","fixed"].includes(mode)||!["easy","normal","hard"].includes(difficulty))return alert("Please use a valid mode and difficulty.");
   const clean=safeName(title);if(!clean)return;
-  await dbUpdate("sessions/"+s.id+"/public",{title:clean,topic:safeName(topic),section:safeName(section),updatedAt:Date.now()});
+  const updated={title:clean,grade:safeName(grade),topic:safeName(topic),section:safeName(section),mode,timeLimitMinutes:minutes,questionIntervalSeconds:interval,difficulty,updatedAt:Date.now()};
+  await dbUpdate("sessions/"+s.id+"/public",updated);
   await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{title:clean});
 }
 $("close-detail").addEventListener("click",()=>{$("session-detail").classList.add("hidden");selectedSession=null;if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();});
