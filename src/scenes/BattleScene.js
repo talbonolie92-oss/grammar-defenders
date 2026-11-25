@@ -1535,6 +1535,8 @@ export function createGameScene() {
         this.hudDirty = false;
         this.updateHud();
       }
+      // Keep the low-poly 3D rigs aligned with the Phaser combat simulation.
+      this.threeWorld?.syncActors(this.defenders, this.enemies, time);
     }
 
     recycleProjectile(projectile) {
