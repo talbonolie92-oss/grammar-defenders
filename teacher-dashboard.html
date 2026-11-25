@@ -38,6 +38,7 @@
             <label>Grade<select id="session-grade"><option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option selected>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>Mixed</option></select></label>
             <label>Class / section<input id="session-section" placeholder="e.g. 10A"></label>
             <label class="wide">Topic<input id="session-topic" placeholder="e.g. Articles and prepositions"></label>
+            <label class="wide">Question set<select id="session-bank"><option value="">Built-in Grammar Questions</option></select></label>
             <label>Game mode<select id="session-mode"><option value="endless">Endless Survival</option><option value="fixed">Fixed Waves</option></select></label>
             <label>Time limit<select id="session-minutes"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option><option>45</option><option>60</option><option>90</option></select></label>
             <label>Question interval<select id="session-interval"><option>30</option><option selected>45</option><option>60</option><option>90</option></select></label>
@@ -53,6 +54,29 @@
           <div id="sessions-list" class="sessions-list"><div class="empty">Your sessions will appear here.</div></div>
         </section>
       </div>
+
+      <section class="panel bank-panel">
+        <div class="panel-title"><div><p class="eyebrow">YOUR TEACHING MATERIALS</p><h2>Question bank</h2><p class="muted">Create reusable question sets for any subject and class.</p></div><span class="step">02</span></div>
+        <div class="bank-import-grid">
+          <label>Subject<input id="bank-subject" maxlength="60" placeholder="e.g. English, Science, Social Studies"></label>
+          <label>Topic / lesson<input id="bank-topic" maxlength="70" placeholder="e.g. Customer Service"></label>
+          <label class="wide">Upload questions (.JSON or .CSV)<input id="bank-file" type="file" accept=".json,.csv,application/json,text/csv"></label>
+          <button id="bank-load-file" class="button ghost" type="button">Load file into draft</button>
+          <p class="bank-help">CSV columns: topic, grade, question, answer1, answer2, answer3, correct, effect. For JSON, use an array of question objects with q, a, and correct fields.</p>
+        </div>
+        <form id="manual-question-form" class="manual-question-form">
+          <h3>Add a question manually</h3>
+          <label class="wide">Question<input id="bank-q" maxlength="500" required placeholder="Type the question"></label>
+          <div class="bank-answer-grid">
+            <label>Answer A<input id="bank-a1" maxlength="200" required></label><label>Answer B<input id="bank-a2" maxlength="200" required></label><label>Answer C<input id="bank-a3" maxlength="200" required></label>
+          </div>
+          <div class="bank-manual-actions"><label>Correct answer<select id="bank-correct"><option value="0">A</option><option value="1">B</option><option value="2">C</option></select></label><label>Grade level<select id="bank-grade"><option>Mixed</option><option>7–9</option><option>10–12</option></select></label><button class="button ghost" type="submit">Add to draft</button></div>
+        </form>
+        <div class="bank-save-row"><span id="bank-draft-count" class="muted">0 questions in draft</span><button id="bank-save" class="button primary" type="button">Save question set</button><button id="bank-clear" class="button ghost" type="button">Clear draft</button></div>
+        <p id="bank-status" class="status" role="status"></p>
+        <div id="bank-list" class="bank-list"><div class="empty">Your saved question sets will appear here.</div></div>
+        <input id="bank-edit-id" type="hidden" value="">
+      </section>
       <section id="session-detail" class="panel detail-panel hidden">
         <div class="panel-title"><div><p class="eyebrow">SESSION MANAGEMENT</p><h2 id="detail-title">Session details</h2><p id="detail-meta" class="muted"></p></div><button id="close-detail" class="button ghost">Close</button></div>
         <div id="session-share" class="share-box hidden"><div><b>Student joining QR</b><p>Students scan this code, enter their name and class/section, then wait for you to start.</p><input id="detail-link" readonly></div><div id="detail-qr" class="qr"></div></div>
