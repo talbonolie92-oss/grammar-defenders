@@ -92,7 +92,18 @@ export function createGameScene() {
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
-      this.spawnTimer = this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
+      this.spawnTimer = this.time.addEvent({
+        delay: 3200,
+        loop: true,
+        callback: () => {
+          try {
+            this.spawnEnemy();
+          } catch (error) {
+            console.error("Enemy spawn failed:", error);
+            if (this.message) this.message.textContent = "An enemy could not spawn. The battle is still running; check the browser console.";
+          }
+        }
+      });
       this.questionTimer = this.time.addEvent({ delay: this.questionIntervalSeconds * 1000, loop: true, callback: () => this.showQuestion(false) });
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
       this.updateHud();
