@@ -194,7 +194,7 @@ export function createGameScene() {
       const feet = this.add.ellipse(0, 15, 25, 10, 0x25443b, .5);
       const eyeL = this.add.circle(-7, -3, 2.5, 0x20343b);
       const eyeR = this.add.circle(7, -3, 2.5, 0x20343b);
-      const smile = this.add.arc(0, 3, 7, 15, 15, 165, false, 0x28463c).setStrokeStyle(1.5, 0x28463c);
+      const smile = this.add.arc(0, 3, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
       const ornament = unitType === "sprout"
         ? [this.add.ellipse(-13, -21, 17, 28, 0x4baf77).setRotation(-.65), this.add.ellipse(13, -21, 17, 28, 0x5fc98a).setRotation(.65)]
         : unitType === "archer"
@@ -407,6 +407,7 @@ export function createGameScene() {
       enemy.group.destroy();
       this.enemies = this.enemies.filter(e => e !== enemy);
       this.baseHealth = Math.max(0, this.baseHealth - 10);
+      this.cameras.main.shake(130, 0.004);
       this.updateHud();
       if (this.baseHealth <= 0) this.endGame(false);
     }
