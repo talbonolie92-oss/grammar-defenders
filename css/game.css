@@ -64,7 +64,7 @@ button{font:inherit}
 /* Landscape-first battlefield and illustrated hero portraits */
 .app-shell{max-width:1680px}
 .game-layout{grid-template-columns:230px minmax(0,1fr);align-items:start}
-#game-container{aspect-ratio:16/9;max-height:none}
+#game-container{aspect-ratio:48/17;max-height:none}
 .unit-icon{position:relative;overflow:hidden}
 .unit-icon .portrait-head{position:absolute;left:11px;top:6px;width:15px;height:15px;border-radius:50%;background:linear-gradient(145deg,#ffe2bd,#c98e69);border:1px solid #79563f;box-shadow:0 11px 0 4px #536b71}
 .archer-icon .portrait-head:after{content:"";position:absolute;left:-4px;top:-4px;width:22px;height:8px;background:#6e4b2d;border-radius:8px 8px 2px 2px}
