@@ -592,6 +592,8 @@ export function createGameScene() {
       defender.group.add(mark);
       defender.evolutionMark = mark;
       defender.group.setScale(1 + (nextLevel - 1) * .06);
+      if (defender.evolutionAura?.active) defender.evolutionAura.destroy();
+      defender.evolutionAura = null;
       if (defender.unitType === "sunwell") {
         // Rebuild, rather than stack, crystals so the visible count matches its tier.
         defender.energyCrystals?.forEach(crystal => crystal.destroy());
@@ -607,6 +609,7 @@ export function createGameScene() {
           .setStrokeStyle(2, nextLevel === 3 ? 0xffdf78 : defender.stats.color, .8);
         defender.group.add(ring);
         defender.group.sendToBack(ring);
+        defender.evolutionAura = ring;
       }
       this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
       this.updateHud();
