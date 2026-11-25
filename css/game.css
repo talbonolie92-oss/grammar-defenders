@@ -478,3 +478,30 @@ body.playing #game-container{
 .deck-grid .unit-card[data-unit="runeblade"] .unit-icon{background:linear-gradient(145deg,#ffe0ad,#b77c58);color:#513324}
 #upgrade-mode-button.active{border-color:#ffe18b;background:linear-gradient(180deg,#765b27,#493d24);color:#fff1bd;box-shadow:0 0 12px #f6d47b66}
 @media(orientation:landscape) and (max-height:600px){#upgrade-mode-button{padding:5px 8px;font-size:9px}}
+
+
+/* PHONE LANDSCAPE: keep all five battle lanes visible without page scrolling. */
+@media (orientation: landscape) and (max-width: 900px) {
+  html, body { width:100%; height:100%; min-height:0; overflow:hidden; }
+  body.playing { position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important; min-height:0!important; overflow:hidden!important; }
+  body.playing > .app-shell { position:fixed!important; inset:0!important; display:flex!important; flex-direction:column!important; width:100vw!important; height:100dvh!important; min-height:0!important; overflow:hidden!important; }
+  body.playing #game-layout, body.playing #game-layout:not(.hidden) { display:flex!important; flex:1 1 auto!important; flex-direction:column!important; gap:3px!important; width:100%!important; height:100%!important; min-height:0!important; max-height:100dvh!important; padding:3px!important; overflow:hidden!important; }
+  body.playing .game-controls { flex:0 0 25px!important; min-height:25px!important; justify-content:flex-end; gap:4px; overflow:hidden; }
+  body.playing .game-controls .icon-button, body.playing .game-controls .secondary-button, body.playing .game-controls .remove-mode-button { min-height:23px; padding:2px 6px; font-size:9px; border-radius:7px; }
+  body.playing .side-panel { flex:0 0 49px!important; width:100%!important; min-height:49px!important; padding:2px 4px!important; overflow:hidden!important; border-radius:9px; }
+  body.playing .panel-heading, body.playing .deck-tip { display:none!important; }
+  body.playing .deck-grid { display:flex!important; align-items:center; width:100%; height:100%; gap:4px; padding:0 2px; overflow-x:auto!important; overflow-y:hidden!important; scrollbar-width:thin; }
+  body.playing .deck-grid .unit-card { display:flex!important; flex:0 0 96px!important; width:96px!important; min-width:96px!important; height:42px!important; min-height:42px!important; margin:0!important; padding:2px 4px!important; gap:4px; border-radius:7px; }
+  body.playing .deck-grid .unit-icon { width:27px; height:27px; flex-basis:27px; font-size:15px; border-radius:7px; }
+  body.playing .deck-grid .unit-copy strong { font-size:9px; }
+  body.playing .deck-grid .unit-copy small { font-size:7px; }
+  body.playing .deck-grid .unit-cost { font-size:9px; }
+  body.playing .battle-panel { display:flex!important; flex:1 1 auto!important; flex-direction:column!important; width:100%!important; min-width:0!important; min-height:0!important; padding:3px!important; gap:2px!important; overflow:hidden!important; }
+  body.playing .battle-hud { flex:0 0 24px!important; min-height:24px!important; padding:0 3px!important; gap:5px!important; overflow:hidden; }
+  body.playing .hud-label { font-size:7px!important; }
+  body.playing .hud-stat { gap:3px; }
+  body.playing .hud-stat strong { font-size:11px!important; }
+  body.playing #game-container { flex:1 1 0!important; width:100%!important; height:0!important; min-height:0!important; max-height:none!important; aspect-ratio:auto!important; overflow:hidden!important; }
+  body.playing #game-container canvas { position:absolute; inset:0; width:100%!important; height:100%!important; }
+  body.playing .battle-footer { display:none!important; }
+}
