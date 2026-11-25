@@ -330,7 +330,9 @@ export async function createThreeWorld(container) {
       disposed = true;
       cancelAnimationFrame(raf);
       observer?.disconnect();
-      actorMeshes.clear();\n      actorMaterials.forEach(item => item.dispose());\n      scene.traverse(object => {
+      actorMeshes.clear();
+      actorMaterials.forEach(item => item.dispose());
+      scene.traverse(object => {
         if (object.geometry && object.geometry !== projectileGeometry && !Object.values(shared).includes(object.geometry)) object.geometry.dispose();
         if (object.material) {
           const materials = Array.isArray(object.material) ? object.material : [object.material];
