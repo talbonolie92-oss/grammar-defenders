@@ -230,10 +230,12 @@ export async function createThreeWorld(container) {
           child.setVisible?.(false);
         });
       }
-      const px = actor.x ?? actor.group.x;
-      const py = actor.y ?? actor.group.y;
-      mesh.position.set((px - 480) / 50, 0, (py - 170) / 50);
+      const px = actor.group.x;
+      const py = actor.group.y;
+      const bob = Math.sin(now * 0.004 + (actor.bobOffset || 0)) * (isEnemy ? 0.035 : 0.025);
+      mesh.position.set((px - 480) / 50, 0.02 + bob, (py - 170) / 50);
       mesh.rotation.y = isEnemy ? Math.PI : 0;
+      mesh.rotation.z = Math.sin(now * 0.0025 + (actor.bobOffset || 0)) * 0.025;
       mesh.visible = true;
       seen.add(actor);
     });
