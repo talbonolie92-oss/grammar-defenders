@@ -80,7 +80,7 @@ function startSoloSetup() {
     } catch (error) {
       const status = document.getElementById("setup-status");
       if (status) status.textContent = error.message || "The game could not start. Please reload and try again.";
-      console.error("Grammar Defenders failed to start:", error);
+      console.error("Emerald Frontier failed to start:", error);
     }
   });
 
@@ -121,7 +121,7 @@ async function initializeStudentJoin() {
           name, classSection, joinedAt: Date.now(), status: "waiting", active: true
         });
       }
-      document.getElementById("student-session-name").textContent = studentSession.title || "Your teacher's Grammar Defenders session";
+      document.getElementById("student-session-name").textContent = studentSession.title || "Your teacher's Emerald Frontier session";
       form.classList.add("hidden");
       document.getElementById("student-waiting").classList.remove("hidden");
       status.textContent = "";
