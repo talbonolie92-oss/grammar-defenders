@@ -579,11 +579,23 @@ export function createGameScene() {
       defender.level = nextLevel;
       const multiplier = nextLevel === 2 ? 1.5 : 2;
       const base = this.unitStats[defender.unitType];
-      if (base.damage > 0) defender.stats.damage = Math.round(base.damage * multiplier);
-      if (base.cooldown > 0) defender.stats.cooldown = Math.max(.45, base.cooldown * (nextLevel === 2 ? .88 : .76));
+      const vanguardChoices = (defender.upgradePaths || []).filter(path => path === "vanguard").length;
+      const mysticChoices = (defender.upgradePaths || []).filter(path => path === "mystic").length;
+      if (base.damage > 0) {
+        defender.stats.damage = Math.max(1, Math.round(base.damage * multiplier * Math.pow(1.25, vanguardChoices)));
+      }
+      if (base.cooldown > 0) {
+        defender.stats.cooldown = Math.max(.38, base.cooldown * (nextLevel === 2 ? .88 : .76) * Math.pow(.9, vanguardChoices));
+      }
+      if (base.range > 0) {
+        defender.stats.range = Math.round(base.range * Math.pow(1.2, mysticChoices));
+        defender.stats.projectileSpeed = Math.round(base.projectileSpeed * Math.pow(1.2, mysticChoices));
+      }
       defender.maxHp = Math.round(defender.maxHp * 1.35);
       defender.hp = Math.min(defender.maxHp, Math.round(defender.hp + defender.maxHp * .25));
-      if (defender.unitType === "sunwell") defender.stats.energyRate = base.energyRate * nextLevel;
+      if (defender.unitType === "sunwell") {
+        defender.stats.energyRate = Math.round(base.energyRate * nextLevel * Math.pow(1.35, mysticChoices));
+      }
       defender.levelBadge?.setText(nextLevel === 2 ? "II" : "III");
       defender.levelBadge?.setColor(nextLevel === 3 ? "#ffe18b" : "#d9f4ff");
       if (defender.evolutionMark?.active) defender.evolutionMark.destroy();
@@ -887,7 +899,10 @@ export function createGameScene() {
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const enemyRoster = ["Grunt", "Runner", "Brute", "Shadow Stalker", "Bone Warrior", "Venom Beast", "Dark Caster", "War Crusher", "Dread Beast", "Dark Overlord"];
-      const unlockedEnemyLevel = Math.min(this.wave >= 10 ? 9 : 8, Math.floor((this.wave - 1) * 1.15));
+      // Dark Overlord is reserved for the scripted boss slot on boss waves.
+      // Keeping normal spawns capped at level 8 prevents a second accidental
+      // Overlord from appearing as an ordinary minion from wave 10 onward.
+      const unlockedEnemyLevel = Math.min(8, Math.floor((this.wave - 1) * 1.15));
       const enemyIndex = Phaser.Math.Between(0, unlockedEnemyLevel);
       const type = enemyIndex % 3;
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
