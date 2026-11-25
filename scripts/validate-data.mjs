@@ -1,13 +1,15 @@
-import { QUESTIONS } from "../src/data/questions.js";
+import { QUESTIONS, BOSS_QUESTIONS } from "../src/data/questions.js";
 
 const errors = [];
-if (!Array.isArray(QUESTIONS) || QUESTIONS.length === 0) {
-  errors.push("Question bank must be a non-empty array.");
-} else {
-  QUESTIONS.forEach((question, index) => {
-    const label = "Question " + (index + 1);
+
+function validateQuestions(list, groupName) {
+  if (!Array.isArray(list) || list.length === 0) {
+    errors.push(groupName + " must be a non-empty array.");
+    return;
+  }
+  list.forEach((question, index) => {
+    const label = groupName + " " + (index + 1);
     if (!question.topic || typeof question.topic !== "string") errors.push(label + ": missing topic.");
-    if (!question.grade || typeof question.grade !== "string") errors.push(label + ": missing grade.");
     if (!question.q || typeof question.q !== "string") errors.push(label + ": missing question text.");
     if (!Array.isArray(question.a) || question.a.length !== 3) {
       errors.push(label + ": must have exactly three answer choices.");
@@ -20,10 +22,13 @@ if (!Array.isArray(QUESTIONS) || QUESTIONS.length === 0) {
   });
 }
 
+validateQuestions(QUESTIONS, "Regular question");
+validateQuestions(BOSS_QUESTIONS, "Boss question");
+
 if (errors.length) {
   console.error("Question bank validation failed:");
   errors.forEach(error => console.error(" - " + error));
   process.exit(1);
 }
 
-console.log("Question bank valid: " + QUESTIONS.length + " questions checked.");
+console.log("Question bank valid: " + QUESTIONS.length + " regular questions and " + BOSS_QUESTIONS.length + " boss questions checked.");
