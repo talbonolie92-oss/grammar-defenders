@@ -24,3 +24,17 @@ export const QUESTIONS = [
   { topic: "Articles", grade: "10–12", q: "She hopes to become _____ engineer.", a: ["a", "an", "the"], correct: 1, effect: "CRITICAL HIT!" },
   { topic: "Prepositions", grade: "10–12", q: "The report must be submitted _____ Friday.", a: ["by", "until", "during"], correct: 0, effect: "DEADLINE DASH!" }
 ];
+
+
+export const BOSS_QUESTIONS = [
+  { topic: "Boss Trial • Conditionals", q: "If she _____ earlier, she would have caught the train.", a: ["left", "had left", "would leave"], correct: 1, effect: "BOSS FREEZE BLAST!" },
+  { topic: "Boss Trial • Inversion", q: "Rarely _____ such a difficult challenge.", a: ["we have faced", "have we faced", "we faced"], correct: 1, effect: "BOSS CRITICAL STRIKE!" },
+  { topic: "Boss Trial • Passive Voice", q: "By next June, the bridge _____ .", a: ["will have been completed", "will complete", "has completed"], correct: 0, effect: "BOSS GUARDIAN SHIELD!" },
+  { topic: "Boss Trial • Reported Speech", q: "She asked me where I _____ the previous night.", a: ["have been", "had been", "was being"], correct: 1, effect: "BOSS ENERGY SURGE!" },
+  { topic: "Boss Trial • Relative Clauses", q: "The proposal, _____ was revised twice, was finally approved.", a: ["that", "which", "what"], correct: 1, effect: "BOSS DRAGON FURY!" },
+  { topic: "Boss Trial • Modal Perfects", q: "You _____ told me earlier; I could have helped.", a: ["should have", "must", "can have"], correct: 0, effect: "BOSS CRITICAL STRIKE!" },
+  { topic: "Boss Trial • Participle Clauses", q: "_____ by the sudden noise, the students looked up.", a: ["Startling", "Startled", "To startle"], correct: 1, effect: "BOSS FREEZE BLAST!" },
+  { topic: "Boss Trial • Subject–Verb Agreement", q: "A number of students _____ absent, but the number _____ decreasing.", a: ["is / are", "are / is", "are / are"], correct: 1, effect: "BOSS GUARDIAN SHIELD!" },
+  { topic: "Boss Trial • Concession", q: "_____ he was exhausted, he completed the assignment.", a: ["Despite", "Although", "However"], correct: 1, effect: "BOSS ENERGY SURGE!" },
+  { topic: "Boss Trial • Mixed Grammar", q: "No sooner _____ the room than the lights went out.", a: ["had we entered", "we had entered", "did we enter"], correct: 0, effect: "BOSS DRAGON FURY!" }
+];

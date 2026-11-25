@@ -17,40 +17,81 @@
         <div><h1>Grammar Defenders</h1><p>Defend. Strategize. Master Grammar.</p></div>
       </div>
       <div class="top-actions">
-        <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound">♫ Sound: Off</button>
+        <button id="music-toggle" class="icon-button" type="button" aria-label="Toggle background music">♫ Music: Off</button>
+        <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound effects">SFX: Off</button>
         <button id="restart-button" class="secondary-button" type="button">Restart</button>
       </div>
     </header>
 
-    <section class="game-layout" aria-label="Game">
-      <aside class="side-panel">
-        <div class="panel-heading"><span>DEFENDER DECK</span><span class="small-label">SELECT</span></div>
-        <button class="unit-card selected" data-unit="sprout" type="button">
-          <span class="unit-icon sprout-icon"><span class="portrait-head"></span><span class="portrait-weapon">✦</span></span><span class="unit-copy"><strong>Grammar Sprout</strong><small>Balanced defender</small></span><span class="unit-cost">50</span>
-        </button>
-        <button class="unit-card" data-unit="archer" type="button">
-          <span class="unit-icon archer-icon"><span class="portrait-head"></span><span class="portrait-weapon">➶</span></span><span class="unit-copy"><strong>Rune Archer</strong><small>Bow • rapid ranged attacks</small></span><span class="unit-cost">65</span>
-        </button>
-        <button class="unit-card" data-unit="mage" type="button">
-          <span class="unit-icon mage-icon"><span class="portrait-head"></span><span class="portrait-weapon">✧</span></span><span class="unit-copy"><strong>Frost Mage</strong><small>Staff • slows enemies</small></span><span class="unit-cost">80</span>
-        </button>
-        <button class="unit-card" data-unit="guardian" type="button">
-          <span class="unit-icon guardian-icon"><span class="portrait-head"></span><span class="portrait-weapon">⬟</span></span><span class="unit-copy"><strong>Aegis Guardian</strong><small>Shield • blocks a lane</small></span><span class="unit-cost">75</span>
-        </button>
-        <div class="deck-tip"><strong>How to play</strong><p>Choose a hero, then place it on an open tile. Guardians block; other heroes attack automatically.</p></div>
-      </aside>
+    <section id="setup-screen" class="setup-screen" aria-labelledby="setup-title">
+      <div class="setup-card">
+        <p class="setup-kicker">TEACHER GAME SETUP</p>
+        <h2 id="setup-title">Prepare the battlefield</h2>
+        <p class="setup-description">Choose the game mode and challenge settings before students begin.</p>
+        <div class="setup-grid">
+          <label class="setup-field">Game mode
+            <select id="setup-mode">
+              <option value="endless">Endless Survival — survive until time runs out</option>
+              <option value="fixed">Fixed Waves — clear all waves</option>
+            </select>
+          </label>
+          <label class="setup-field">Time limit
+            <select id="setup-time">
+              <option value="5">5 minutes</option><option value="10" selected>10 minutes</option>
+              <option value="15">15 minutes</option><option value="20">20 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </label>
+          <label class="setup-field">Grammar question interval
+            <select id="setup-interval">
+              <option value="30">Every 30 seconds</option>
+              <option value="45" selected>Every 45 seconds</option>
+              <option value="60">Every 60 seconds</option>
+              <option value="90">Every 90 seconds</option>
+            </select>
+          </label>
+          <label class="setup-field">Difficulty
+            <select id="setup-difficulty">
+              <option value="normal" selected>Normal</option><option value="easy">Easy</option><option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+        <div class="setup-note">Boss encounters trigger a separate, harder grammar challenge. Correct answers activate a special battle boost.</div>
+        <div class="setup-actions"><button id="start-game" class="start-button" type="button">Preview Game</button><button id="copy-student-link" class="link-button" type="button">Copy Student Link</button></div>
+        <input id="student-link" class="student-link hidden" type="text" readonly aria-label="Student game link">
+        <p id="setup-status" class="setup-status" aria-live="polite">Settings are applied to this game session.</p>
+      </div>
+    </section>
 
+    <section id="game-layout" class="game-layout hidden" aria-label="Game">
       <section class="battle-panel">
         <div class="battle-hud">
           <div class="hud-stat"><span class="hud-label">ENERGY</span><strong id="energy-value">100</strong></div>
           <div class="energy-track"><div id="energy-fill"></div></div>
           <div class="hud-stat wave-stat"><span class="hud-label">WAVE</span><strong id="wave-value">1</strong></div>
-          <div class="hud-stat"><span class="hud-label">TIME</span><strong id="battle-time">00:00</strong></div>
+          <div class="hud-stat"><span class="hud-label">TIME</span><strong id="battle-time">10:00</strong></div>
           <div class="hud-stat"><span class="hud-label">BASE</span><strong id="base-value">100%</strong></div>
         </div>
         <div id="game-container" aria-label="Five-lane fantasy battlefield"></div>
-        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">FIXED WAVES</span></span><span id="battle-message">Prepare your defenses!</span></div>
+        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">ENDLESS SURVIVAL</span></span><span id="battle-message">Prepare your defenses!</span></div>
       </section>
+
+      <aside class="side-panel">
+        <div class="panel-heading"><span>DEFENDER DECK</span><span class="small-label">SELECT • DEPLOY</span></div>
+        <div class="deck-grid">
+          <button class="unit-card selected" data-unit="sprout" type="button"><span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Sprout</strong><small>Balanced</small></span><span class="unit-cost">25</span></button>
+          <button class="unit-card" data-unit="archer" type="button"><span class="unit-icon archer-icon">➶</span><span class="unit-copy"><strong>Archer</strong><small>Rapid fire</small></span><span class="unit-cost">50</span></button>
+          <button class="unit-card" data-unit="guardian" type="button"><span class="unit-icon guardian-icon">⬟</span><span class="unit-copy"><strong>Guardian</strong><small>Tank</small></span><span class="unit-cost">75</span></button>
+          <button class="unit-card" data-unit="mage" type="button"><span class="unit-icon mage-icon">❄</span><span class="unit-copy"><strong>Frost Mage</strong><small>Slow</small></span><span class="unit-cost">90</span></button>
+          <button class="unit-card" data-unit="ember" type="button"><span class="unit-icon ember-icon">♨</span><span class="unit-copy"><strong>Ember Mage</strong><small>Area damage</small></span><span class="unit-cost">110</span></button>
+          <button class="unit-card" data-unit="volt" type="button"><span class="unit-icon volt-icon">ϟ</span><span class="unit-copy"><strong>Volt Beast</strong><small>Chain shock</small></span><span class="unit-cost">130</span></button>
+          <button class="unit-card" data-unit="thorn" type="button"><span class="unit-icon thorn-icon">♜</span><span class="unit-copy"><strong>Thorn Dragon</strong><small>Heavy damage</small></span><span class="unit-cost">150</span></button>
+          <button class="unit-card" data-unit="knight" type="button"><span class="unit-icon knight-icon">⚔</span><span class="unit-copy"><strong>Iron Knight</strong><small>Armored melee</small></span><span class="unit-cost">175</span></button>
+          <button class="unit-card" data-unit="phoenix" type="button"><span class="unit-icon phoenix-icon">♨</span><span class="unit-copy"><strong>Solar Phoenix</strong><small>Lane burst</small></span><span class="unit-cost">200</span></button>
+          <button class="unit-card" data-unit="titan" type="button"><span class="unit-icon titan-icon">✹</span><span class="unit-copy"><strong>Ancient Titan</strong><small>Ultimate</small></span><span class="unit-cost">250</span></button>
+        </div>
+        <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then tap an empty tile. Defenders attack automatically. Stronger heroes cost more energy.</p></div>
+      </aside>
     </section>
 
     <footer class="page-footer">A classroom strategy game • Development build</footer>

@@ -64,7 +64,7 @@ button{font:inherit}
 /* Landscape-first battlefield and illustrated hero portraits */
 .app-shell{max-width:1680px}
 .game-layout{grid-template-columns:230px minmax(0,1fr);align-items:start}
-#game-container{aspect-ratio:16/9;max-height:none}
+#game-container{aspect-ratio:48/17;max-height:none}
 .unit-icon{position:relative;overflow:hidden}
 .unit-icon .portrait-head{position:absolute;left:11px;top:6px;width:15px;height:15px;border-radius:50%;background:linear-gradient(145deg,#ffe2bd,#c98e69);border:1px solid #79563f;box-shadow:0 11px 0 4px #536b71}
 .archer-icon .portrait-head:after{content:"";position:absolute;left:-4px;top:-4px;width:22px;height:8px;background:#6e4b2d;border-radius:8px 8px 2px 2px}
@@ -75,3 +75,93 @@ button{font:inherit}
 @media(min-width:1100px){body{padding:clamp(10px,1.3vw,20px)}.topbar{margin-bottom:12px}.game-layout{grid-template-columns:220px minmax(0,1fr);gap:12px}.side-panel{padding:12px}.battle-panel{padding:10px}.unit-card{min-height:58px;margin-bottom:8px}.deck-tip{margin-top:10px}}
 @media(max-width:900px){.game-layout{grid-template-columns:1fr}.side-panel{order:2}.battle-panel{order:1}.side-panel .unit-card{width:calc(25% - 8px);min-width:150px}}
 @media(max-width:620px){.side-panel .unit-card{width:100%;min-width:0}}
+
+
+/* Grammar Defenders v2 — mobile landscape and compact bottom deck */
+.hidden{display:none!important}
+.setup-screen{min-height:min(72vh,680px);display:grid;place-items:center;padding:18px}
+.setup-card{width:min(720px,100%);padding:clamp(20px,4vw,34px);border:1px solid #52718b;border-radius:22px;background:linear-gradient(145deg,#1a3552,#10243c);box-shadow:0 22px 60px #02091499,inset 0 1px #ffffff12}
+.setup-kicker{margin:0 0 8px;color:#9af0c2;font-size:10px;font-weight:1000;letter-spacing:2px}
+.setup-card h2{margin:0;font-size:clamp(24px,4vw,36px);line-height:1.1}
+.setup-description{color:#b6c8dc;font-size:13px;margin:9px 0 22px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.setup-field{display:flex;flex-direction:column;gap:7px;color:#dce9f6;font-size:12px;font-weight:900}
+.setup-field select{width:100%;min-height:43px;padding:9px 11px;border-radius:10px;border:1px solid #496987;background:#0b1c30;color:#f4f8ff;font:inherit;font-size:12px}
+.setup-note{margin:18px 0;padding:12px 14px;border:1px solid #45677b;border-radius:11px;background:#0c1e31;color:#b8cadd;font-size:11px;line-height:1.55}
+.start-button{width:100%;border:1px solid #b6f7d0;border-radius:12px;padding:14px 18px;background:linear-gradient(110deg,#b4ef9d,#63d9ad);color:#103b3a;font:inherit;font-size:15px;font-weight:1000;cursor:pointer;box-shadow:0 8px 24px #55d5a633}
+.start-button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.setup-status{margin:10px 0 0;text-align:center;color:#91a9c0;font-size:10px}
+.deck-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.unit-card{margin:0;min-height:54px;padding:6px 8px}
+.unit-icon{width:34px;height:34px;flex-basis:34px;font-size:19px}
+.unit-copy strong{font-size:11px}
+.unit-copy small{font-size:9px}
+.unit-cost{font-size:11px}
+.ember-icon{background:linear-gradient(145deg,#ffe0a1,#e77c55);color:#75351e}
+.volt-icon{background:linear-gradient(145deg,#f4f0a0,#7dc6e8);color:#31506b}
+.thorn-icon{background:linear-gradient(145deg,#c9e5a0,#56885d);color:#24462e}
+.knight-icon{background:linear-gradient(145deg,#e4edf8,#718aa8);color:#283d58}
+.phoenix-icon{background:linear-gradient(145deg,#ffe1a0,#e58b55);color:#783c24}
+.titan-icon{background:linear-gradient(145deg,#e9d5ff,#a38bd9);color:#3c2b68}
+.battle-panel{min-width:0}
+#game-container{touch-action:pan-y}
+@media(max-width:900px){
+  .game-layout{display:flex;flex-direction:column;gap:8px}
+  .battle-panel{order:1;width:100%}
+  .side-panel{order:2;width:100%;padding:8px}
+  .deck-grid{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 1px 5px}
+  .deck-grid .unit-card{flex:0 0 126px;min-width:126px;min-height:49px}
+  .deck-tip{display:none}
+  .panel-heading{margin:0 2px 6px;font-size:9px}
+}
+@media(orientation:landscape) and (max-height:600px){
+  body{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px}
+  .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
+  .topbar{flex:0 0 25px;margin:0 0 4px;min-height:0;align-items:center}
+  .brand{gap:7px}
+  .brand-mark{width:23px;height:23px;border-radius:7px;font-size:9px}
+  .brand h1{font-size:11px}
+  .brand p{display:none}
+  .top-actions{flex-direction:row;gap:5px}
+  .icon-button,.secondary-button{padding:5px 8px;font-size:9px;border-radius:7px}
+  .game-layout{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px}
+  .battle-panel{flex:1;min-height:0;padding:4px;display:flex;flex-direction:column;gap:2px}
+  .battle-hud{flex:0 0 20px;min-height:20px;padding:0 3px 1px;gap:8px}
+  .hud-stat{gap:4px}
+  .hud-stat strong{font-size:12px}
+  .hud-label{font-size:7px}
+  .energy-track{height:7px}
+  #game-container{flex:1;min-height:0;width:100%;height:100%;max-height:none;aspect-ratio:auto}
+  .battle-footer{display:none}
+  .side-panel{flex:0 0 56px;min-height:56px;padding:2px 5px}
+  .panel-heading{display:none}
+  .deck-grid{height:100%;display:flex;align-items:center;gap:5px;overflow-x:auto}
+  .deck-grid .unit-card{flex:0 0 112px;min-width:112px;height:49px;min-height:49px;padding:3px 5px;gap:5px}
+  .deck-grid .unit-icon{width:27px;height:27px;flex-basis:27px;font-size:15px}
+  .deck-grid .unit-copy strong{font-size:9px}
+  .deck-grid .unit-copy small{font-size:8px}
+  .deck-grid .unit-cost{font-size:9px}
+  .page-footer{display:none}
+  .setup-screen{flex:1;min-height:0;overflow:auto;padding:6px}
+  .setup-card{max-width:640px;padding:14px 18px;border-radius:14px}
+  .setup-card h2{font-size:20px}
+  .setup-description{margin:5px 0 10px;font-size:10px}
+  .setup-grid{gap:7px}
+  .setup-field{font-size:10px;gap:3px}
+  .setup-field select{min-height:30px;padding:5px 7px;font-size:10px}
+  .setup-note{margin:8px 0;padding:7px 9px;font-size:9px}
+  .start-button{padding:8px;font-size:12px}
+  .setup-status{margin-top:4px;font-size:8px}
+}
+@media(orientation:portrait) and (max-width:900px){
+  body:has(#game-layout:not(.hidden)) .app-shell:after{content:"For the best experience, rotate your phone to landscape.";position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:30px;text-align:center;background:#081426f5;color:#fff;font-size:20px;font-weight:900}
+}
+@media(prefers-reduced-motion:reduce){.start-button:hover{transform:none}}
+
+.setup-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.setup-actions .start-button{width:100%}
+.link-button{border:1px solid #5c829d;border-radius:12px;padding:12px 16px;background:linear-gradient(180deg,#284865,#19344f);color:#e8f6ff;font:inherit;font-size:13px;font-weight:1000;cursor:pointer}
+.link-button:hover{border-color:#9af0c2;background:#2d5961}
+.student-link{width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid #4d718b;background:#081a2d;color:#bcebd4;font:inherit;font-size:10px}
+@media(orientation:landscape) and (max-height:600px){.setup-actions .start-button,.link-button{padding:8px;font-size:11px}}
+@media(max-width:480px){.setup-actions{grid-template-columns:1fr}}
