@@ -217,6 +217,10 @@ export function createGameScene() {
       this.removeMode = false;
       this.upgradeModeButton = document.getElementById("upgrade-mode-button");
       this.upgradeModeButton?.addEventListener("click", () => {
+        if (!this.battleStarted || this.gameOver) {
+          this.message.textContent = "Start a battle before upgrading defenders.";
+          return;
+        }
         this.upgradeMode = !this.upgradeMode;
         this.removeMode = false;
         this.removeModeButton?.classList.remove("active");
@@ -228,7 +232,14 @@ export function createGameScene() {
           : "Upgrade mode cancelled.";
       });
       this.removeModeButton?.addEventListener("click", () => {
+        if (!this.battleStarted || this.gameOver) {
+          this.message.textContent = "Start a battle before removing defenders.";
+          return;
+        }
         this.removeMode = !this.removeMode;
+        this.upgradeMode = false;
+        this.upgradeModeButton?.classList.remove("active");
+        this.upgradeModeButton?.setAttribute("aria-pressed", "false");
         this.removeModeButton.classList.toggle("active", this.removeMode);
         this.removeModeButton.setAttribute("aria-pressed", String(this.removeMode));
         this.message.textContent = this.removeMode
@@ -238,6 +249,12 @@ export function createGameScene() {
       this.unitCards.forEach(card => {
         card.addEventListener("click", () => {
           if (card.disabled) return;
+          this.upgradeMode = false;
+          this.removeMode = false;
+          this.upgradeModeButton?.classList.remove("active");
+          this.upgradeModeButton?.setAttribute("aria-pressed", "false");
+          this.removeModeButton?.classList.remove("active");
+          this.removeModeButton?.setAttribute("aria-pressed", "false");
           this.removeMode = false;
           this.upgradeMode = false;
           this.upgradeModeButton?.classList.remove("active");
