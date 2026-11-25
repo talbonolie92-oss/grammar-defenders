@@ -1173,11 +1173,15 @@ export function createGameScene() {
       });
       for (let projectileIndex = this.projectiles.length - 1; projectileIndex >= 0; projectileIndex--) {
         const p = this.projectiles[projectileIndex];
-        if (!p.active) continue;
+        if (!p.active) {
+          this.projectiles.splice(projectileIndex, 1);
+          continue;
+        }
         const dx = p.target.x - p.x, dy = p.target.y - p.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 13 || !p.target.group.active) {
           p.destroy(); p.active = false;
+          this.projectiles.splice(projectileIndex, 1);
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
             if (p.unitType === "mage" && p.target.group.active) {
@@ -1425,8 +1429,8 @@ export function createGameScene() {
         }
         if (e.x < 65) this.damageBase(e);
       }
-      // Compact projectile references only when something was removed.
-      if (this.projectiles.some(p => !p.active)) this.projectiles = this.projectiles.filter(p => p.active);
+      // Projectiles are removed during the reverse traversal, avoiding a
+      // second full-array scan and a temporary filtered array.
       this.checkWaveProgress();
     }
 
@@ -1470,7 +1474,12 @@ export function createGameScene() {
       p.unitType = defender.unitType;
       p.level = defender.level || 1;
       this.projectiles.push(p);
-      this.playSound("shot");
+      // Keep firing audible without stacking identical sounds when many
+      // defenders release projectiles on the same frame.
+      if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 85) {
+        this.lastShotSoundAt = this.time.now;
+        this.playSound("shot");
+      }
       this.tweens.add({
         targets: defender.group,
         scaleY: .94,
