@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101b35">
-  <meta name="description" content="Grammar Defenders — Defend. Strategize. Master Grammar.">
-  <title>Grammar Defenders</title>
+  <meta name="description" content="Emerald Frontier — Build. Defend. Survive.">
+  <title>Emerald Frontier</title>
   <link rel="stylesheet" href="css/game.css">
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -14,14 +14,14 @@
   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark">GD</div>
-        <div><h1>Grammar Defenders</h1><p>Defend. Strategize. Master Grammar.</p></div>
+        <div class="brand-mark">EF</div>
+        <div><h1>Emerald Frontier</h1><p>Build. Defend. Survive.</p></div>
       </div>
 
     </header>
 
-    <section id="landing-hero" class="landing-hero" aria-label="Grammar Defenders fantasy battlefield">
-      <div class="hero-copy"><p class="hero-kicker">A FANTASY LANE-DEFENSE ADVENTURE</p><h2>DEFEND THE <span>GRAMMAR REALM.</span></h2><p>Build your team. Outsmart the monsters. Answer grammar challenges to power up your defenders and protect the Emerald Keep.</p><div class="hero-pills"><span>5 BATTLE LANES</span><span>HERO DEFENDERS</span><span>GRAMMAR POWER-UPS</span></div></div>
+    <section id="landing-hero" class="landing-hero" aria-label="Emerald Frontier fantasy battlefield">
+      <div class="hero-copy"><p class="hero-kicker">A FANTASY LANE-DEFENSE ADVENTURE</p><h2>DEFEND THE <span>EMERALD FRONTIER.</span></h2><p>Build your team. Outsmart the monsters. Conquer the Dark Gate and protect the Emerald Keep.</p><div class="hero-pills"><span>5 BATTLE LANES</span><span>HERO DEFENDERS</span><span>MAGIC POWER-UPS</span></div></div>
       <img class="hero-art" src="assets/hero-battle.svg" alt="Fantasy defenders protecting a crystal keep from a fierce monster army">
     </section>
     <section id="setup-screen" class="setup-screen" aria-labelledby="setup-title">
@@ -43,7 +43,7 @@
               <option value="30">30 minutes</option>
             </select>
           </label>
-          <label class="setup-field">Grammar question interval
+          <label class="setup-field">Challenge interval
             <select id="setup-interval">
               <option value="30">Every 30 seconds</option>
               <option value="45" selected>Every 45 seconds</option>
@@ -96,7 +96,7 @@
           <button class="unit-card" data-unit="thorn" type="button"><span class="unit-icon thorn-icon">♜</span><span class="unit-copy"><strong>Thorn Dragon</strong><small>Heavy damage</small></span><span class="unit-cost">150</span></button>
           <button class="unit-card" data-unit="knight" type="button"><span class="unit-icon knight-icon">⚔</span><span class="unit-copy"><strong>Iron Knight</strong><small>Armored melee</small></span><span class="unit-cost">175</span></button>
           <button class="unit-card" data-unit="phoenix" type="button"><span class="unit-icon phoenix-icon">♨</span><span class="unit-copy"><strong>Solar Phoenix</strong><small>Lane burst</small></span><span class="unit-cost">200</span></button>
-          <button class="unit-card" data-unit="sprout" type="button" aria-pressed="false" aria-label="Grammar Sprout, Balanced, costs 25 energy"><span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Sprout</strong><small>Balanced</small></span><span class="unit-cost">25</span></button>
+          <button class="unit-card" data-unit="sprout" type="button" aria-pressed="false" aria-label="Verdant Sprout, Balanced, costs 25 energy"><span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Sprout</strong><small>Balanced</small></span><span class="unit-cost">25</span></button>
           <button class="unit-card" data-unit="titan" type="button"><span class="unit-icon titan-icon">✹</span><span class="unit-copy"><strong>Ancient Titan</strong><small>Ultimate</small></span><span class="unit-cost">250</span></button>
         </div>
         <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then tap an empty tile. To correct a placement, choose <b>Remove</b> and tap that defender. Removed defenders do not refund energy.</p></div>
