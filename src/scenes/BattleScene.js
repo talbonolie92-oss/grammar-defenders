@@ -1193,7 +1193,8 @@ export function createGameScene() {
 
     update(time, delta) {
       if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
-      // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.\n      const dt = Math.min(delta / 1000, 0.25);
+      // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.
+      const dt = Math.min(delta / 1000, 0.25);
       const energyDt = Math.min(delta / 1000, 1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
       // Use a separate bounded clock so low frame rates do not silently slow energy income.
