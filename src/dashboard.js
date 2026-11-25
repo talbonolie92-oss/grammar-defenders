@@ -146,7 +146,7 @@ $("players-list").addEventListener("click",async e=>{
     const name=prompt("Correct student name:",p.name||"");if(name===null)return;
     const cls=prompt("Correct class / section:",p.classSection||"");if(cls===null)return;
     await dbUpdate("sessions/"+selectedSession.id+"/players/"+uid,{name:safeName(name),classSection:safeName(cls),editedByTeacher:true,updatedAt:Date.now()});
-  }else if(confirm("Remove this student from the session roster?"))await dbRemove("sessions/"+selectedSession.id+"/players/"+uid);
+  }else if(confirm("Remove this student from the roster and block this device from rejoining this session?")){await dbSet("sessions/"+selectedSession.id+"/blockedPlayers/"+uid,true);await dbRemove("sessions/"+selectedSession.id+"/players/"+uid);}
 });
 function renderReport(){
   const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({uid,...r}));
