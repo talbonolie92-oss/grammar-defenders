@@ -1277,12 +1277,13 @@ export function createGameScene() {
             // projectile damage; support/tank units gain a small close-range counter.
             blocker.retaliateCooldown = (blocker.retaliateCooldown || 0) - dt;
             if (blocker.retaliateCooldown <= 0 && e.group.active) {
-              const counterDamage = blocker.stats.damage > 0
-                ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65) * (blocker.counterDamageMultiplier || 1)))
+              const baseCounterDamage = blocker.stats.damage > 0
+                ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65)) )
                 : blocker.unitType === "titan" ? 14
                 : blocker.unitType === "runeblade" ? (blocker.level >= 3 ? 18 : blocker.level === 2 ? 13 : 10)
                 : blocker.unitType === "knight" ? 6
                 : blocker.unitType === "guardian" ? 3 : 1;
+              const counterDamage = Math.max(1, Math.ceil(baseCounterDamage * (blocker.counterDamageMultiplier || 1)));
               this.damageEnemy(e, counterDamage);
               if (blocker.level >= 3 && blocker.unitType === "knight" && e.group.active) {
                 this.damageEnemy(e, Math.ceil(counterDamage * .5));
