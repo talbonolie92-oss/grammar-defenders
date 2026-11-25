@@ -73,10 +73,9 @@ export function createGameScene() {
     create() {
       this.drawWorld();
       this.createHud();
-      this.input.on("gameobjectdown", (pointer, gameObject) => {
-        if (!gameObject?.getData("frontierTile")) return;
-        this.handleTileTap(gameObject.getData("lane"), gameObject.getData("col"));
-      });
+      // Use Phaser's camera-transformed pointer coordinates for the whole
+      // board. This avoids per-object hit-test gaps on scaled mobile canvases.
+      this.input.on("pointerdown", pointer => this.handleBoardPointer(pointer));
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
       const launchConfig = window.GRAMMAR_DEFENDERS_CONFIG;
@@ -149,18 +148,6 @@ export function createGameScene() {
         g.fillRect(GRID_X + 2, y + TILE_H - 13, GRID_W - 4, 9);
         for (let col = 0; col < 7; col++) {
           const x = GRID_X + col * TILE_W;
-          // Real Phaser hit zones make every tile independently tappable,
-          // avoiding coordinate drift on mobile FIT-scaled canvases.
-          const tileHitZone = this.add.zone(
-            x + TILE_W / 2,
-            y + (TILE_H - 3) / 2,
-            TILE_W - 4,
-            TILE_H - 7
-          ).setInteractive();
-          tileHitZone.setDepth(10);
-          tileHitZone.setData("frontierTile", true);
-          tileHitZone.setData("lane", lane);
-          tileHitZone.setData("col", col);
           g.lineStyle(1, 0xe1efbd, 0.18);
           g.strokeRoundedRect(x + 2, y + 2, TILE_W - 4, TILE_H - 7, 5);
           if ((lane + col) % 3 === 0) {
@@ -270,6 +257,21 @@ export function createGameScene() {
         this.message.textContent = this.soundOn ? "Sound effects enabled." : "Sound effects muted.";
         if (this.soundOn) this.playSound("deploy");
       });
+    }
+
+    handleBoardPointer(pointer) {
+      if (!pointer || !this.battleStarted || this.gameOver || this.questionActive) return;
+      // pointer.x/y are already converted by Phaser's Scale Manager. Transform
+      // through the active camera, then map the point to one of the 35 tiles.
+      const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      const localX = point.x - GRID_X;
+      const localY = point.y - GRID_Y;
+      if (localX < 0 || localY < 0 || localX >= GRID_W || localY >= GRID_H) return;
+      const col = Math.floor(localX / TILE_W);
+      const lane = Math.floor(localY / TILE_H);
+      if (lane >= 0 && lane < LANES && col >= 0 && col < 7) {
+        this.handleTileTap(lane, col);
+      }
     }
 
     handleTileTap(lane, col) {
