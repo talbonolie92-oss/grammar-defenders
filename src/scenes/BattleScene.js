@@ -412,7 +412,7 @@ export function createGameScene() {
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const enemyRoster = ["Grunt", "Runner", "Brute", "Shadow Stalker", "Bone Warrior", "Venom Beast", "Dark Caster", "War Crusher", "Dread Beast", "Dark Overlord"];
-      const enemyIndex = Math.min(9, this.wave - 1);
+      const enemyIndex = (this.wave - 1) % 10;
       const type = enemyIndex % 3;
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
       const enemyType = isBoss ? "Dark Overlord" : enemyRoster[enemyIndex];
@@ -734,7 +734,11 @@ export function createGameScene() {
     }
 
     showQuestion(isBoss = false) {
-      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      if (!this.battleStarted || this.gameOver) return;
+      if (this.questionActive) {
+        if (isBoss) this.pendingBossQuestion = true;
+        return;
+      }
       this.questionActive = true;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
@@ -803,6 +807,11 @@ export function createGameScene() {
         this.questionOverlay = null;
         this.questionActive = false;
         this.isBossQuestion = false;
+        if (this.pendingBossQuestion && !this.gameOver) {
+          this.pendingBossQuestion = false;
+          this.showQuestion(true);
+          return;
+        }
         if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
         if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
       });
