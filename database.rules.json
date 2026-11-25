@@ -4,7 +4,6 @@
     ".write": false,
     "sessions": {
       "$sessionId": {
-        ".write": "auth != null && data.child('public').child('teacherId').val() === auth.uid",
         "public": {
           ".read": true,
           ".write": "auth != null && ((!data.exists() && newData.child('teacherId').val() === auth.uid) || data.child('teacherId').val() === auth.uid)"
@@ -13,20 +12,20 @@
           ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$uid": {
             ".read": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
-            ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
+            ".write": "auth != null && (root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid || (auth.uid === $uid && root.child('sessions').child($sessionId).child('blockedPlayers').child($uid).val() !== true))",
             ".validate": "auth != null && (root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid || !data.exists() || (newData.child('name').val() === data.child('name').val() && newData.child('classSection').val() === data.child('classSection').val()))"
           }
         },
         "results": {
           ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && root.child('sessions').child($sessionId).child('players').child($uid).exists()"
+            ".write": "auth != null && auth.uid === $uid && root.child('sessions').child($sessionId).child('players').child($uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child($uid).val() !== true"
           }
         },
         "attempts": {
           ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$attemptId": {
-            ".write": "auth != null && root.child('sessions').child($sessionId).child('players').child(auth.uid).exists()"
+            ".write": "auth != null && root.child('sessions').child($sessionId).child('players').child(auth.uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child(auth.uid).val() !== true"
           }
         },
         "blockedPlayers": {
