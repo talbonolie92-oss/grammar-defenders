@@ -66,8 +66,8 @@ async function initializeStudentJoin() {
   form?.addEventListener("submit", async event => {
     event.preventDefault();
     game.scene.getScene("BattleScene")?.prepareAudio?.();
-    const name = document.getElementById("student-name").value.trim();
-    const classSection = document.getElementById("student-class").value.trim();
+    let name = document.getElementById("student-name").value.trim();
+    let classSection = document.getElementById("student-class").value.trim();
     const status = document.getElementById("student-join-status");
     if (!name || !classSection) { status.textContent = "Please enter your name and class/section."; return; }
     status.textContent = "Joining your classroom session…";
@@ -79,9 +79,17 @@ async function initializeStudentJoin() {
       studentSession = snapshot.val();
       if (studentSession.status === "ended") throw new Error("This classroom session has already ended.");
       if (studentSession.status === "running" && !studentSession.allowLateJoin) throw new Error("Your teacher has disabled late joining.");
-      await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
-        name, classSection, joinedAt: Date.now(), status: "waiting", active: true
-      });
+      const blocked = await dbGet("sessions/" + sessionId + "/blockedPlayers/" + studentUid);
+      if (blocked.exists() && blocked.val() === true) throw new Error("Your teacher removed you from this session. Please speak with your teacher.");
+      const existingPlayer = await dbGet("sessions/" + sessionId + "/players/" + studentUid);
+      if (existingPlayer.exists()) {
+        name = existingPlayer.val().name || name;
+        classSection = existingPlayer.val().classSection || classSection;
+      } else {
+        await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
+          name, classSection, joinedAt: Date.now(), status: "waiting", active: true
+        });
+      }
       document.getElementById("student-session-name").textContent = studentSession.title || "Your teacher's Grammar Defenders session";
       form.classList.add("hidden");
       document.getElementById("student-waiting").classList.remove("hidden");
