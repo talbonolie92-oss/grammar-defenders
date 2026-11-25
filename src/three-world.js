@@ -5,7 +5,8 @@ export async function createThreeWorld(container) {
   if (!container || !container.isConnected) throw new Error("Battlefield container is unavailable.");
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x10283a);
+  // Transparent scene: the Phaser canvas remains the reliable gameplay layer.
+  scene.background = null;
   scene.fog = new THREE.Fog(0x10283a, 16, 34);
 
   const camera = new THREE.OrthographicCamera(-9.6, 9.6, 3.4, -3.4, 0.1, 80);
@@ -22,6 +23,7 @@ export async function createThreeWorld(container) {
   });
   const isSmallScreen = window.matchMedia?.("(max-width: 900px)").matches || false;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1 : 1.25));
+  renderer.setClearColor(0x000000, 0);
   renderer.setSize(960, 340, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -327,6 +329,7 @@ export async function createThreeWorld(container) {
           materials.forEach(item => item.dispose());
         }
       });
+      Object.values(shared).forEach(geometry => geometry.dispose());
       projectileGeometry.dispose();
       projectileHaloGeometry.dispose();
       renderer.dispose();
