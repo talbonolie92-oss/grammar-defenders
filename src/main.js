@@ -47,6 +47,7 @@ startButton?.addEventListener("click", async () => {
   }
   setupScreen?.classList.add("hidden");
   gameLayout?.classList.remove("hidden");
+  requestAnimationFrame(() => game.scale.refresh());
   game.scene.getScene("BattleScene").startBattle(settings);
 });
 
