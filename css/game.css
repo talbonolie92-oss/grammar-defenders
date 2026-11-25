@@ -13,3 +13,9 @@ button{font:inherit}.app-shell{max-width:1440px;margin:auto}.topbar{display:flex
 .unit-card:disabled{opacity:.45;cursor:not-allowed}
 .unit-card .unit-copy small{line-height:1.25}
 @media(max-width:850px){.side-panel .unit-card{min-height:62px}}
+
+
+.unit-card.unaffordable{border-color:#6b5260;background:#263044}
+.unit-card.unaffordable .unit-cost{color:#e8a0a0}
+.unit-card:not(.selected):hover{border-color:#7895b5;transform:translateY(-1px)}
+.battle-message{overflow-wrap:anywhere}
