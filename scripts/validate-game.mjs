@@ -13,6 +13,7 @@ assert.match(battle, /const TILE_W = 108;/, "Seven-column tile width must remain
 assert.match(battle, /const GRID_W = TILE_W \* 7;/, "Battlefield must contain seven columns.");
 assert.match(battle, /this\.defenders\.push\(/, "Defender deployment must register units.");
 assert.doesNotMatch(battle, /this\.defenders = this\.defenders\.filter/, "Defender removal must mutate the existing array without allocating a replacement.");
+assert.match(battle, /defeatedByPoison = true[\s\S]*?for \(let i = this\.defenders\.length - 1; i >= 0; i--\)/, "Poison deaths must be removed after defender iteration.");
 assert.doesNotMatch(battle, /removeModeButton\?\.setAttribute\("aria-pressed", "false"\);\s*this\.upgradeMode = false;/, "Unit selection must not repeat the mode-reset block.");
 assert.match(battle, /this\.enemies\.push\(enemy\)/, "Enemy spawning must register attackers.");
 assert.match(battle, /const dt = Math\.min\(delta \/ 1000, 0\.25\);/, "Combat delta time must be declared as executable code.");
