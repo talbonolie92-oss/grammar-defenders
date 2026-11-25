@@ -149,7 +149,8 @@ $("players-list").addEventListener("click",async e=>{
   }else if(confirm("Remove this student from the roster and block this device from rejoining this session?")){await dbSet("sessions/"+selectedSession.id+"/blockedPlayers/"+uid,true);await dbRemove("sessions/"+selectedSession.id+"/players/"+uid);}
 });
 function renderReport(){
-  const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({uid,...r}));
+  const roster=selectedSession?.players||{};
+  const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({uid,...r,name:roster[uid]?.name||r.name,classSection:roster[uid]?.classSection||r.classSection}));
   const total=results.length,correct=results.reduce((n,r)=>n+(Number(r.correctAnswers)||0),0),answered=results.reduce((n,r)=>n+(Number(r.questionsAnswered)||0),0),accuracy=answered?Math.round(correct/answered*100):0;
   $("report-summary").innerHTML=[["Students",Object.keys(selectedSession?.players||{}).length],["Completed",total],["Accuracy",accuracy+"%"]].map(([label,value])=>'<div class="metric"><strong>'+escapeHtml(value)+'</strong><small>'+label+'</small></div>').join("");
   $("report-list").innerHTML=results.length?results.map(r=>'<div class="report-row"><div><b>'+escapeHtml(r.name||"Student")+'</b><small>'+escapeHtml(r.classSection||"")+'</small></div><b>'+escapeHtml(r.correctAnswers||0)+' / '+escapeHtml(r.questionsAnswered||0)+'</b><small>'+escapeHtml(r.accuracy||0)+'% accuracy</small></div>').join(""):'<div class="empty">Results will appear after students finish.</div>';
@@ -161,9 +162,9 @@ function renderReport(){
   $("topic-analysis").innerHTML=topicRows.length?topicRows.join("")+(missedRows.length?'<p class="muted">Most commonly missed questions</p>'+missedRows.join(""):''):'<div class="empty">Topic and question analysis will appear as students answer questions.</div>';
 }
 $("export-report").addEventListener("click",()=>{
-  const results=Object.values(selectedSession?.results||{});const rows=[["Student","Class/Section","Questions","Correct","Incorrect","Accuracy","Kills","Waves","Outcome"],...results.map(r=>[r.name,r.classSection,r.questionsAnswered,r.correctAnswers,r.incorrectAnswers,r.accuracy,r.kills,r.wave,r.won?"Victory":"Defeat"])];
+  const roster=selectedSession?.players||{};const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({...r,name:roster[uid]?.name||r.name,classSection:roster[uid]?.classSection||r.classSection}));const rows=[["Student","Class/Section","Questions","Correct","Incorrect","Accuracy","Kills","Waves","Outcome"],...results.map(r=>[r.name,r.classSection,r.questionsAnswered,r.correctAnswers,r.incorrectAnswers,r.accuracy,r.kills,r.wave,r.won?"Victory":"Defeat"])];
   const attempts=Object.values(selectedSession?.attempts||{});
-  rows.push([],["QUESTION ATTEMPTS"],["Student","Class/Section","Topic","Question","Selected answer","Correct answer","Correct","Boss question"],...attempts.map(x=>[x.playerName,x.classSection,x.topic,x.question,x.selectedAnswer,x.correctAnswer,x.correct?"Yes":"No",x.isBoss?"Yes":"No"]));
+  rows.push([],["QUESTION ATTEMPTS"],["Student","Class/Section","Topic","Question","Selected answer","Correct answer","Correct","Boss question"],...attempts.map(x=>[roster[x.playerId]?.name||x.playerName,roster[x.playerId]?.classSection||x.classSection,x.topic,x.question,x.selectedAnswer,x.correctAnswer,x.correct?"Yes":"No",x.isBoss?"Yes":"No"]));
   const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="grammar-defenders-report.csv";a.click();URL.revokeObjectURL(url);
 });
