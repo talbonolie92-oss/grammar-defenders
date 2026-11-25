@@ -181,22 +181,30 @@ export function createGameScene() {
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const type = (this.wave - 1) % 3;
+      const enemyType = ["Grunt", "Runner", "Brute"][type];
       const color = [0xc87973, 0x8c82c7, 0xc69b5b][type];
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
+      const radius = isBoss ? 31 : [23, 19, 27][type];
       const group = this.add.container(x, y);
-      const shadow = this.add.ellipse(0, 25, isBoss ? 76 : 52, 13, 0x10251d, .3);
-      const body = this.add.circle(0, 0, isBoss ? 31 : 23, isBoss ? 0x9f4264 : color).setStrokeStyle(3, 0x4c3949);
-      const horn = this.add.triangle(0, isBoss ? -29 : -22, -12, 8, 12, 8, 0, 0xead9ad);
-      const eyes = this.add.text(0, -2, isBoss ? "◆" : "••", { fontSize: isBoss ? "20px" : "17px", color: "#fff" }).setOrigin(.5);
+      const shadow = this.add.ellipse(0, 25, isBoss ? 76 : radius * 2.25, 13, 0x10251d, .3);
+      const body = this.add.circle(0, 0, radius, isBoss ? 0x9f4264 : color).setStrokeStyle(3, 0x4c3949);
+      const horn = this.add.triangle(0, isBoss ? -29 : -radius, -12, 8, 12, 8, 0, 0xead9ad);
+      const eyes = this.add.text(0, -2, isBoss ? "◆" : ["••", "»", "▰"][type], { fontSize: isBoss ? "20px" : "17px", color: "#fff" }).setOrigin(.5);
       group.add([shadow, body, horn, eyes]);
 
-      const hp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2) * (isBoss ? 5 : 1);
+      const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
+      const hp = (baseHp + [0, -1, 2][type]) * (isBoss ? 5 : 1);
       const barWidth = isBoss ? 64 : 46;
       const bar = this.add.graphics();
       bar.fillStyle(0x342d39); bar.fillRoundedRect(-barWidth / 2, isBoss ? -48 : -37, barWidth, 6, 3);
       bar.fillStyle(0x83e39a); bar.fillRoundedRect(-barWidth / 2 + 1, isBoss ? -47 : -36, barWidth - 2, 4, 2);
       group.add(bar);
-      this.enemies.push({ lane, x, y, group, hp, maxHp: hp, speed: (isBoss ? 10 : 17) + this.wave * 1.2, bar, isBoss });
+      const speedFactor = [1, 1.65, 0.68][type];
+      this.enemies.push({
+        lane, x, y, group, hp, maxHp: hp,
+        speed: ((isBoss ? 10 : 17) + this.wave * 1.2) * speedFactor,
+        bar, isBoss, enemyType, phase: 1, body
+      });
       this.enemiesSpawnedThisWave++;
       if (isBoss) {
         this.message.textContent = "BOSS APPROACHING!";
@@ -291,7 +299,19 @@ export function createGameScene() {
 
     damageEnemy(enemy, amount) {
       if (!enemy.group.active) return;
-      enemy.hp -= amount;
+      const appliedDamage = enemy.enemyType === "Brute" && !enemy.isBoss ? Math.max(0.75, amount * 0.75) : amount;
+      enemy.hp -= appliedDamage;
+      if (enemy.isBoss) {
+        const healthRatio = enemy.hp / enemy.maxHp;
+        const nextPhase = healthRatio <= 0.25 ? 3 : healthRatio <= 0.6 ? 2 : 1;
+        if (nextPhase > enemy.phase) {
+          enemy.phase = nextPhase;
+          enemy.speed *= nextPhase === 2 ? 1.2 : 1.3;
+          this.message.textContent = "BOSS PHASE " + nextPhase + "! The gatekeeper grows stronger!";
+          this.playSound("boss");
+          this.tweens.add({ targets: enemy.body, alpha: 0.45, yoyo: true, duration: 150, repeat: 2 });
+        }
+      }
       enemy.bar.clear();
       const barWidth = enemy.isBoss ? 64 : 46;
       const barY = enemy.isBoss ? -48 : -37;
