@@ -27,6 +27,7 @@ assert.match(battle, /showUpgradeChoices\(defender, nextLevel\)/, "Evolution mus
 assert.match(main, /transparent: true/, "Phaser canvas must support transparency.");
 assert.match(world, /scene\.background = null/, "Three.js background must remain transparent.");
 assert.match(world, /setClearColor\(0x000000, 0\)/, "Three.js canvas must clear with alpha zero.");
+assert.match(css, /three-world-canvas\{[^}]*z-index:3/, "Transparent 3D battlefield and actors must layer above Phaser sprites.");
 assert.match(world, /const frameInterval = isSmallScreen \? 42 : 32/, "3D render loop must remain frame-throttled.");
 assert.match(world, /renderer\.render\(scene, camera\);\n  raf = requestAnimationFrame\(render\);/, "3D renderer must complete its first frame before activation.");
 assert.doesNotMatch(world, /projectile\.setVisible\?\.\(false\)/, "Phaser projectile fallback must remain visible.");
