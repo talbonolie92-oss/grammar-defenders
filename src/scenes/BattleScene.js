@@ -1215,8 +1215,9 @@ export function createGameScene() {
           if (d.hp <= 0) {
             if (d.healthBar?.active) d.healthBar.destroy();
             this.tweens.add({ targets: d.group, alpha: 0, scale: .6, duration: 220, onComplete: () => d.group?.destroy() });
-            const defeatedIndex = this.defenders.indexOf(d);
-            if (defeatedIndex >= 0) this.defenders.splice(defeatedIndex, 1);
+            // Defer array removal until the forEach finishes; splicing here
+            // would skip the next defender during this frame's update pass.
+            d.defeatedByPoison = true;
             this.message.textContent = d.stats.name + " succumbed to venom!";
             this.playSound("defeat");
             return;
@@ -1252,6 +1253,10 @@ export function createGameScene() {
           if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown * (this.teamSurgeUntil && this.time.now < this.teamSurgeUntil ? 0.72 : 1); }
         }
       });
+      // Remove poisoned defenders after iteration so no neighboring unit is skipped.
+      for (let i = this.defenders.length - 1; i >= 0; i--) {
+        if (this.defenders[i].defeatedByPoison) this.defenders.splice(i, 1);
+      }
       for (let projectileIndex = this.projectiles.length - 1; projectileIndex >= 0; projectileIndex--) {
         const p = this.projectiles[projectileIndex];
         if (!p.active) {
