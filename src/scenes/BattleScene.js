@@ -188,7 +188,11 @@ export function createGameScene() {
         card.addEventListener("click", () => {
           if (card.disabled) return;
           this.selectedUnit = card.dataset.unit;
-          this.unitCards.forEach(c => c.classList.toggle("selected", c === card));
+          this.unitCards.forEach(c => {
+            const selected = c === card;
+            c.classList.toggle("selected", selected);
+            c.setAttribute("aria-pressed", String(selected));
+          });
           this.message.textContent = this.unitStats[this.selectedUnit].name + " selected. Choose a tile.";
         });
       });
@@ -1014,7 +1018,12 @@ export function createGameScene() {
       this.energyFill.style.width = (this.energy / 300 * 100) + "%";
       this.unitCards.forEach(card => {
         const stats = this.unitStats[card.dataset.unit];
-        if (stats) card.classList.toggle("unaffordable", this.energy < stats.cost);
+        if (stats) {
+          const affordable = this.energy >= stats.cost;
+          card.classList.toggle("unaffordable", !affordable);
+          card.setAttribute("aria-label", stats.name + ", " + stats.role + ", costs " + stats.cost + " energy" + (affordable ? "" : ", not enough energy yet"));
+          card.setAttribute("aria-pressed", String(card.dataset.unit === this.selectedUnit));
+        }
       });
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%" + (this.baseShield > 0 ? " +" + this.baseShield : "");
