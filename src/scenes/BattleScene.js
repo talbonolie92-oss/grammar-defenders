@@ -818,8 +818,10 @@ export function createGameScene() {
     update(time, delta) {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
       const dt = Math.min(delta / 1000, 0.1);
+      const energyDt = Math.min(delta / 1000, 1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
-      this.passiveEnergyClock += dt;
+      // Use a separate bounded clock so low frame rates do not silently slow energy income.
+      this.passiveEnergyClock += energyDt;
       let passiveEnergyGained = false;
       while (this.passiveEnergyClock >= 1) {
         this.passiveEnergyClock -= 1;
@@ -830,7 +832,7 @@ export function createGameScene() {
       if (passiveEnergyGained) this.updateHud();
       this.defenders.forEach(d => {
         if (d.stats.energyRate) {
-          d.energyClock = (d.energyClock || 0) + dt;
+          d.energyClock = (d.energyClock || 0) + energyDt;
           while (d.energyClock >= d.stats.energyInterval) {
             d.energyClock -= d.stats.energyInterval;
             const before = this.energy;
