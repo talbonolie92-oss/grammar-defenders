@@ -554,7 +554,8 @@ export function createGameScene() {
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const enemyRoster = ["Grunt", "Runner", "Brute", "Shadow Stalker", "Bone Warrior", "Venom Beast", "Dark Caster", "War Crusher", "Dread Beast", "Dark Overlord"];
-      const enemyIndex = (this.wave - 1) % 10;
+      const unlockedEnemyLevel = Math.min(8, Math.floor((this.wave - 1) * 1.15));
+      const enemyIndex = Phaser.Math.Between(0, unlockedEnemyLevel);
       const type = enemyIndex % 3;
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
       const enemyType = isBoss ? "Dark Overlord" : enemyRoster[enemyIndex];
