@@ -146,6 +146,7 @@ async function launchStudentGame(name, classSection) {
     questionIntervalSeconds: Number(studentSession.questionIntervalSeconds) || 45,
     difficulty: studentSession.difficulty || "normal",
     studentLaunch: true,
+    questions: Array.isArray(studentSession.questions) ? studentSession.questions : [],
     sessionId, playerId: studentUid, playerName: name, classSection
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
