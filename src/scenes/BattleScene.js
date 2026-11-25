@@ -1020,6 +1020,27 @@ export function createGameScene() {
               else p.target.slowUntil = this.time.now + (p.level === 2 ? 4500 : 3000);
               this.message.textContent = "Frost magic slows an enemy!";
             }
+            if (p.unitType === "archer" && p.level >= 2) {
+              let pierced = 0;
+              const maxPierce = p.level >= 3 ? 2 : 1;
+              for (let i = 0; i < this.enemies.length && pierced < maxPierce; i++) {
+                const candidate = this.enemies[i];
+                if (candidate !== p.target && candidate.group.active && candidate.lane === p.target.lane && candidate.x > p.target.x && candidate.x - p.target.x < 105) {
+                  this.damageEnemy(candidate, Math.max(1, Math.round(p.damage * (p.level >= 3 ? .7 : .45))));
+                  pierced++;
+                }
+              }
+            }
+            if (p.unitType === "thorn" && p.level >= 2) {
+              const thornRadius = p.level >= 3 ? 165 : 105;
+              const thornDamage = Math.max(2, Math.round(p.damage * (p.level >= 3 ? .8 : .45)));
+              for (let i = 0; i < this.enemies.length; i++) {
+                const nearby = this.enemies[i];
+                if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < thornRadius) {
+                  this.damageEnemy(nearby, thornDamage);
+                }
+              }
+            }
             if (p.unitType === "ember" || p.unitType === "phoenix") {
               const splashDamage = p.unitType === "phoenix" ? (p.level >= 3 ? 8 : p.level === 2 ? 5 : 3) : (p.level >= 3 ? 6 : p.level === 2 ? 3 : 1);
               const splashRange = p.level >= 3 ? 175 : p.level === 2 ? 130 : 92;
@@ -1087,7 +1108,10 @@ export function createGameScene() {
           e.attackCooldown = (e.attackCooldown || 0) - dt;
           if (e.attackCooldown <= 0) {
             const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
-            const hit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
+            const rawHit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
+            const hit = blocker.unitType === "guardian" && blocker.level >= 2
+              ? Math.max(1, Math.ceil(rawHit * (blocker.level >= 3 ? .55 : .75)))
+              : rawHit;
             blocker.hp = Math.max(0, blocker.hp - hit);
             if (blocker.healthBar?.active) this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
