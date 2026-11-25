@@ -13,7 +13,6 @@ const config = {
   parent: "game-container",
   width: 960,
   height: 340,
-  backgroundColor: "rgba(0,0,0,0)",
   transparent: true,
   resolution: pixelRatio,
   render: { antialias: true, pixelArt: false, roundPixels: true, powerPreference: "high-performance" },
