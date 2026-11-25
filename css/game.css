@@ -165,3 +165,45 @@ button{font:inherit}
 .student-link{width:100%;margin-top:10px;padding:10px;border-radius:9px;border:1px solid #4d718b;background:#081a2d;color:#bcebd4;font:inherit;font-size:10px}
 @media(orientation:landscape) and (max-height:600px){.setup-actions .start-button,.link-button{padding:8px;font-size:11px}}
 @media(max-width:480px){.setup-actions{grid-template-columns:1fr}}
+
+
+/* UX refinement: make the battlefield the main attraction and keep the deck as a slim top toolbar. */
+.game-layout{display:flex;flex-direction:column;gap:8px}
+.side-panel{order:0;width:100%;padding:8px 10px}
+.battle-panel{order:1;width:100%;min-width:0}
+.panel-heading{margin:0 2px 6px}
+.deck-grid{display:flex;flex-direction:row;gap:7px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;padding:2px 2px 6px;scrollbar-width:thin}
+.deck-grid .unit-card{flex:0 0 112px;width:112px;min-width:112px;min-height:48px;height:48px;margin:0;padding:4px 6px;gap:5px}
+.deck-grid .unit-icon{width:29px;height:29px;flex-basis:29px;font-size:16px}
+.deck-grid .unit-copy strong{font-size:9px}
+.deck-grid .unit-copy small{font-size:8px}
+.deck-grid .unit-cost{font-size:9px}
+.deck-tip{display:none}
+#game-container{width:100%;aspect-ratio:48/17;max-height:none}
+@media(orientation:landscape) and (max-height:600px){
+  body{height:100dvh;min-height:100dvh;overflow:hidden;padding:3px 6px}
+  .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
+  .topbar{flex:0 0 25px;margin:0 0 3px;min-height:0}
+  .game-layout{flex:1;min-height:0;display:flex;flex-direction:column;gap:3px}
+  .side-panel{order:0;flex:0 0 64px;min-height:64px;padding:2px 5px}
+  .panel-heading{display:flex;font-size:8px;margin:0 2px 2px}
+  .small-label{font-size:7px}
+  .deck-grid{height:45px;align-items:center;gap:5px;padding:0 1px 2px}
+  .deck-grid .unit-card{flex:0 0 104px;min-width:104px;width:104px;height:41px;min-height:41px;padding:2px 4px;gap:4px}
+  .deck-grid .unit-icon{width:25px;height:25px;flex-basis:25px;font-size:14px}
+  .deck-grid .unit-copy strong{font-size:8px}
+  .deck-grid .unit-copy small{font-size:7px}
+  .deck-grid .unit-cost{font-size:8px}
+  .battle-panel{order:1;flex:1;min-height:0;padding:4px;display:flex;flex-direction:column;gap:2px}
+  .battle-hud{flex:0 0 20px;min-height:20px;padding:0 3px 1px;gap:8px}
+  #game-container{flex:1;min-height:0;width:100%;height:100%;max-height:none;aspect-ratio:auto}
+  .battle-footer{display:none}
+  .page-footer{display:none}
+}
+.setup-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+.student-qr-wrap{display:flex;align-items:center;gap:14px;width:max-content;max-width:100%;margin:12px auto 0;padding:12px;border:1px solid #496987;border-radius:12px;background:#f8fbff;color:#14243b}
+.student-qr-wrap p{max-width:190px;margin:0;font-size:11px;line-height:1.45;font-weight:800}
+#student-qr{width:190px;height:190px;display:grid;place-items:center;background:#fff}
+#student-qr img,#student-qr canvas{display:block;max-width:190px;height:auto}
+@media(max-width:560px){.setup-actions{grid-template-columns:1fr}.student-qr-wrap{width:100%;justify-content:center}.student-qr-wrap p{max-width:130px}}
+@media(orientation:landscape) and (max-height:600px){.setup-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.student-qr-wrap{margin-top:5px;padding:5px;gap:7px}#student-qr{width:110px;height:110px}.student-qr-wrap p{font-size:8px;max-width:120px}#student-qr img,#student-qr canvas{max-width:110px}}
