@@ -15,7 +15,8 @@ The browser game currently includes:
 - Gatekeeper boss encounters on waves 5 and 10, including multi-phase behavior
 - Keep health, defeat/victory conditions, and restart flow
 - Twenty-four categorized grammar questions across middle- and upper-secondary topics
-- Correct-answer tactical power and optional synthesized battle sound effects
+- Distinct grammar-triggered tactical powers: freeze, keep restoration, armor-breaking damage, critical strikes, and energy surges
+- Optional synthesized battle sound effects
 - Responsive HTML/CSS shell and Phaser 3 battlefield
 
 ## Controls
