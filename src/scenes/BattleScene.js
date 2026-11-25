@@ -73,7 +73,10 @@ export function createGameScene() {
     create() {
       this.drawWorld();
       this.createHud();
-      this.input.on("pointerdown", pointer => this.handleBoardTap(pointer));
+      this.input.on("gameobjectdown", (pointer, gameObject) => {
+        if (!gameObject?.getData("frontierTile")) return;
+        this.handleTileTap(gameObject.getData("lane"), gameObject.getData("col"));
+      });
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
       const launchConfig = window.GRAMMAR_DEFENDERS_CONFIG;
@@ -146,6 +149,18 @@ export function createGameScene() {
         g.fillRect(GRID_X + 2, y + TILE_H - 13, GRID_W - 4, 9);
         for (let col = 0; col < 7; col++) {
           const x = GRID_X + col * TILE_W;
+          // Real Phaser hit zones make every tile independently tappable,
+          // avoiding coordinate drift on mobile FIT-scaled canvases.
+          const tileHitZone = this.add.zone(
+            x + TILE_W / 2,
+            y + (TILE_H - 3) / 2,
+            TILE_W - 4,
+            TILE_H - 7
+          ).setInteractive();
+          tileHitZone.setDepth(10);
+          tileHitZone.setData("frontierTile", true);
+          tileHitZone.setData("lane", lane);
+          tileHitZone.setData("col", col);
           g.lineStyle(1, 0xe1efbd, 0.18);
           g.strokeRoundedRect(x + 2, y + 2, TILE_W - 4, TILE_H - 7, 5);
           if ((lane + col) % 3 === 0) {
@@ -257,35 +272,25 @@ export function createGameScene() {
       });
     }
 
-    handleBoardTap(pointer) {
+    handleTileTap(lane, col) {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
-      // Map the actual browser touch/click position to the fixed 960×340 game world.
-      // Phaser pointer coordinates can be offset on mobile when FIT scaling and CSS sizing interact.
-      const canvas = this.game.canvas;
-      const rect = canvas?.getBoundingClientRect();
-      const nativeEvent = pointer.event;
-      let boardX, boardY;
-      if (rect && rect.width > 0 && rect.height > 0 && nativeEvent &&
-          Number.isFinite(nativeEvent.clientX) && Number.isFinite(nativeEvent.clientY)) {
-        boardX = (nativeEvent.clientX - rect.left) * (960 / rect.width);
-        boardY = (nativeEvent.clientY - rect.top) * (340 / rect.height);
-      } else {
-        const point = pointer.positionToCamera(this.cameras.main);
-        boardX = point.x;
-        boardY = point.y;
-      }
-      if (boardX < GRID_X || boardX >= GRID_X + GRID_W || boardY < GRID_Y || boardY >= GRID_Y + GRID_H) return;
-      const col = Math.floor((boardX - GRID_X) / TILE_W);
-      const lane = Math.floor((boardY - GRID_Y) / TILE_H);
+      if (!Number.isInteger(lane) || !Number.isInteger(col) ||
+          lane < 0 || lane >= LANES || col < 0 || col >= 7) return;
       const existing = this.defenders.find(d => d.lane === lane && d.col === col);
       if (this.removeMode) {
         if (existing) this.removeDefender(existing);
         else this.message.textContent = "No defender on that tile. Tap a deployed defender to remove it.";
         return;
       }
-      if (existing) return;
+      if (existing) {
+        this.message.textContent = "That tile is occupied. Select Remove to reposition the defender.";
+        return;
+      }
       const stats = this.unitStats[this.selectedUnit];
-      if (this.energy < stats.cost) { this.message.textContent = "Not enough energy for " + stats.name + "."; return; }
+      if (this.energy < stats.cost) {
+        this.message.textContent = "Not enough energy for " + stats.name + ".";
+        return;
+      }
       try {
         this.deployDefender(lane, col, this.selectedUnit);
         this.energy -= stats.cost;
@@ -755,11 +760,13 @@ export function createGameScene() {
       group.setActive(true).setVisible(true).setAlpha(1).setDepth(20);
       this.children.bringToTop(group);
 
-      const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
-      const waveMultiplier = 1 + (this.wave - 1) * 0.22;
+      // The opening Grunt now survives five basic Archer hits. Elite classes
+      // receive a meaningful durability jump, then scale with later waves.
+      const baseHp = 5 + Math.floor((this.wave - 1) / 3);
+      const waveMultiplier = 1 + (this.wave - 1) * 0.18;
       const enemyLevel = enemyRoster.indexOf(enemyType);
-      const hpScale = [1, .8, 1.5, 1.2, 1.35, 1.25, 1.15, 1.8, 2.1, 3.2][Math.max(0, enemyLevel)];
-      const hp = Math.max(1, Math.round((baseHp + [0, -1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
+      const hpScale = [1, 1.2, 2, 1.6, 1.8, 1.7, 1.9, 2.4, 2.8, 4.2][Math.max(0, enemyLevel)];
+      const hp = Math.max(5, Math.round((baseHp + [0, 1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
       const barWidth = isBoss ? 70 : 46;
       const bar = this.add.graphics();
       bar.fillStyle(0x342d39); bar.fillRoundedRect(-barWidth / 2, isBoss ? -57 : -39, barWidth, 7, 3);
