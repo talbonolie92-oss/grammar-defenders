@@ -13,6 +13,8 @@ assert.match(battle, /const TILE_W = 108;/, "Seven-column tile width must remain
 assert.match(battle, /const GRID_W = TILE_W \* 7;/, "Battlefield must contain seven columns.");
 assert.match(battle, /this\.defenders\.push\(/, "Defender deployment must register units.");
 assert.match(battle, /this\.enemies\.push\(enemy\)/, "Enemy spawning must register attackers.");
+assert.match(battle, /const dt = Math\.min\(delta \/ 1000, 0\.25\);/, "Combat delta time must be declared as executable code.");
+assert.doesNotMatch(battle, /spikes\\\\n\\s+const dt/, "Combat delta declaration must not be swallowed by a line comment.");
 
 const units = ["sunwell","archer","guardian","mage","ember","volt","thorn","knight","phoenix","titan","stormcaller","runeblade"];
 for (const unit of units) {
