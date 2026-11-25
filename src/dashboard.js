@@ -40,9 +40,9 @@ function watchQuestionBanks(){
 }
 function normalizeBankQuestion(raw, subject, topic){
   const q=String(raw.q??raw.question??"").trim();
-  const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1,raw.answer2,raw.answer3,raw.answer4].filter(v=>v!==undefined&&v!==null&&String(v).trim()!==""));
+  const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1??raw.optiona??raw.choicea,raw.answer2??raw.optionb??raw.choiceb,raw.answer3??raw.optionc??raw.choicec,raw.answer4??raw.optiond??raw.choiced].filter(v=>v!==undefined&&v!==null&&String(v).trim()!==""));
   const a=answers.map(v=>String(v).trim()).filter(Boolean);
-  let correct=raw.correct??raw.correctAnswer??0;
+  let correct=raw.correct??raw.correctAnswer??raw.answer??0;
   if(typeof correct==="string"){
     const value=correct.trim().toUpperCase();
     correct=/^[A-D]$/.test(value)?value.charCodeAt(0)-65:/^[1-4]$/.test(value)?Number(value)-1:Number(value);
