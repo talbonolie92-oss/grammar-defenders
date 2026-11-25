@@ -250,12 +250,39 @@ $("players-list").addEventListener("click",async e=>{
     await dbUpdate("sessions/"+selectedSession.id+"/players/"+uid,{name:safeName(name),classSection:safeName(cls),editedByTeacher:true,updatedAt:Date.now()});
   }else if(confirm("Remove this student from the roster and block this device from rejoining this session?")){await dbSet("sessions/"+selectedSession.id+"/blockedPlayers/"+uid,true);await dbRemove("sessions/"+selectedSession.id+"/players/"+uid);}
 });
+function buildPlayerPerformance(){
+  const roster=selectedSession?.players||{};
+  const attempts=Object.values(selectedSession?.attempts||{});
+  const results=selectedSession?.results||{};
+  const stats={};
+  Object.entries(roster).forEach(([uid,p])=>{stats[uid]={uid,name:p.name||"Student",classSection:p.classSection||"",answered:0,correct:0,incorrect:0,completed:Boolean(results[uid]),result:results[uid]||null};});
+  attempts.forEach(a=>{
+    const uid=a.playerId;
+    if(!uid)return;
+    stats[uid]??={uid,name:a.playerName||"Student",classSection:a.classSection||"",answered:0,correct:0,incorrect:0,completed:Boolean(results[uid]),result:results[uid]||null};
+    stats[uid].answered++;
+    if(a.correct)stats[uid].correct++;else stats[uid].incorrect++;
+  });
+  Object.values(stats).forEach(p=>{
+    if(!p.answered&&p.result){
+      p.answered=Number(p.result.questionsAnswered)||0;
+      p.correct=Number(p.result.correctAnswers)||0;
+      p.incorrect=Number(p.result.incorrectAnswers)||Math.max(0,p.answered-p.correct);
+    }
+    p.accuracy=p.answered?Math.round(p.correct/p.answered*100):0;
+  });
+  return Object.values(stats).sort((a,b)=>a.name.localeCompare(b.name));
+}
 function renderReport(){
   const roster=selectedSession?.players||{};
-  const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({uid,...r,name:roster[uid]?.name||r.name,classSection:roster[uid]?.classSection||r.classSection}));
-  const total=results.length,correct=results.reduce((n,r)=>n+(Number(r.correctAnswers)||0),0),answered=results.reduce((n,r)=>n+(Number(r.questionsAnswered)||0),0),accuracy=answered?Math.round(correct/answered*100):0;
-  $("report-summary").innerHTML=[["Students",Object.keys(selectedSession?.players||{}).length],["Completed",total],["Accuracy",accuracy+"%"]].map(([label,value])=>'<div class="metric"><strong>'+escapeHtml(value)+'</strong><small>'+label+'</small></div>').join("");
-  $("report-list").innerHTML=results.length?results.map(r=>'<div class="report-row"><div><b>'+escapeHtml(r.name||"Student")+'</b><small>'+escapeHtml(r.classSection||"")+'</small></div><b>'+escapeHtml(r.correctAnswers||0)+' / '+escapeHtml(r.questionsAnswered||0)+'</b><small>'+escapeHtml(r.accuracy||0)+'% accuracy</small></div>').join(""):'<div class="empty">Results will appear after students finish.</div>';
+  const players=buildPlayerPerformance();
+  const completed=players.filter(p=>p.completed).length;
+  const answered=players.reduce((n,p)=>n+p.answered,0);
+  const correct=players.reduce((n,p)=>n+p.correct,0);
+  const accuracy=answered?Math.round(correct/answered*100):0;
+  const active=players.filter(p=>p.answered>0&&!p.completed).length;
+  $("report-summary").innerHTML=[["Students",players.length],["Answered",answered],["Correct",correct],["Accuracy",accuracy+"%"],["Completed",completed],["In progress",active]].map(([label,value])=>'<div class="metric"><strong>'+escapeHtml(value)+'</strong><small>'+label+'</small></div>').join("");
+  $("report-list").innerHTML=players.length?players.map(p=>'<div class="report-row"><div><b>'+escapeHtml(p.name)+'</b><small>'+escapeHtml(p.classSection||"No class")+" • "+(p.completed?"Completed":p.answered?"In progress":"Not started")+'</small></div><b>'+p.correct+' / '+p.answered+'</b><small>'+p.incorrect+' wrong • '+p.accuracy+'% accuracy</small></div>').join(""):'<div class="empty">Students will appear when they join.</div>';
   const attempts=Object.values(selectedSession?.attempts||{});
   const topics={}; const misses={};
   attempts.forEach(a=>{const topic=a.topic||"Uncategorized";topics[topic]??={total:0,correct:0};topics[topic].total++;if(a.correct)topics[topic].correct++;else{const key=a.question||"Unknown question";misses[key]=(misses[key]||0)+1;}});
@@ -264,7 +291,9 @@ function renderReport(){
   $("topic-analysis").innerHTML=topicRows.length?topicRows.join("")+(missedRows.length?'<p class="muted">Most commonly missed questions</p>'+missedRows.join(""):''):'<div class="empty">Topic and question analysis will appear as students answer questions.</div>';
 }
 $("export-report").addEventListener("click",()=>{
-  const roster=selectedSession?.players||{};const results=Object.entries(selectedSession?.results||{}).map(([uid,r])=>({...r,name:roster[uid]?.name||r.name,classSection:roster[uid]?.classSection||r.classSection}));const rows=[["Student","Class/Section","Questions","Correct","Incorrect","Accuracy","Kills","Waves","Outcome"],...results.map(r=>[r.name,r.classSection,r.questionsAnswered,r.correctAnswers,r.incorrectAnswers,r.accuracy,r.kills,r.wave,r.won?"Victory":"Defeat"])];
+  const roster=selectedSession?.players||{};
+  const players=buildPlayerPerformance();
+  const rows=[["Student","Class/Section","Questions answered","Correct","Incorrect","Accuracy","Completed","Kills","Waves","Outcome"],...players.map(p=>[p.name,p.classSection,p.answered,p.correct,p.incorrect,p.accuracy+"%",p.completed?"Yes":"No",p.result?.kills??"",p.result?.wave??"",p.result?(p.result.won?"Victory":"Defeat"):""])];
   const attempts=Object.values(selectedSession?.attempts||{});
   rows.push([],["QUESTION ATTEMPTS"],["Student","Class/Section","Topic","Question","Selected answer","Correct answer","Correct","Boss question"],...attempts.map(x=>[roster[x.playerId]?.name||x.playerName,roster[x.playerId]?.classSection||x.classSection,x.topic,x.question,x.selectedAnswer,x.correctAnswer,x.correct?"Yes":"No",x.isBoss?"Yes":"No"]));
   const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
