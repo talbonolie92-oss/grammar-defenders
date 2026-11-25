@@ -824,14 +824,25 @@ export function createGameScene() {
         if (d.stats.health || d.stats.energyRate) return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
-          const target = this.enemies
-            .filter(e => e.lane === d.lane && e.x > d.x && e.x - d.x < d.stats.range)
-            .sort((a, b) => a.x - b.x)[0];
+          // Select the nearest valid target in one pass; avoid allocating and sorting
+          // temporary arrays for every defender on every animation frame.
+          let target = null;
+          let nearestDistance = d.stats.range;
+          for (let i = 0; i < this.enemies.length; i++) {
+            const candidate = this.enemies[i];
+            if (!candidate.group.active || candidate.lane !== d.lane || candidate.x <= d.x) continue;
+            const distance = candidate.x - d.x;
+            if (distance < nearestDistance) {
+              nearestDistance = distance;
+              target = candidate;
+            }
+          }
           if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown; }
         }
       });
-      this.projectiles.forEach(p => {
-        if (!p.active) return;
+      for (let projectileIndex = this.projectiles.length - 1; projectileIndex >= 0; projectileIndex--) {
+        const p = this.projectiles[projectileIndex];
+        if (!p.active) continue;
         const dx = p.target.x - p.x, dy = p.target.y - p.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 13 || !p.target.group.active) {
@@ -856,10 +867,18 @@ export function createGameScene() {
         } else {
           p.x += dx / dist * p.projectileSpeed * dt; p.y += dy / dist * p.projectileSpeed * dt;
         }
-      });
-      this.enemies.slice().forEach(e => {
+      }
+      for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
+        const e = this.enemies[enemyIndex];
         if (!e.group.active) return;
-        const blocker = this.defenders.find(d => d.stats.health && d.lane === e.lane && d.hp > 0 && d.x < e.x && e.x - d.x < 42);
+        let blocker = null;
+        for (let i = 0; i < this.defenders.length; i++) {
+          const candidate = this.defenders[i];
+          if (candidate.stats.health && candidate.lane === e.lane && candidate.hp > 0 && candidate.x < e.x && e.x - candidate.x < 42) {
+            blocker = candidate;
+            break;
+          }
+        }
         if (blocker) {
           e.x = Math.max(e.x, blocker.x + 34);
           e.attackCooldown = (e.attackCooldown || 0) - dt;
@@ -893,8 +912,9 @@ export function createGameScene() {
           e.feet[1].rotation = -Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
         }
         if (e.x < 65) this.damageBase(e);
-      });
-      this.projectiles = this.projectiles.filter(p => p.active);
+      }
+      // Compact projectile references only when something was removed.
+      if (this.projectiles.some(p => !p.active)) this.projectiles = this.projectiles.filter(p => p.active);
       this.checkWaveProgress();
     }
 
