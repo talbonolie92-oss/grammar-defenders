@@ -5,7 +5,7 @@ const GRID_X = 72;
 const GRID_Y = 86;
 const GRID_W = TILE_W * 7;
 const GRID_H = TILE_H * LANES;
-import { QUESTIONS } from "../data/questions.js";
+import { QUESTIONS, BOSS_QUESTIONS } from "../data/questions.js";
 
 export function createGameScene() {
   return class BattleScene extends Phaser.Scene {
@@ -24,6 +24,12 @@ export function createGameScene() {
       this.spawnClock = 0;
       this.questionClock = 0;
       this.soundOn = false;
+      this.battleStarted = false;
+      this.questionIntervalSeconds = 45;
+      this.difficulty = "normal";
+      this.musicNodes = [];
+      this.musicGain = null;
+      this.musicChordIndex = 0;
       this.enemiesSpawnedThisWave = 0;
       this.enemiesPerWave = 8;
       this.waveActive = true;
@@ -41,10 +47,16 @@ export function createGameScene() {
       this.selectedUnit = "sprout";
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
-        sprout: { name: "Grammar Sprout", cost: 50, damage: 1, cooldown: 1.15, range: 490, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
-        archer: { name: "Rune Archer", cost: 65, damage: 1, cooldown: 0.62, range: 560, color: 0xffd27a, projectileSpeed: 470, radius: 5, symbol: "➶", body: 0xe8b96f, role: "Rapid fire" },
-        mage: { name: "Frost Mage", cost: 80, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "✧", body: 0xb9a8f5, role: "Frost slow" },
-        guardian: { name: "Aegis Guardian", cost: 75, damage: 0, cooldown: 0, range: 0, color: 0x9fc8f4, projectileSpeed: 0, radius: 0, symbol: "⬟", body: 0x8da8c5, role: "Lane blocker", health: 24 }
+        sprout: { name: "Grammar Sprout", cost: 25, damage: 1, cooldown: 1.2, range: 460, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
+        archer: { name: "Rune Archer", cost: 50, damage: 1, cooldown: 0.62, range: 560, color: 0xffd27a, projectileSpeed: 470, radius: 5, symbol: "➶", body: 0xe8b96f, role: "Rapid fire" },
+        guardian: { name: "Aegis Guardian", cost: 75, damage: 0, cooldown: 0, range: 0, color: 0x9fc8f4, projectileSpeed: 0, radius: 0, symbol: "⬟", body: 0x8da8c5, role: "Lane blocker", health: 38 },
+        mage: { name: "Frost Mage", cost: 90, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "❄", body: 0xb9a8f5, role: "Frost slow" },
+        ember: { name: "Ember Mage", cost: 110, damage: 3, cooldown: 2.2, range: 430, color: 0xff925d, projectileSpeed: 250, radius: 12, symbol: "♨", body: 0xe67a4e, role: "Splash damage" },
+        volt: { name: "Volt Beast", cost: 130, damage: 2, cooldown: 1.55, range: 510, color: 0xf2ed8b, projectileSpeed: 390, radius: 10, symbol: "ϟ", body: 0x77bad7, role: "Chain shock" },
+        thorn: { name: "Thorn Dragon", cost: 150, damage: 4, cooldown: 2.3, range: 520, color: 0x9ce28c, projectileSpeed: 300, radius: 12, symbol: "♜", body: 0x56885d, role: "Heavy damage" },
+        knight: { name: "Iron Knight", cost: 175, damage: 0, cooldown: 0, range: 0, color: 0xcbdcf0, projectileSpeed: 0, radius: 0, symbol: "⚔", body: 0x718aa8, role: "Heavy blocker", health: 70 },
+        phoenix: { name: "Solar Phoenix", cost: 200, damage: 5, cooldown: 2.8, range: 540, color: 0xffc16d, projectileSpeed: 320, radius: 14, symbol: "♨", body: 0xe58b55, role: "Lane burst" },
+        titan: { name: "Ancient Titan", cost: 250, damage: 0, cooldown: 0, range: 0, color: 0xd8c1ff, projectileSpeed: 0, radius: 0, symbol: "✹", body: 0x9a83c7, role: "Ultimate fortress", health: 130 }
       };
     }
 
@@ -52,11 +64,26 @@ export function createGameScene() {
       this.drawWorld();
       this.createHud();
       this.input.on("pointerdown", pointer => this.handleBoardTap(pointer));
+      this.events.on("shutdown", () => this.clearTimers());
+      this.updateHud();
+    }
+
+    startBattle(config = {}) {
+      if (this.battleStarted) return;
+      this.battleMode = config.mode === "fixed" ? "fixed" : "endless";
+      this.endlessMode = this.battleMode === "endless";
+      this.timeLimitMinutes = Phaser.Math.Clamp(Number(config.timeLimitMinutes) || 10, 1, 180);
+      this.remainingSeconds = this.timeLimitMinutes * 60;
+      this.elapsedSeconds = 0;
+      this.questionIntervalSeconds = Phaser.Math.Clamp(Number(config.questionIntervalSeconds) || 45, 15, 180);
+      this.difficulty = ["easy", "normal", "hard"].includes(config.difficulty) ? config.difficulty : "normal";
+      this.battleStarted = true;
+      if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
+      this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
       this.spawnTimer = this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
-      this.time.addEvent({ delay: 24000, loop: true, callback: () => this.showQuestion() });
+      this.questionTimer = this.time.addEvent({ delay: this.questionIntervalSeconds * 1000, loop: true, callback: () => this.showQuestion(false) });
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
-      this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
     }
 
@@ -173,7 +200,7 @@ export function createGameScene() {
     }
 
     handleBoardTap(pointer) {
-      if (this.gameOver || this.questionActive || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
+      if (!this.battleStarted || this.gameOver || this.questionActive || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
       const col = Math.floor((pointer.x - GRID_X) / TILE_W);
       const lane = Math.floor((pointer.y - GRID_Y) / TILE_H);
       if (this.defenders.some(d => d.lane === lane && d.col === col)) return;
@@ -247,7 +274,7 @@ export function createGameScene() {
       if (unitType !== "guardian") this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
 
       let healthBar = null;
-      if (unitType === "guardian") {
+      if (stats.health) {
         healthBar = this.add.graphics();
         group.add(healthBar);
         this.drawGuardianHealth(healthBar, stats.health, stats.health);
@@ -426,10 +453,10 @@ export function createGameScene() {
     }
 
     update(time, delta) {
-      if (this.gameOver || this.questionActive) return;
+      if (!this.battleStarted || this.gameOver || this.questionActive) return;
       const dt = Math.min(delta / 1000, 0.05);
       this.defenders.forEach(d => {
-        if (d.unitType === "guardian") return;
+        if (d.stats.health) return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
           const target = this.enemies
@@ -456,7 +483,7 @@ export function createGameScene() {
         }
       });
       this.enemies.slice().forEach(e => {
-        const blocker = this.defenders.find(d => d.unitType === "guardian" && d.lane === e.lane && d.hp > 0 && d.x < e.x && e.x - d.x < 42);
+        const blocker = this.defenders.find(d => d.stats.health && d.lane === e.lane && d.hp > 0 && d.x < e.x && e.x - d.x < 42);
         if (blocker) {
           e.x = Math.max(e.x, blocker.x + 34);
           e.attackCooldown = (e.attackCooldown || 0) - dt;
@@ -709,7 +736,7 @@ export function createGameScene() {
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%";
       if (this.timerText) {
-        const seconds = this.endlessMode ? this.remainingSeconds : this.elapsedSeconds;
+        const seconds = this.remainingSeconds;
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         this.timerText.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
@@ -717,15 +744,13 @@ export function createGameScene() {
     }
 
     tickBattleClock() {
-      if (this.gameOver || this.questionActive) return;
-      if (this.endlessMode) {
+      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      {
         this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
         if (this.remainingSeconds === 0) {
           this.endGame(true, "TIME LIMIT REACHED!");
           return;
         }
-      } else {
-        this.elapsedSeconds++;
       }
       this.updateHud();
     }
@@ -733,6 +758,8 @@ export function createGameScene() {
     endGame(won, customTitle = "") {
       this.gameOver = true;
       if (this.spawnTimer) this.spawnTimer.paused = true;
+      if (this.questionTimer) this.questionTimer.paused = true;
+      this.stopMusic();
       this.add.rectangle(480, 315, 960, 540, 0x081323, .76);
       this.add.text(480, 260, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
       this.add.text(480, 315, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
@@ -740,6 +767,6 @@ export function createGameScene() {
       this.playSound(won ? "victory" : "defeat");
     }
 
-    clearTimers() { this.time.removeAllEvents(); }
+    clearTimers() { this.time.removeAllEvents(); this.stopMusic(); }
   };
 }
