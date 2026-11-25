@@ -9,8 +9,8 @@ export async function createThreeWorld(container) {
   scene.fog = new THREE.Fog(0x10283a, 16, 34);
 
   const camera = new THREE.OrthographicCamera(-9.6, 9.6, 3.4, -3.4, 0.1, 80);
-  camera.position.set(0, 20, 0);
-  camera.up.set(0, 0, -1);
+  camera.position.set(0, 18, 7);
+  camera.up.set(0, 1, 0);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({
