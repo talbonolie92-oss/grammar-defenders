@@ -55,6 +55,8 @@ export function createGameScene() {
       this.incorrectAnswers = 0;
       this.selectedUnit = "sunwell";
       this.upgradeMode = false;
+      this.upgradeChoiceActive = false;
+      this.upgradeChoiceOverlay = null;
       this.advancedDeckUnlocked = false;
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
@@ -295,7 +297,7 @@ export function createGameScene() {
     }
 
     handleBoardPointer(pointer) {
-      if (!pointer || !this.battleStarted || this.gameOver || this.questionActive) return;
+      if (!pointer || !this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
       // pointer.x/y are already converted by Phaser's Scale Manager. Transform
       // through the active camera, then map the point to one of the 35 tiles.
       const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
@@ -310,7 +312,7 @@ export function createGameScene() {
     }
 
     handleTileTap(lane, col) {
-      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
       if (!Number.isInteger(lane) || !Number.isInteger(col) ||
           lane < 0 || lane >= LANES || col < 0 || col >= 7) return;
       const existing = this.defenders.find(d => d.lane === lane && d.col === col);
@@ -553,7 +555,8 @@ export function createGameScene() {
       this.defenders.push({
         lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35),
         unitType, stats, hp: maxHp, maxHp, level: 1, levelBadge, evolutionMark,
-        healthBar, attackCooldown: 0, legs
+        healthBar, attackCooldown: 0, legs, upgradePaths: [], damageReduction: 0,
+        counterDamageMultiplier: 1
       });
       this.message.textContent = stats.name + " deployed! Upgrade it later to unlock stronger abilities.";
       this.playSound("deploy");
@@ -613,8 +616,99 @@ export function createGameScene() {
       }
       this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
       this.updateHud();
-      this.message.textContent = defender.stats.name + " evolved to Tier " + nextLevel + "! Cost: " + cost + " energy.";
+      this.message.textContent = defender.stats.name + " reached Tier " + nextLevel + "! Choose a specialization.";
       this.playSound("deploy");
+      this.showUpgradeChoices(defender, nextLevel);
+    }
+
+    showUpgradeChoices(defender, tier) {
+      if (!defender || !this.defenders.includes(defender)) return;
+      this.upgradeChoiceActive = true;
+      if (this.spawnTimer) this.spawnTimer.paused = true;
+      if (this.questionTimer) this.questionTimer.paused = true;
+      const overlay = this.add.container(0, 0).setDepth(950);
+      this.upgradeChoiceOverlay = overlay;
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .88).setInteractive();
+      const panel = this.add.rectangle(480, 170, 820, 292, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const heading = this.add.text(480, 43, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
+        fontFamily: "Nunito", fontSize: "20px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
+      }).setOrigin(.5);
+      const sub = this.add.text(480, 70, defender.stats.name + " — select one permanent upgrade path", {
+        fontFamily: "Nunito", fontSize: "12px", color: "#d2e4f0", fontStyle: "800"
+      }).setOrigin(.5);
+      overlay.add([shade, panel, heading, sub]);
+      const choices = [
+        { id: "vanguard", title: "⚔ VANGUARD", desc: "More attack or counter damage\nand faster strikes", color: 0x70453e },
+        { id: "fortress", title: "🛡 FORTRESS", desc: "Much tougher defender\nand reduced incoming damage", color: 0x365a70 },
+        { id: "mystic", title: "✦ MYSTIC", desc: "Greater range / projectile speed\nor stronger energy production", color: 0x514477 }
+      ];
+      choices.forEach((choice, index) => {
+        const x = 205 + index * 275;
+        const card = this.add.rectangle(x, 190, 245, 165, choice.color, 1)
+          .setStrokeStyle(2, 0xc8e7d8).setInteractive({ useHandCursor: true });
+        const title = this.add.text(x, 143, choice.title, {
+          fontFamily: "Nunito", fontSize: "16px", color: "#fff1c5", fontStyle: "1000"
+        }).setOrigin(.5);
+        const desc = this.add.text(x, 202, choice.desc, {
+          fontFamily: "Nunito", fontSize: "13px", color: "#f0f5f8", fontStyle: "800",
+          align: "center", lineSpacing: 7
+        }).setOrigin(.5);
+        const pick = this.add.text(x, 251, "SELECT", {
+          fontFamily: "Nunito", fontSize: "12px", color: "#a9f0cf", fontStyle: "1000", letterSpacing: 1
+        }).setOrigin(.5);
+        card.on("pointerover", () => card.setStrokeStyle(4, 0xffdf78));
+        card.on("pointerout", () => card.setStrokeStyle(2, 0xc8e7d8));
+        card.on("pointerdown", () => this.applyDefenderUpgradeChoice(defender, choice.id));
+        overlay.add([card, title, desc, pick]);
+      });
+      overlay.add(this.add.text(480, 300, "Battle pauses while you choose. Each tier grants one specialization.", {
+        fontFamily: "Nunito", fontSize: "11px", color: "#b8ccdc", fontStyle: "700"
+      }).setOrigin(.5));
+    }
+
+    applyDefenderUpgradeChoice(defender, choice) {
+      if (!this.upgradeChoiceActive || !defender || !this.defenders.includes(defender)) return;
+      defender.upgradePaths = defender.upgradePaths || [];
+      defender.upgradePaths.push(choice);
+      if (choice === "vanguard") {
+        if (defender.stats.damage > 0) {
+          defender.stats.damage = Math.max(1, Math.round(defender.stats.damage * 1.25));
+          defender.stats.cooldown = Math.max(.38, defender.stats.cooldown * .9);
+        } else {
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.3;
+        }
+      } else if (choice === "fortress") {
+        const oldMax = defender.maxHp;
+        defender.maxHp = Math.round(defender.maxHp * 1.45);
+        defender.hp = Math.min(defender.maxHp, defender.hp + Math.round(oldMax * .45));
+        defender.damageReduction = Math.min(.35, (defender.damageReduction || 0) + .15);
+      } else if (choice === "mystic") {
+        if (defender.stats.energyRate) {
+          defender.stats.energyRate = Math.round(defender.stats.energyRate * 1.35);
+        } else if (defender.stats.damage > 0) {
+          defender.stats.range = Math.round(defender.stats.range * 1.2);
+          defender.stats.projectileSpeed = Math.round(defender.stats.projectileSpeed * 1.2);
+        } else {
+          defender.maxHp = Math.round(defender.maxHp * 1.2);
+          defender.hp = Math.min(defender.maxHp, defender.hp + Math.round(defender.maxHp * .2));
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.15;
+        }
+      }
+      if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
+      if (defender.group?.active) {
+        const color = choice === "vanguard" ? 0xffa27d : choice === "fortress" ? 0x9bc9ff : 0xc5a7ff;
+        const glow = this.add.circle(defender.x, defender.y, 34, color, .22).setDepth(47);
+        this.tweens.add({ targets: glow, scale: 1.9, alpha: 0, duration: 420, onComplete: () => glow.destroy() });
+      }
+      if (this.upgradeChoiceOverlay) this.upgradeChoiceOverlay.destroy(true);
+      this.upgradeChoiceOverlay = null;
+      this.upgradeChoiceActive = false;
+      if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
+      if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
+      this.updateHud();
+      const label = choice === "vanguard" ? "Vanguard" : choice === "fortress" ? "Fortress" : "Mystic";
+      this.message.textContent = defender.stats.name + " gained the " + label + " path!";
+      this.playSound("wave");
     }
 
     unlockAdvancedDeck() {
@@ -782,7 +876,7 @@ export function createGameScene() {
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
       const bossWave = this.wave % 5 === 0;
-      if (this.enemies.length >= (bossWave ? 26 : (this.wave > 5 ? 22 : 18))) return;
+      if (this.enemies.length >= (bossWave ? 34 : (this.wave > 5 ? 30 : 20))) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
@@ -955,14 +1049,14 @@ export function createGameScene() {
         const bossWave = this.wave % 5 === 0;
         // Boss waves are full assaults: a larger minion wave followed by the boss.
         this.enemiesPerWave = bossWave
-          ? Math.min(20, 14 + Math.floor(this.wave / 5) + (this.wave > 5 ? 3 : 0))
-          : Math.min(19, 8 + Math.floor((this.wave - 1) * 0.8) + (this.wave > 5 ? 3 : 0));
+          ? Math.min(28, 16 + Math.floor(this.wave / 5) * 2 + (this.wave > 5 ? 3 : 0))
+          : Math.min(28, 8 + Math.floor((this.wave - 1) * 1.2) + (this.wave > 5 ? 3 : 0));
         if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
         this.waveActive = true;
         this.waveTransitioning = false;
         this.spawnTimer.delay = bossWave
-          ? 1350
-          : Math.max(this.wave > 5 ? 720 : 900, 3200 - (this.wave - 1) * 170 - (this.wave > 5 ? 250 : 0));
+          ? Math.max(850, 1350 - Math.floor(this.wave / 5) * 45)
+          : Math.max(620, 3200 - (this.wave - 1) * 170 - (this.wave > 5 ? 250 : 0));
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -988,7 +1082,7 @@ export function createGameScene() {
     }
 
     update(time, delta) {
-      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
       const dt = Math.min(delta / 1000, 0.1);
       const energyDt = Math.min(delta / 1000, 1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
@@ -1153,9 +1247,9 @@ export function createGameScene() {
           if (e.attackCooldown <= 0) {
             const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
             const rawHit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
-            const hit = blocker.unitType === "guardian" && blocker.level >= 2
-              ? Math.max(1, Math.ceil(rawHit * (blocker.level >= 3 ? .55 : .75)))
-              : rawHit;
+            const guardReduction = blocker.unitType === "guardian" && blocker.level >= 2
+              ? (blocker.level >= 3 ? .45 : .25) : 0;
+            const hit = Math.max(1, Math.ceil(rawHit * (1 - guardReduction) * (1 - Math.min(.35, blocker.damageReduction || 0))));
             blocker.hp = Math.max(0, blocker.hp - hit);
             if (e.enemyType === "Venom Beast") {
               const poisonAlreadyActive = blocker.poisonUntil && blocker.poisonUntil > this.time.now;
@@ -1179,7 +1273,7 @@ export function createGameScene() {
             blocker.retaliateCooldown = (blocker.retaliateCooldown || 0) - dt;
             if (blocker.retaliateCooldown <= 0 && e.group.active) {
               const counterDamage = blocker.stats.damage > 0
-                ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65)))
+                ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65) * (blocker.counterDamageMultiplier || 1)))
                 : blocker.unitType === "titan" ? 14
                 : blocker.unitType === "runeblade" ? (blocker.level >= 3 ? 18 : blocker.level === 2 ? 13 : 10)
                 : blocker.unitType === "knight" ? 6
@@ -1227,7 +1321,7 @@ export function createGameScene() {
               for (let i = this.defenders.length - 1; i >= 0; i--) {
                 const defender = this.defenders[i];
                 if (defender.lane !== e.lane || defender.hp <= 0) continue;
-                defender.hp = Math.max(0, defender.hp - pulseDamage);
+                defender.hp = Math.max(0, defender.hp - Math.max(1, Math.ceil(pulseDamage * (1 - Math.min(.35, defender.damageReduction || 0)))));
                 defendersHit++;
                 if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
                 if (defender.hp <= 0) {
@@ -1622,7 +1716,7 @@ export function createGameScene() {
     }
 
     tickBattleClock() {
-      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
       {
         this.elapsedSeconds++;
         this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
