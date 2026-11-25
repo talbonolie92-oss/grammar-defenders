@@ -553,7 +553,7 @@ export function createGameScene() {
       const base = this.unitStats[defender.unitType];
       if (base.damage > 0) defender.stats.damage = Math.round(base.damage * multiplier);
       if (base.cooldown > 0) defender.stats.cooldown = Math.max(.45, base.cooldown * (nextLevel === 2 ? .88 : .76));
-      defender.maxHp = Math.round((defender.maxHp / (nextLevel === 2 ? 1 : 1)) * 1.35);
+      defender.maxHp = Math.round(defender.maxHp * 1.35);
       defender.hp = Math.min(defender.maxHp, Math.round(defender.hp + defender.maxHp * .25));
       if (defender.unitType === "sunwell") defender.stats.energyRate = base.energyRate * nextLevel;
       defender.levelBadge?.setText(nextLevel === 2 ? "II" : "III");
@@ -1019,7 +1019,7 @@ export function createGameScene() {
                 }
               }
             }
-            if (p.unitType === "volt") {
+            if (p.unitType === "volt" || p.unitType === "stormcaller") {
               // Ignore destroyed targets and select the nearest live enemy without sorting.
               let chainTarget = null;
               let nearestChainDistance = 145;
