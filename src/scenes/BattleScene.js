@@ -11,7 +11,7 @@ export function createGameScene() {
   return class BattleScene extends Phaser.Scene {
     constructor() {
       super("BattleScene");
-      this.energy = 100;
+      this.energy = 150;
       this.baseHealth = 100;
       this.baseShield = 0;
       this.laneLives = [3, 3, 3, 3, 3];
@@ -258,9 +258,14 @@ export function createGameScene() {
     }
 
     handleBoardTap(pointer) {
-      if (!this.battleStarted || this.gameOver || this.questionActive || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
-      const col = Math.floor((pointer.x - GRID_X) / TILE_W);
-      const lane = Math.floor((pointer.y - GRID_Y) / TILE_H);
+      if (!this.battleStarted || this.gameOver || this.questionActive) return;
+      // Convert screen taps through the active camera so scaled landscape canvases select the correct tile.
+      const point = pointer.positionToCamera(this.cameras.main);
+      const boardX = point.x;
+      const boardY = point.y;
+      if (boardX < GRID_X || boardX >= GRID_X + GRID_W || boardY < GRID_Y || boardY >= GRID_Y + GRID_H) return;
+      const col = Math.floor((boardX - GRID_X) / TILE_W);
+      const lane = Math.floor((boardY - GRID_Y) / TILE_H);
       const existing = this.defenders.find(d => d.lane === lane && d.col === col);
       if (this.removeMode) {
         if (existing) this.removeDefender(existing);
@@ -826,7 +831,7 @@ export function createGameScene() {
       while (this.passiveEnergyClock >= 1) {
         this.passiveEnergyClock -= 1;
         const before = this.energy;
-        this.energy = Math.min(300, this.energy + 1);
+        this.energy = Math.min(300, this.energy + 3);
         passiveEnergyGained ||= this.energy > before;
       }
       if (passiveEnergyGained) this.updateHud();
