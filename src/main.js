@@ -27,6 +27,7 @@ let stopPlayerWatch = null;
 let stopBlockedWatch = null;
 let resultSaved = false;
 let resultSavePromise = null;
+let pendingResult = null;
 let studentLaunchStarted = false;
 
 if (sessionId) {
@@ -175,6 +176,7 @@ async function launchStudentGame(name, classSection) {
   };
   window.GD_SAVE_RESULT = async result => {
     if (!studentUid || resultSaved) return;
+    pendingResult = result;
     if (resultSavePromise) return resultSavePromise;
     resultSavePromise = (async () => {
       const completedAt = Date.now();
@@ -188,6 +190,7 @@ async function launchStudentGame(name, classSection) {
             status: "finished", finishedAt: completedAt, active: false
           });
           resultSaved = true;
+          pendingResult = null;
           return;
         } catch (error) {
           lastError = error;
@@ -210,6 +213,11 @@ async function launchStudentGame(name, classSection) {
 document.addEventListener("visibilitychange", () => {
   if (!game || !game.scene) return;
   if (document.hidden) game.loop.sleep(); else game.loop.wake();
+});
+window.addEventListener("online", () => {
+  if (pendingResult && !resultSaved && typeof window.GD_SAVE_RESULT === "function") {
+    window.GD_SAVE_RESULT(pendingResult).catch(error => console.warn("Result sync will retry when the connection returns:", error));
+  }
 });
 window.addEventListener("beforeunload", () => {
   if (stopSessionWatch) stopSessionWatch();
