@@ -466,3 +466,12 @@ body.playing #game-container{
     max-width: 100%;
   }
 }
+
+/* Defender evolution and post-boss elite unlocks */
+.deck-grid .unit-card.deck-locked{opacity:.42;filter:grayscale(.85);cursor:not-allowed;border-style:dashed}
+.deck-grid .unit-card[data-unit="stormcaller"]{background:linear-gradient(135deg,#28566b,#1b354f);border-color:#83e4f1}
+.deck-grid .unit-card[data-unit="runeblade"]{background:linear-gradient(135deg,#654c38,#3e3040);border-color:#e7bd87}
+.deck-grid .unit-card[data-unit="stormcaller"] .unit-icon{background:linear-gradient(145deg,#d8ffff,#65bfd3);color:#17435a}
+.deck-grid .unit-card[data-unit="runeblade"] .unit-icon{background:linear-gradient(145deg,#ffe0ad,#b77c58);color:#513324}
+#upgrade-mode-button.active{border-color:#ffe18b;background:linear-gradient(180deg,#765b27,#493d24);color:#fff1bd;box-shadow:0 0 12px #f6d47b66}
+@media(orientation:landscape) and (max-height:600px){#upgrade-mode-button{padding:5px 8px;font-size:9px}}
