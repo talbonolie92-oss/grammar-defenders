@@ -20,7 +20,8 @@ export async function createThreeWorld(container) {
     depth: true,
     stencil: false
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+  const isSmallScreen = window.matchMedia?.("(max-width: 900px)").matches || false;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1 : 1.25));
   renderer.setSize(960, 340, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -222,7 +223,7 @@ export async function createThreeWorld(container) {
   };
   let lastActorSync = 0;
   const syncActors = (defenders = [], enemies = [], projectiles = [], now = 0) => {
-    if (now - lastActorSync < 32) return;
+    if (now - lastActorSync < 40) return;
     lastActorSync = now;
     const seen = new Set();
     const syncList = (list, isEnemy) => list.forEach(actor => {
@@ -301,7 +302,7 @@ export async function createThreeWorld(container) {
   let lastFrame = 0;
   const render = now => {
     raf = requestAnimationFrame(render);
-    if (now - lastFrame < 32) return;
+    if (now - lastFrame < (isSmallScreen ? 42 : 32)) return;
     lastFrame = now;
     portal.rotation.z = now * 0.00022;
     portalMat.emissiveIntensity = 1.05 + Math.sin(now * 0.0018) * 0.28;
