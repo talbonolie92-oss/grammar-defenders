@@ -2,7 +2,7 @@ import { firebaseReady, watchAuth, teacherSignIn, teacherSignOut, dbRef, dbGet, 
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
-let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, selectedSession=null, sessionCache=[];
+let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[];
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const setStatus=(id,msg)=>{if($(id))$(id).textContent=msg;};
 const statusClass=s=>["waiting","running","ended"].includes(s)?s:"ended";
@@ -25,16 +25,98 @@ else{
     dashboardPanel.classList.toggle("hidden",!isTeacher);
     $("logout-button").classList.toggle("hidden",!isTeacher);
     $("teacher-email").textContent=isTeacher?user.email:"";
-    if(isTeacher)watchSessions();else stopWatching();
+    if(isTeacher){watchSessions();watchQuestionBanks();}else stopWatching();
   });
 }
 
-function stopWatching(){if(stopSessions)stopSessions();if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();stopSessions=stopPlayers=stopResults=stopAttempts=null;}
+
+function watchQuestionBanks(){
+  if(stopQuestionBanks)stopQuestionBanks();
+  stopQuestionBanks=dbWatch("teacherSessions/"+teacher.uid+"/questionBanks",snap=>{
+    const value=snap.val()||{};
+    bankCache=Object.entries(value).map(([id,bank])=>({id,...bank})).sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+    renderQuestionBanks();
+  },err=>setStatus("bank-status",err.message));
+}
+function normalizeBankQuestion(raw, subject, topic){
+  const q=String(raw.q??raw.question??"").trim();
+  const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1,raw.answer2,raw.answer3,raw.answer4].filter(v=>v!==undefined&&v!==null&&String(v).trim()!==""));
+  const a=answers.map(v=>String(v).trim()).filter(Boolean);
+  let correct=raw.correct??raw.correctAnswer??0;
+  if(typeof correct==="string"){
+    const value=correct.trim().toUpperCase();
+    correct=/^[A-D]$/.test(value)?value.charCodeAt(0)-65:/^[1-4]$/.test(value)?Number(value)-1:Number(value);
+  }
+  if(!q||a.length<2||a.length>4||!Number.isInteger(Number(correct))||Number(correct)<0||Number(correct)>=a.length)throw new Error("Each question needs text, 2–4 answers, and a valid correct answer.");
+  return {topic:String(raw.topic||topic||subject||"General").trim(),grade:String(raw.grade||"Mixed"),q,a,correct:Number(correct),effect:String(raw.effect||"GRAMMAR POWER!").trim()};
+}
+function parseQuestionCsv(source){
+  const rows=[];let row=[],cell="",quoted=false;
+  for(let i=0;i<source.length;i++){const c=source[i];if(c==='"'&&quoted&&source[i+1]==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell="";}else if((c==="\\n"||c==="\\r")&&!quoted){if(c==="\\r"&&source[i+1]==="\\n")i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=c;}
+  row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
+  if(rows.length<2)throw new Error("CSV needs a header row and at least one question.");
+  const headers=rows.shift().map(v=>v.trim().toLowerCase().replace(/[ _-]+/g,""));
+  return rows.map(values=>Object.fromEntries(headers.map((key,i)=>[key,values[i]??""])));
+}
+function updateBankDraftCount(){setStatus("bank-draft-count",bankDraft.length+" questions in draft");}
+function renderQuestionBanks(){
+  const select=$("session-bank"),current=select.value;
+  select.innerHTML='<option value="">Built-in Grammar Questions</option>'+bankCache.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.subject+" • "+b.topic+" ("+(b.questions?.length||0)+")")+'</option>').join("");
+  if(bankCache.some(b=>b.id===current))select.value=current;
+  $("bank-list").innerHTML=bankCache.length?bankCache.map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.subject||"Subject")+' • '+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join(""):'<div class="empty">No saved question sets yet.</div>';
+}
+$("bank-load-file").addEventListener("click",async()=>{
+  const file=$("bank-file").files?.[0];if(!file){setStatus("bank-status","Choose a .JSON or .CSV file first.");return;}
+  try{
+    const source=await file.text();let raw;
+    if(file.name.toLowerCase().endsWith(".json")){const parsed=JSON.parse(source);raw=Array.isArray(parsed)?parsed:parsed.questions;}
+    else raw=parseQuestionCsv(source);
+    if(!Array.isArray(raw)||!raw.length)throw new Error("No question records found in this file.");
+    const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
+    const imported=raw.slice(0,300).map(item=>normalizeBankQuestion(item,subject,topic));
+    bankDraft=imported;updateBankDraftCount();setStatus("bank-status","Loaded "+imported.length+" questions. Review the draft, then save the question set.");
+  }catch(error){setStatus("bank-status",error.message||"Could not read this file.");}
+});
+$("manual-question-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  try{
+    const item=normalizeBankQuestion({q:$("bank-q").value,a:[$("bank-a1").value,$("bank-a2").value,$("bank-a3").value],correct:Number($("bank-correct").value),grade:$("bank-grade").value},$("bank-subject").value,$("bank-topic").value);
+    bankDraft.push(item);updateBankDraftCount();$("manual-question-form").reset();setStatus("bank-status","Question added to draft.");
+  }catch(error){setStatus("bank-status",error.message);}
+});
+$("bank-save").addEventListener("click",async()=>{
+  if(!teacher)return;
+  const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
+  if(!subject||!topic||!bankDraft.length){setStatus("bank-status","Enter a subject, topic, and at least one question.");return;}
+  if(bankDraft.length>300){setStatus("bank-status","A question set can contain up to 300 questions.");return;}
+  const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
+  const existing=bankCache.find(b=>b.id===id);
+  try{
+    await dbSet("teacherSessions/"+teacher.uid+"/questionBanks/"+id,{subject,topic,questions:bankDraft,createdAt:existing?.createdAt||Date.now(),updatedAt:Date.now()});
+    $("bank-edit-id").value=id;setStatus("bank-status","Saved "+bankDraft.length+" questions. You can now select this set when creating a session.");
+  }catch(error){setStatus("bank-status",error.message||"Could not save the question set.");}
+});
+$("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
+$("bank-list").addEventListener("click",async e=>{
+  const button=e.target.closest("button[data-bank-action]");if(!button)return;
+  const id=button.closest("[data-bank]").dataset.bank,bank=bankCache.find(b=>b.id===id);if(!bank)return;
+  if(button.dataset.bankAction==="load"){
+    $("bank-edit-id").value=id;$("bank-subject").value=bank.subject||"";$("bank-topic").value=bank.topic||"";
+    bankDraft=(bank.questions||[]).map(q=>({...q,a:[...q.a]}));updateBankDraftCount();setStatus("bank-status","Loaded saved set for editing.");
+    window.scrollTo({top:$("bank-subject").getBoundingClientRect().top+window.scrollY-100,behavior:"smooth"});
+  }else if(confirm("Delete this question set? Existing sessions that already copied it will remain unchanged.")){
+    await dbRemove("teacherSessions/"+teacher.uid+"/questionBanks/"+id);
+    if($("bank-edit-id").value===id){$("bank-edit-id").value="";bankDraft=[];updateBankDraftCount();}
+  }
+});
+updateBankDraftCount();
+
+function stopWatching(){if(stopSessions)stopSessions();if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();if(stopQuestionBanks)stopQuestionBanks();stopSessions=stopPlayers=stopResults=stopAttempts=stopQuestionBanks=null;}
 function watchSessions(){
   if(stopSessions)stopSessions();
   stopSessions=dbWatch("teacherSessions/"+teacher.uid,snap=>{
     const index=snap.val()||{};
-    loadSessions(Object.keys(index).map(id=>({id,...index[id]})));
+    loadSessions(Object.keys(index).filter(id=>id!=="questionBanks").map(id=>({id,...index[id]})));
   },err=>setStatus("create-status",err.message));
 }
 async function loadSessions(entries){
@@ -70,7 +152,7 @@ $("session-form").addEventListener("submit",async e=>{
   setStatus("create-status","Creating session…");
   try{
     const id=dbPush("sessions").key,now=Date.now();
-    const data={teacherId:teacher.uid,title,grade:$("session-grade").value,section:safeName($("session-section").value),topic:safeName($("session-topic").value)||"General grammar",mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};
+    const bank=bankCache.find(item=>item.id===$("session-bank").value);const data={teacherId:teacher.uid,title,grade:$("session-grade").value,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||safeName($("session-topic").value)||"General grammar",mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};if(bank)data.questions=bank.questions;
     await dbSet("sessions/"+id+"/public",data);
     await dbSet("teacherSessions/"+teacher.uid+"/"+id,{title,status:"waiting",createdAt:now});
     $("session-title").value="";setStatus("create-status","Session created. Open it below to display the QR code.");
@@ -99,7 +181,7 @@ function openSession(s){
 function renderDetail(){
   const s=selectedSession;if(!s)return;
   $("detail-title").textContent=s.title||"Session details";
-  $("detail-meta").textContent=[s.grade,s.section,s.topic,s.mode==="endless"?"Endless Survival":"Fixed Waves",s.timeLimitMinutes+" min",s.status].filter(Boolean).join(" • ");
+  $("detail-meta").textContent=[s.grade,s.section,s.subject,s.topic,s.mode==="endless"?"Endless Survival":"Fixed Waves",s.timeLimitMinutes+" min",s.status].filter(Boolean).join(" • ");
   const link=studentUrl(s.id);$("detail-link").value=link;
   $("session-share").classList.toggle("hidden",s.status==="ended");
   $("detail-qr").innerHTML="";if(window.QRCode&&s.status!=="ended")new QRCode($("detail-qr"),{text:link,width:150,height:150,colorDark:"#10243c",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
