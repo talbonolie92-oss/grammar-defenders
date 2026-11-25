@@ -207,3 +207,30 @@ button{font:inherit}
 #student-qr img,#student-qr canvas{display:block;max-width:190px;height:auto}
 @media(max-width:560px){.setup-actions{grid-template-columns:1fr}.student-qr-wrap{width:100%;justify-content:center}.student-qr-wrap p{max-width:130px}}
 @media(orientation:landscape) and (max-height:600px){.setup-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.student-qr-wrap{margin-top:5px;padding:5px;gap:7px}#student-qr{width:110px;height:110px}.student-qr-wrap p{font-size:8px;max-width:120px}#student-qr img,#student-qr canvas{max-width:110px}}
+
+
+/* Distinct, consistent identities for all ten defender choices. */
+.deck-grid .unit-card{position:relative;border-width:1px;border-style:solid;box-shadow:inset 0 1px #ffffff12;transition:filter .15s,transform .15s,border-color .15s}
+.deck-grid .unit-card[data-unit="sprout"]{background:linear-gradient(135deg,#234b3c,#183c36);border-color:#65c78c}
+.deck-grid .unit-card[data-unit="archer"]{background:linear-gradient(135deg,#59452d,#3d3528);border-color:#d4a65e}
+.deck-grid .unit-card[data-unit="guardian"]{background:linear-gradient(135deg,#334c6b,#23374f);border-color:#8eafd2}
+.deck-grid .unit-card[data-unit="mage"]{background:linear-gradient(135deg,#47416f,#302e55);border-color:#aaa1f0}
+.deck-grid .unit-card[data-unit="ember"]{background:linear-gradient(135deg,#713d2e,#4a2928);border-color:#f08b55}
+.deck-grid .unit-card[data-unit="volt"]{background:linear-gradient(135deg,#34576b,#233c56);border-color:#8dd9e9}
+.deck-grid .unit-card[data-unit="thorn"]{background:linear-gradient(135deg,#35583a,#263f31);border-color:#91cb79}
+.deck-grid .unit-card[data-unit="knight"]{background:linear-gradient(135deg,#46556d,#2e3b53);border-color:#bdcce0}
+.deck-grid .unit-card[data-unit="phoenix"]{background:linear-gradient(135deg,#78432e,#4d2e2b);border-color:#ffc16d}
+.deck-grid .unit-card[data-unit="titan"]{background:linear-gradient(135deg,#55456f,#352d52);border-color:#c6a9f3}
+.deck-grid .unit-card.selected{filter:brightness(1.2);box-shadow:inset 0 0 0 2px #ffffff35,0 0 14px #d7f7e955}
+.deck-grid .unit-card.unaffordable{filter:saturate(.55) brightness(.72)}
+.deck-grid .unit-card .unit-cost{padding:3px 5px;border-radius:7px;background:#07132188;min-width:25px;text-align:center}
+.deck-grid .unit-card[data-unit="sprout"] .unit-icon{background:linear-gradient(145deg,#e4f8a8,#79d99b);color:#24573c}
+.deck-grid .unit-card[data-unit="archer"] .unit-icon{background:linear-gradient(145deg,#fff0b8,#dca45b);color:#70451e}
+.deck-grid .unit-card[data-unit="guardian"] .unit-icon{background:linear-gradient(145deg,#e6f0ff,#8096b7);color:#314968}
+.deck-grid .unit-card[data-unit="mage"] .unit-icon{background:linear-gradient(145deg,#e8ddff,#9c9be8);color:#493c85}
+.deck-grid .unit-card[data-unit="ember"] .unit-icon{background:linear-gradient(145deg,#ffe0a1,#e77c55);color:#75351e}
+.deck-grid .unit-card[data-unit="volt"] .unit-icon{background:linear-gradient(145deg,#f4f0a0,#7dc6e8);color:#31506b}
+.deck-grid .unit-card[data-unit="thorn"] .unit-icon{background:linear-gradient(145deg,#c9e5a0,#56885d);color:#24462e}
+.deck-grid .unit-card[data-unit="knight"] .unit-icon{background:linear-gradient(145deg,#e4edf8,#718aa8);color:#283d58}
+.deck-grid .unit-card[data-unit="phoenix"] .unit-icon{background:linear-gradient(145deg,#ffe1a0,#e58b55);color:#783c24}
+.deck-grid .unit-card[data-unit="titan"] .unit-icon{background:linear-gradient(145deg,#e9d5ff,#a38bd9);color:#3c2b68}
