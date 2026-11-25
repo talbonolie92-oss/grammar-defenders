@@ -86,6 +86,7 @@ export function createGameScene() {
       this.elapsedSeconds = 0;
       this.questionIntervalSeconds = Phaser.Math.Clamp(Number(config.questionIntervalSeconds) || 45, 15, 180);
       this.difficulty = ["easy", "normal", "hard"].includes(config.difficulty) ? config.difficulty : "normal";
+      this.customQuestions = Array.isArray(config.questions) ? config.questions.filter(q => q && q.q && Array.isArray(q.a) && q.a.length >= 2 && Number.isInteger(Number(q.correct)) && Number(q.correct) >= 0 && Number(q.correct) < q.a.length) : [];
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
@@ -912,9 +913,9 @@ export function createGameScene() {
       this.questionActive = true;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
-      let pool = isBoss ? BOSS_QUESTIONS : QUESTIONS;
-      if (!isBoss && this.difficulty === "easy") pool = QUESTIONS.filter(q => q.grade === "7–9");
-      if (!isBoss && this.difficulty === "hard") pool = QUESTIONS.filter(q => q.grade === "10–12");
+      let pool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
+      if (!isBoss && !this.customQuestions.length && this.difficulty === "easy") pool = QUESTIONS.filter(q => q.grade === "7–9");
+      if (!isBoss && !this.customQuestions.length && this.difficulty === "hard") pool = QUESTIONS.filter(q => q.grade === "10–12");
       const item = pool[(isBoss ? this.bossQuestionIndex++ : this.questionIndex++) % pool.length];
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
