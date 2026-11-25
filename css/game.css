@@ -281,3 +281,124 @@ button{font:inherit}
 .setup-screen{min-height:unset;padding:0 18px 24px}
 .setup-card{width:min(720px,100%)}
 @media(max-width:760px){.landing-hero{grid-template-columns:1fr;min-height:390px;align-items:end;padding:24px}.hero-art{width:100%;height:100%;object-position:58% center;opacity:.52;mask-image:linear-gradient(180deg,#000 0%,#0009 45%,#000 100%);-webkit-mask-image:linear-gradient(180deg,#000 0%,#0009 45%,#000 100%)}.hero-copy{max-width:100%}.hero-copy h2{font-size:clamp(36px,10vw,54px)}.setup-screen{padding:0 0 18px}}
+
+
+/* Active play mode: remove the homepage shell and let the battlefield own the viewport. */
+body.playing{
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  overflow:hidden;
+  padding:0;
+}
+body.playing .app-shell{
+  width:100%;
+  max-width:none;
+  height:100dvh;
+  min-height:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+body.playing .topbar,
+body.playing .landing-hero,
+body.playing #setup-screen,
+body.playing #student-join-screen,
+body.playing .page-footer{display:none!important}
+body.playing #game-layout{
+  display:flex!important;
+  flex:1;
+  flex-direction:column;
+  width:100%;
+  min-height:0;
+  height:100%;
+  margin:0;
+  padding:6px 8px 8px;
+  gap:6px;
+}
+body.playing .game-controls{
+  order:0;
+  display:flex;
+  flex:0 0 30px;
+  min-height:30px;
+  justify-content:flex-end;
+  align-items:center;
+  gap:6px;
+  margin:0;
+}
+body.playing .game-controls .dashboard-link{display:none!important}
+body.playing .game-controls .icon-button,
+body.playing .game-controls .secondary-button{
+  min-height:27px;
+  padding:4px 9px;
+  font-size:10px;
+}
+body.playing .side-panel{
+  order:1;
+  flex:0 0 57px;
+  width:100%;
+  min-height:57px;
+  padding:3px 6px;
+  overflow:hidden;
+}
+body.playing .panel-heading{display:none}
+body.playing .deck-grid{
+  display:flex;
+  height:100%;
+  align-items:center;
+  gap:6px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:1px 2px 3px;
+}
+body.playing .deck-grid .unit-card{
+  flex:0 0 108px;
+  width:108px;
+  min-width:108px;
+  height:48px;
+  min-height:48px;
+  margin:0;
+  padding:3px 5px;
+}
+body.playing .battle-panel{
+  order:2;
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  width:100%;
+  min-width:0;
+  min-height:0;
+  padding:4px;
+  gap:4px;
+}
+body.playing .battle-hud{flex:0 0 30px;min-height:30px;padding:2px 4px;gap:8px}
+body.playing #game-container{
+  flex:1 1 auto;
+  width:100%;
+  height:100%;
+  min-height:0;
+  max-height:none;
+  aspect-ratio:auto;
+}
+body.playing .battle-footer{flex:0 0 18px;margin:0;padding:2px 4px}
+body.playing .battle-footer,
+body.playing .battle-footer #battle-message{font-size:9px}
+.deck-grid .unit-card[data-unit="sunwell"]{
+  background:linear-gradient(135deg,#66502a,#3f3425);
+  border-color:#ffe58c;
+}
+.deck-grid .unit-card[data-unit="sunwell"] .unit-icon{
+  background:radial-gradient(circle at 50% 38%,#fff9d5,#eac96e 48%,#936b35);
+  color:#72501e;
+}
+@media(max-width:700px){
+  body.playing #game-layout{padding:3px;gap:3px}
+  body.playing .game-controls{flex-basis:26px;min-height:26px}
+  body.playing .side-panel{flex-basis:52px;min-height:52px;padding:2px}
+  body.playing .deck-grid .unit-card{flex-basis:100px;width:100px;min-width:100px;height:44px;min-height:44px}
+  body.playing .battle-hud{flex-basis:25px;min-height:25px;gap:5px}
+  body.playing .hud-label{font-size:7px}
+  body.playing .hud-stat strong{font-size:11px}
+  body.playing .battle-footer{display:none}
+}
