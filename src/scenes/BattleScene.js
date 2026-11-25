@@ -14,6 +14,7 @@ export function createGameScene() {
       this.energy = 100;
       this.baseHealth = 100;
       this.baseShield = 0;
+      this.laneLives = [3, 3, 3, 3, 3];
       this.wave = 1;
       this.defenders = [];
       this.enemies = [];
@@ -61,6 +62,7 @@ export function createGameScene() {
         thorn: { name: "Thorn Dragon", cost: 150, damage: 4, cooldown: 2.3, range: 520, color: 0x9ce28c, projectileSpeed: 300, radius: 12, symbol: "♜", body: 0x56885d, role: "Heavy damage" },
         knight: { name: "Iron Knight", cost: 175, damage: 0, cooldown: 0, range: 0, color: 0xcbdcf0, projectileSpeed: 0, radius: 0, symbol: "⚔", body: 0x718aa8, role: "Heavy blocker", health: 70 },
         phoenix: { name: "Solar Phoenix", cost: 200, damage: 5, cooldown: 2.8, range: 540, color: 0xffc16d, projectileSpeed: 320, radius: 14, symbol: "♨", body: 0xe58b55, role: "Lane burst" },
+        sunwell: { name: "Sunwell Keeper", cost: 65, damage: 0, cooldown: 0, range: 0, color: 0xffe58c, projectileSpeed: 0, radius: 0, symbol: "☼", body: 0xe6c96f, role: "Energy producer", energyRate: 7, energyInterval: 3.5 },
         titan: { name: "Ancient Titan", cost: 250, damage: 0, cooldown: 0, range: 0, color: 0xd8c1ff, projectileSpeed: 0, radius: 0, symbol: "✹", body: 0x9a83c7, role: "Ultimate fortress", health: 130 }
       };
     }
@@ -180,6 +182,7 @@ export function createGameScene() {
       this.energyFill = document.getElementById("energy-fill");
       this.waveText = document.getElementById("wave-value");
       this.baseText = document.getElementById("base-value");
+      this.laneLivesText = document.getElementById("lane-value");
       this.timerText = document.getElementById("battle-time");
       this.modeText = document.getElementById("battle-mode");
       this.message = document.getElementById("battle-message");
@@ -251,10 +254,11 @@ export function createGameScene() {
         const hair = this.add.ellipse(-2, -26, 22, 9, 0x513b2c);
         const face = this.add.rectangle(4, -20, 2, 3, 0x24303b);
         const bow = this.add.arc(18, -5, 25, 250, 110, false, 0xe5bd75).setStrokeStyle(4, 0x704b2d);
-        const string = this.add.line(18, -29, 0, 0, 0, 0, 0xffedc3).setLineWidth(1.5);
+        const bowString = this.add.graphics();
+        bowString.lineStyle(1.5, 0xffedc3, 1); bowString.beginPath(); bowString.moveTo(18, -29); bowString.lineTo(18, 19); bowString.strokePath();
+        bowString.lineStyle(2, 0xffe4a5, 1); bowString.beginPath(); bowString.moveTo(-15, -24); bowString.lineTo(-15, -11); bowString.strokePath();
         const quiver = this.add.rectangle(-15, -7, 8, 25, 0x704b35).setRotation(-.35);
-        const arrow = this.add.line(-15, -24, 0, 0, 0, 13, 0xffe4a5).setLineWidth(2);
-        parts.push(...legs, torso, head, hood, hair, face, quiver, arrow, bow, string);
+        parts.push(...legs, torso, head, hood, hair, face, quiver, bow, bowString);
       } else if (unitType === "mage") {
         // Robed ice mage with a tall hood and a crystal-tipped staff.
         legs = [this.add.ellipse(-8, 17, 12, 7, 0x313b63), this.add.ellipse(8, 17, 12, 7, 0x313b63)];
@@ -349,6 +353,14 @@ export function createGameScene() {
         const fistL = this.add.circle(-29, 11, 11, 0x78689f).setStrokeStyle(2, 0x40345f);
         const fistR = this.add.circle(29, 11, 11, 0x78689f).setStrokeStyle(2, 0x40345f);
         parts.push(...legs, cape, torso, shoulderL, shoulderR, head, ...eyes, rune, fistL, fistR);
+      } else if (unitType === "sunwell") {
+        const base = this.add.ellipse(0, 13, 35, 15, 0x7b6537).setStrokeStyle(2, 0xffe58c);
+        const stem = this.add.rectangle(0, -1, 8, 30, 0x8cbd72).setStrokeStyle(2, 0x416b4a);
+        const crystal = this.add.star(0, -24, 8, 12, 23, 0xffe58c).setStrokeStyle(3, 0xfff5c2);
+        const orb = this.add.circle(0, -24, 8, 0xffffff, .9);
+        const rays = this.add.graphics(); rays.lineStyle(2, 0xffe58c, .85);
+        for (let a = 0; a < 8; a++) { const angle = a * Math.PI / 4; rays.lineBetween(Math.cos(angle) * 28, -24 + Math.sin(angle) * 28, Math.cos(angle) * 35, -24 + Math.sin(angle) * 35); }
+        parts.push(base, stem, crystal, orb, rays);
       } else {
         if (unitType === "sprout") {
           legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
@@ -413,7 +425,8 @@ export function createGameScene() {
         correct: [520, 880, 0.2, "sine"],
         boss: [110, 65, 0.42, "sawtooth"],
         wave: [360, 560, 0.22, "triangle"],
-        victory: [520, 1040, 0.5, "sine"]
+        victory: [520, 1040, 0.5, "sine"],
+        lane: [150, 65, 0.22, "sawtooth"]
       };
       if (kind === "shot") {
         const stamp = performance.now();
@@ -428,7 +441,7 @@ export function createGameScene() {
       oscillator.frequency.setValueAtTime(startHz, now);
       oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endHz), now + duration);
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.075, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(kind === "shot" ? 0.12 : 0.14, now + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       oscillator.connect(gain);
       gain.connect(this.audioContext.destination);
@@ -528,7 +541,7 @@ export function createGameScene() {
 
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
-      if (this.enemies.length >= 14) return;
+      if (this.enemies.length >= 18) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
@@ -613,12 +626,20 @@ export function createGameScene() {
         details.push(this.add.triangle(radius - 2, -radius * .55, -11, 7, 4, 13, 0, 0xead9ad));
         details.push(this.add.circle(0, -2, 7, 0xffc4e2).setStrokeStyle(2, 0xffffff));
       }
+      if (armorLevel > 0) {
+        const armorColor = armorLevel >= 3 ? 0xd8c8a8 : 0x9aaec5;
+        details.push(this.add.rectangle(0, 5, radius * 1.45, Math.max(7, radius * .42), armorColor).setStrokeStyle(2, 0x34445b));
+        details.push(this.add.circle(-radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
+        details.push(this.add.circle(radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
+      }
       group.add([shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes]);
 
       const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
+      const waveMultiplier = 1 + (this.wave - 1) * 0.22;
+      const armorLevel = Math.min(5, Math.floor((this.wave - 1) / 2));
       const enemyLevel = enemyRoster.indexOf(enemyType);
       const hpScale = [1, .8, 1.5, 1.2, 1.35, 1.25, 1.15, 1.8, 2.1, 3.2][Math.max(0, enemyLevel)];
-      const hp = Math.max(1, Math.round((baseHp + [0, -1, 2][type]) * hpScale * (isBoss ? 5 : 1)));
+      const hp = Math.max(1, Math.round((baseHp + [0, -1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
       const barWidth = isBoss ? 70 : 46;
       const bar = this.add.graphics();
       bar.fillStyle(0x342d39); bar.fillRoundedRect(-barWidth / 2, isBoss ? -57 : -39, barWidth, 7, 3);
@@ -627,8 +648,8 @@ export function createGameScene() {
 
       const speedFactor = [1, 1.65, 0.68, 1.35, .82, 1.05, .9, .62, .78, .55][Math.max(0, enemyLevel)];
       const enemy = {
-        lane, x, y, baseY: y, group, hp, maxHp: hp,
-        speed: isBoss ? 10 + this.wave * 0.6 : (17 + this.wave * 1.2) * speedFactor,
+        lane, x, y, baseY: y, group, hp, maxHp: hp, armorLevel,
+        speed: isBoss ? 10 + this.wave * 0.8 : Math.min(48, (17 + this.wave * 1.7) * speedFactor),
         bar, isBoss, enemyType, enemyLevel, phase: 1, body, aura, frostRing, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
       };
@@ -666,10 +687,10 @@ export function createGameScene() {
         if (this.gameOver) return;
         this.wave++;
         this.enemiesSpawnedThisWave = 0;
-        this.enemiesPerWave = Math.min(14, 8 + Math.floor((this.wave - 1) / 2));
+        this.enemiesPerWave = Math.min(16, 8 + Math.floor((this.wave - 1) * 0.8));
         this.waveActive = true;
         this.waveTransitioning = false;
-        this.spawnTimer.delay = Math.max(1100, 3200 - (this.wave - 1) * 120);
+        this.spawnTimer.delay = Math.max(900, 3200 - (this.wave - 1) * 170);
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -687,7 +708,15 @@ export function createGameScene() {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
       const dt = Math.min(delta / 1000, 0.05);
       this.defenders.forEach(d => {
-        if (d.stats.health) return;
+        if (d.stats.energyRate) {
+          d.energyClock = (d.energyClock || 0) + dt;
+          if (d.energyClock >= d.stats.energyInterval) {
+            d.energyClock -= d.stats.energyInterval;
+            this.energy = Math.min(300, this.energy + d.stats.energyRate);
+            this.updateHud();
+          }
+        }
+        if (d.stats.health || d.stats.energyRate) return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
           const target = this.enemies
@@ -729,7 +758,8 @@ export function createGameScene() {
           e.x = Math.max(e.x, blocker.x + 34);
           e.attackCooldown = (e.attackCooldown || 0) - dt;
           if (e.attackCooldown <= 0) {
-            const hit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
+            const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
+            const hit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
             blocker.hp -= hit;
             blocker.healthBar && this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
@@ -810,7 +840,8 @@ export function createGameScene() {
 
     damageEnemy(enemy, amount) {
       if (!enemy.group.active) return;
-      const appliedDamage = ["Brute", "Bone Warrior", "War Crusher"].includes(enemy.enemyType) && !enemy.isBoss ? Math.max(0.75, amount * (enemy.enemyType === "Bone Warrior" ? 0.65 : 0.75)) : amount;
+      const typeAdjustedDamage = ["Brute", "Bone Warrior", "War Crusher"].includes(enemy.enemyType) && !enemy.isBoss ? Math.max(0.75, amount * (enemy.enemyType === "Bone Warrior" ? 0.65 : 0.75)) : amount;
+      const appliedDamage = Math.max(0.5, typeAdjustedDamage * (1 - Math.min(0.4, (enemy.armorLevel || 0) * 0.08)));
       enemy.hp -= appliedDamage;
       if (enemy.isBoss) {
         const healthRatio = enemy.hp / enemy.maxHp;
@@ -849,9 +880,23 @@ export function createGameScene() {
     damageBase(enemy) {
       enemy.group.destroy();
       this.enemies = this.enemies.filter(e => e !== enemy);
-      const shieldAbsorbed = Math.min(this.baseShield, 10);
-      this.baseShield -= shieldAbsorbed;
-      this.baseHealth = Math.max(0, this.baseHealth - (10 - shieldAbsorbed));
+      const lane = enemy.lane;
+      if (this.laneLives[lane] > 0) {
+        this.laneLives[lane]--;
+        this.enemies.slice().filter(other => other.lane === lane).forEach(other => {
+          other.group.destroy();
+          this.enemies = this.enemies.filter(active => active !== other);
+        });
+        this.message.textContent = "LANE " + (lane + 1) + " BREACHED! Lane guard cleared the attackers. " + this.laneLives[lane] + " lives left.";
+        this.playSound("lane");
+      } else {
+        const shieldAbsorbed = Math.min(this.baseShield, 10);
+        this.baseShield -= shieldAbsorbed;
+        this.baseHealth = Math.max(0, this.baseHealth - (10 - shieldAbsorbed));
+        this.message.textContent = "LANE " + (lane + 1) + " IS EXPOSED! The keep has taken damage.";
+        this.enemies = this.enemies.filter(active => active !== enemy);
+        enemy.group.destroy();
+      }
       this.cameras.main.shake(130, 0.004);
       this.updateHud();
       if (this.baseHealth <= 0) this.endGame(false);
@@ -1027,6 +1072,7 @@ export function createGameScene() {
       });
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%" + (this.baseShield > 0 ? " +" + this.baseShield : "");
+      if (this.laneLivesText) this.laneLivesText.textContent = this.laneLives.map((lives, lane) => (lane + 1) + ":" + "♥".repeat(lives) + "♡".repeat(3 - lives)).join("  ");
       if (this.timerText) {
         const seconds = this.remainingSeconds;
         const mins = Math.floor(seconds / 60);
