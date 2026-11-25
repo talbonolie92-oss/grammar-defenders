@@ -486,15 +486,7 @@ export function createGameScene() {
         const core = this.add.star(0, 2, 6, 5, 12, 0xe3ffff);
         parts.push(body, head, ...eyes, ...horns, core);
       } else {
-        if (unitType === "sprout") {
-          legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
-          const body = this.add.circle(0, 0, 21, stats.body).setStrokeStyle(3, 0x2b7957);
-          const leafL = this.add.ellipse(-14, -22, 17, 28, 0x4baf77).setRotation(-.65);
-          const leafR = this.add.ellipse(14, -22, 17, 28, 0x5fc98a).setRotation(.65);
-          const eyes = [this.add.circle(-7, -3, 2.5, 0x20343b), this.add.circle(7, -3, 2.5, 0x20343b)];
-          const smile = this.add.ellipse(0, 5, 7, 3, 0x28463c);
-          parts.push(...legs, leafL, leafR, body, ...eyes, smile);
-        } else {
+        {
           // Elite heroes use distinct silhouettes, armor, horns, and magical crests.
           legs = [this.add.rectangle(-9, 16, 9, 14, 0x263748), this.add.rectangle(9, 16, 9, 14, 0x263748)];
           const torso = this.add.triangle(0, 2, -18, -15, 18, -15, 0, 24, stats.body).setStrokeStyle(3, 0x28354a);
@@ -1108,6 +1100,7 @@ export function createGameScene() {
               const counterDamage = blocker.stats.damage > 0
                 ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65)))
                 : blocker.unitType === "titan" ? 14
+                : blocker.unitType === "runeblade" ? (blocker.level >= 3 ? 18 : blocker.level === 2 ? 13 : 10)
                 : blocker.unitType === "knight" ? 6
                 : blocker.unitType === "guardian" ? 3 : 1;
               this.damageEnemy(e, counterDamage);
