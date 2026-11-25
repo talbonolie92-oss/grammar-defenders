@@ -162,6 +162,8 @@ function renderReport(){
 }
 $("export-report").addEventListener("click",()=>{
   const results=Object.values(selectedSession?.results||{});const rows=[["Student","Class/Section","Questions","Correct","Incorrect","Accuracy","Kills","Waves","Outcome"],...results.map(r=>[r.name,r.classSection,r.questionsAnswered,r.correctAnswers,r.incorrectAnswers,r.accuracy,r.kills,r.wave,r.won?"Victory":"Defeat"])];
+  const attempts=Object.values(selectedSession?.attempts||{});
+  rows.push([],["QUESTION ATTEMPTS"],["Student","Class/Section","Topic","Question","Selected answer","Correct answer","Correct","Boss question"],...attempts.map(x=>[x.playerName,x.classSection,x.topic,x.question,x.selectedAnswer,x.correctAnswer,x.correct?"Yes":"No",x.isBoss?"Yes":"No"]));
   const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="grammar-defenders-report.csv";a.click();URL.revokeObjectURL(url);
 });
