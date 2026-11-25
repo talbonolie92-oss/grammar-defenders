@@ -375,7 +375,9 @@ export function createGameScene() {
 
     removeDefender(defender) {
       if (!defender || !this.defenders.includes(defender)) return;
-      this.defenders = this.defenders.filter(item => item !== defender);
+      const defenderIndex = this.defenders.indexOf(defender);
+      if (defenderIndex < 0) return;
+      this.defenders.splice(defenderIndex, 1);
       if (defender.healthBar?.active) defender.healthBar.destroy();
       if (defender.group?.active) {
         this.tweens.add({
@@ -1213,7 +1215,8 @@ export function createGameScene() {
           if (d.hp <= 0) {
             if (d.healthBar?.active) d.healthBar.destroy();
             this.tweens.add({ targets: d.group, alpha: 0, scale: .6, duration: 220, onComplete: () => d.group?.destroy() });
-            this.defenders = this.defenders.filter(item => item !== d);
+            const defeatedIndex = this.defenders.indexOf(d);
+            if (defeatedIndex >= 0) this.defenders.splice(defeatedIndex, 1);
             this.message.textContent = d.stats.name + " succumbed to venom!";
             this.playSound("defeat");
             return;
