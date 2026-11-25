@@ -810,7 +810,7 @@ export function createGameScene() {
 
     update(time, delta) {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
-      const dt = Math.min(delta / 1000, 0.05);
+      const dt = Math.min(delta / 1000, 0.1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
       this.passiveEnergyClock += dt;
       let passiveEnergyGained = false;
@@ -1040,10 +1040,12 @@ export function createGameScene() {
       const lane = enemy.lane;
       if (this.laneLives[lane] > 0) {
         this.laneLives[lane]--;
-        this.enemies.slice().filter(other => other.lane === lane).forEach(other => {
-          other.group.destroy();
-          this.enemies = this.enemies.filter(active => active !== other);
-        });
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+          const other = this.enemies[i];
+          if (other.lane !== lane) continue;
+          if (other.group.active) other.group.destroy();
+          this.enemies.splice(i, 1);
+        }
         this.message.textContent = "LANE " + (lane + 1) + " BREACHED! Lane guard cleared the attackers. " + this.laneLives[lane] + " lives left.";
         this.playSound("lane");
       } else {
@@ -1160,9 +1162,26 @@ export function createGameScene() {
       const label = String(effect).toUpperCase();
       let feedback = effect;
       let color = "#ffe58c";
+      const activeEnemies = () => this.enemies.filter(enemy => enemy.group.active);
+      const damageFrontEnemies = (amount, limit = 3) => {
+        const targets = [];
+        for (let i = 0; i < this.enemies.length; i++) {
+          const enemy = this.enemies[i];
+          if (!enemy.group.active) continue;
+          let insertAt = targets.length;
+          while (insertAt > 0 && targets[insertAt - 1].x > enemy.x) insertAt--;
+          if (insertAt < limit) {
+            targets.splice(insertAt, 0, enemy);
+            if (targets.length > limit) targets.pop();
+          }
+        }
+        targets.forEach(enemy => this.damageEnemy(enemy, amount));
+        return targets.length;
+      };
 
       if (label.includes("FREEZE")) {
-        this.enemies.forEach(enemy => {
+        const enemies = activeEnemies();
+        enemies.forEach(enemy => {
           enemy.slowUntil = this.time.now + 3800;
           this.tweens.add({ targets: enemy.body, tint: 0x8feaff, duration: 180, yoyo: true, repeat: 2 });
         });
@@ -1175,12 +1194,15 @@ export function createGameScene() {
         feedback = restored > 0 ? "KEEP RESTORED +" + restored + "%!" : "DEFENSE SURGE! +12 ENERGY";
         color = "#8de1a4";
       } else if (label.includes("ARMOR BREAK") || label.includes("SHIELD PIERCE") || label.includes("WEAKNESS")) {
-        const targets = this.enemies.slice().sort((a, b) => a.x - b.x).slice(0, 3);
-        targets.forEach(enemy => this.damageEnemy(enemy, 3));
-        feedback = "ARMOR SHATTER! Heavy damage to up to 3 enemies.";
+        const count = damageFrontEnemies(3, 3);
+        feedback = "ARMOR SHATTER! Heavy damage to " + (count ? "up to " + count : "no") + " enemies.";
         color = "#ffd27a";
       } else if (label.includes("CRITICAL") || label.includes("PRECISION") || label.includes("RAPID STRIKE") || label.includes("ECHO STRIKE")) {
-        const target = this.enemies.slice().sort((a, b) => a.x - b.x)[0];
+        let target = null;
+        for (let i = 0; i < this.enemies.length; i++) {
+          const enemy = this.enemies[i];
+          if (enemy.group.active && (!target || enemy.x < target.x)) target = enemy;
+        }
         if (target) this.damageEnemy(target, 5);
         this.energy = Math.min(300, this.energy + 8);
         feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
@@ -1191,7 +1213,10 @@ export function createGameScene() {
         feedback = "GUARDIAN SHIELD! +20% shield and +20 energy.";
         color = "#b9d8ff";
       } else if (label.includes("DRAGON FURY")) {
-        this.enemies.slice().forEach(enemy => this.damageEnemy(enemy, 6));
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+          const enemy = this.enemies[i];
+          if (enemy.group.active) this.damageEnemy(enemy, 6);
+        }
         this.energy = Math.min(300, this.energy + 15);
         feedback = "DRAGON FURY! Heavy damage across the battlefield.";
         color = "#ffb27c";
@@ -1200,10 +1225,9 @@ export function createGameScene() {
         feedback = "ENERGY SURGE! +30 ENERGY";
         color = "#ffe58c";
       } else {
-        const targets = this.enemies.slice().sort((a, b) => a.x - b.x).slice(0, 3);
-        targets.forEach(enemy => this.damageEnemy(enemy, 1));
+        const count = damageFrontEnemies(1, 3);
         this.energy = Math.min(300, this.energy + 12);
-        feedback = "GRAMMAR POWER! Damage dealt and +12 energy.";
+        feedback = "GRAMMAR POWER! Damage dealt to " + count + " enemies and +12 energy.";
       }
 
       this.updateHud();
