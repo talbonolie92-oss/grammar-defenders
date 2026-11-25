@@ -613,7 +613,6 @@ export function createGameScene() {
     answerQuestion(index, item, button, label) {
       if (!this.questionActive) return;
       const correct = index === item.correct;
-      this.questionActive = false;
       if (correct) {
         button.setFillStyle(0x286c58);
         button.setStrokeStyle(2, 0x8ff0bd);
@@ -634,6 +633,7 @@ export function createGameScene() {
       this.time.delayedCall(1150, () => {
         if (this.questionOverlay) this.questionOverlay.destroy(true);
         this.questionOverlay = null;
+        this.questionActive = false;
         if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
       });
     }
