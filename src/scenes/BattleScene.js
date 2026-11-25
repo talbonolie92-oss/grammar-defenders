@@ -1528,14 +1528,19 @@ export function createGameScene() {
           if (enemy.aura?.active) enemy.aura.setFillStyle(nextPhase === 3 ? 0xff5c9d : 0xd47bff);
         }
       }
-      enemy.bar.clear();
-      const barWidth = enemy.isBoss ? 64 : 46;
-      const barY = enemy.isBoss ? -48 : -37;
-      const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);
-      enemy.bar.fillStyle(0x342d39);
-      enemy.bar.fillRoundedRect(-barWidth / 2, barY, barWidth, 6, 3);
-      enemy.bar.fillStyle(ratio > 0.45 ? 0x83e39a : 0xe58b8b);
-      enemy.bar.fillRoundedRect(-barWidth / 2 + 1, barY + 1, Math.max(0, (barWidth - 2) * ratio), 4, 2);
+      // Health values update on every hit, while the small graphic redraw is
+      // paced during rapid multi-hit bursts. Lethal hits always redraw immediately.
+      if (enemy.hp <= 0 || !enemy.lastHealthBarAt || this.time.now - enemy.lastHealthBarAt >= 100) {
+        enemy.lastHealthBarAt = this.time.now;
+        enemy.bar.clear();
+        const barWidth = enemy.isBoss ? 64 : 46;
+        const barY = enemy.isBoss ? -48 : -37;
+        const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);
+        enemy.bar.fillStyle(0x342d39);
+        enemy.bar.fillRoundedRect(-barWidth / 2, barY, barWidth, 6, 3);
+        enemy.bar.fillStyle(ratio > 0.45 ? 0x83e39a : 0xe58b8b);
+        enemy.bar.fillRoundedRect(-barWidth / 2 + 1, barY + 1, Math.max(0, (barWidth - 2) * ratio), 4, 2);
+      }
       // Throttle cosmetic hit feedback so dense waves do not create
       // overlapping tweens or a burst of identical hit sounds.
       const hitFeedbackReady = !enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140;
