@@ -469,6 +469,22 @@ export function createGameScene() {
             .setRotation(i * Math.PI / 4)
         );
         parts.push(base, stem, crystal, orb, ...rays);
+      } else if (unitType === "runeblade") {
+        legs = [this.add.rectangle(-11, 18, 13, 17, 0x513e35), this.add.rectangle(11, 18, 13, 17, 0x513e35)];
+        const cape = this.add.triangle(-4, 8, -21, -18, 20, -18, -10, 39, 0x6b3448).setStrokeStyle(2, 0x3a253b);
+        const armor = this.add.rectangle(0, -1, 38, 38, 0xb17b55).setStrokeStyle(3, 0x4b382d);
+        const helmet = this.add.triangle(0, -27, -15, 18, 15, 18, 0, 0xe9c68b).setStrokeStyle(3, 0x6e4a34);
+        const visor = this.add.rectangle(0, -23, 17, 5, 0x1b293b);
+        const sword = this.add.rectangle(25, -5, 7, 54, 0xf6e2b4).setStrokeStyle(2, 0x8b6448).setRotation(-.2);
+        const guard = this.add.rectangle(25, 8, 21, 5, 0xc18c56);
+        parts.push(...legs, cape, armor, helmet, visor, sword, guard);
+      } else if (unitType === "stormcaller") {
+        const body = this.add.ellipse(0, 2, 43, 37, 0x4b91b4).setStrokeStyle(3, 0x214e70);
+        const head = this.add.circle(0, -19, 13, 0x8fe7f2).setStrokeStyle(2, 0x326c89);
+        const eyes = [this.add.circle(-5, -20, 3, 0x19394d), this.add.circle(5, -20, 3, 0x19394d)];
+        const horns = [this.add.star(-17, -34, 4, 3, 12, 0xe3ffff), this.add.star(17, -34, 4, 3, 12, 0xe3ffff)];
+        const core = this.add.star(0, 2, 6, 5, 12, 0xe3ffff);
+        parts.push(body, head, ...eyes, ...horns, core);
       } else {
         if (unitType === "sprout") {
           legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
@@ -565,12 +581,14 @@ export function createGameScene() {
       defender.evolutionMark = mark;
       defender.group.setScale(1 + (nextLevel - 1) * .06);
       if (defender.unitType === "sunwell") {
-        // Each evolution adds a visible energy crystal; tier III forms a three-crystal crown.
-        const crystalCount = nextLevel;
-        for (let i = 0; i < crystalCount; i++) {
-          const crystal = this.add.star((i - (crystalCount - 1) / 2) * 13, -42 - (i % 2) * 5, 5, 4, 8, 0xffe58c)
+        // Rebuild, rather than stack, crystals so the visible count matches its tier.
+        defender.energyCrystals?.forEach(crystal => crystal.destroy());
+        defender.energyCrystals = [];
+        for (let i = 0; i < nextLevel; i++) {
+          const crystal = this.add.star((i - (nextLevel - 1) / 2) * 13, -42 - (i % 2) * 5, 5, 4, 8, 0xffe58c)
             .setStrokeStyle(1.5, 0xffffff);
           defender.group.add(crystal);
+          defender.energyCrystals.push(crystal);
         }
       } else {
         const ring = this.add.circle(0, 0, 39 + nextLevel * 3, 0xffffff, .035)
@@ -1006,23 +1024,28 @@ export function createGameScene() {
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
             if (p.unitType === "mage" && p.target.group.active) {
-              p.target.slowUntil = this.time.now + 3000;
+              if (p.level >= 3) p.target.stunnedUntil = this.time.now + 1500;
+              else p.target.slowUntil = this.time.now + (p.level === 2 ? 4500 : 3000);
               this.message.textContent = "Frost magic slows an enemy!";
             }
             if (p.unitType === "ember" || p.unitType === "phoenix") {
-              const splashDamage = p.unitType === "phoenix" ? 3 : 1;
+              const splashDamage = p.unitType === "phoenix" ? (p.level >= 3 ? 8 : p.level === 2 ? 5 : 3) : (p.level >= 3 ? 6 : p.level === 2 ? 3 : 1);
+              const splashRange = p.level >= 3 ? 175 : p.level === 2 ? 130 : 92;
               // Walk backwards because defeated enemies are removed from this.enemies.
               for (let i = this.enemies.length - 1; i >= 0; i--) {
                 const nearby = this.enemies[i];
-                if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < 92) {
+                if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < splashRange) {
                   this.damageEnemy(nearby, splashDamage);
                 }
               }
             }
+            if (p.unitType === "titan" && p.level >= 3 && p.target.isBoss && p.target.group.active) {
+              this.damageEnemy(p.target, Math.max(1, Math.ceil(p.target.maxHp * 0.06)), true);
+            }
             if (p.unitType === "volt" || p.unitType === "stormcaller") {
               // Ignore destroyed targets and select the nearest live enemy without sorting.
               let chainTarget = null;
-              let nearestChainDistance = 145;
+              let nearestChainDistance = p.unitType === "stormcaller" ? (p.level >= 3 ? 230 : 175) : (p.level >= 3 ? 190 : p.level === 2 ? 165 : 125);
               for (let i = 0; i < this.enemies.length; i++) {
                 const candidate = this.enemies[i];
                 if (candidate === p.target || !candidate.group.active || candidate.lane !== p.target.lane) continue;
@@ -1032,7 +1055,20 @@ export function createGameScene() {
                   chainTarget = candidate;
                 }
               }
-              if (chainTarget) this.damageEnemy(chainTarget, 2);
+              const chainDamage = p.unitType === "stormcaller"
+                ? Math.max(3, Math.round(p.damage * (p.level >= 3 ? .85 : .65)))
+                : Math.max(2, Math.round(p.damage * (p.level >= 3 ? .65 : p.level === 2 ? .45 : .25)));
+              if (chainTarget) this.damageEnemy(chainTarget, chainDamage);
+              if (p.level >= 3 && chainTarget) {
+                let second = null, secondDistance = nearestChainDistance;
+                for (let i = 0; i < this.enemies.length; i++) {
+                  const candidate = this.enemies[i];
+                  if (candidate === p.target || candidate === chainTarget || !candidate.group.active || candidate.lane !== p.target.lane) continue;
+                  const distance = Math.abs(candidate.x - chainTarget.x);
+                  if (distance < secondDistance) { second = candidate; secondDistance = distance; }
+                }
+                if (second) this.damageEnemy(second, chainDamage);
+              }
             }
           }
         } else {
@@ -1070,12 +1106,15 @@ export function createGameScene() {
             blocker.retaliateCooldown = (blocker.retaliateCooldown || 0) - dt;
             if (blocker.retaliateCooldown <= 0 && e.group.active) {
               const counterDamage = blocker.stats.damage > 0
-                ? Math.max(1, Math.ceil(blocker.stats.damage * 0.65))
+                ? Math.max(1, Math.ceil(blocker.stats.damage * (blocker.level >= 3 ? 1.25 : blocker.level === 2 ? .9 : .65)))
                 : blocker.unitType === "titan" ? 14
                 : blocker.unitType === "knight" ? 6
                 : blocker.unitType === "guardian" ? 3 : 1;
               this.damageEnemy(e, counterDamage);
-              blocker.retaliateCooldown = 0.85;
+              if (blocker.level >= 3 && blocker.unitType === "knight" && e.group.active) {
+                this.damageEnemy(e, Math.ceil(counterDamage * .5));
+              }
+              blocker.retaliateCooldown = blocker.level >= 3 ? .65 : .85;
               if (!e.group.active) continue;
             }
             if (blocker.hp <= 0) {
@@ -1150,6 +1189,7 @@ export function createGameScene() {
       p.damage = stats.damage;
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
+      p.level = defender.level || 1;
       this.projectiles.push(p);
       this.playSound("shot");
       this.tweens.add({
