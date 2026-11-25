@@ -92,17 +92,12 @@ export function createGameScene() {
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
+      // Spawn the first attacker immediately so the battlefield never starts empty.
+      this.spawnEnemySafely();
       this.spawnTimer = this.time.addEvent({
-        delay: 3200,
+        delay: 2600,
         loop: true,
-        callback: () => {
-          try {
-            this.spawnEnemy();
-          } catch (error) {
-            console.error("Enemy spawn failed:", error);
-            if (this.message) this.message.textContent = "An enemy could not spawn. The battle is still running; check the browser console.";
-          }
-        }
+        callback: () => this.spawnEnemySafely()
       });
       this.questionTimer = this.time.addEvent({ delay: this.questionIntervalSeconds * 1000, loop: true, callback: () => this.showQuestion(false) });
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
@@ -571,6 +566,19 @@ export function createGameScene() {
       this.musicNodes = [];
       const toggle = document.getElementById("music-toggle");
       if (toggle) toggle.textContent = "♫ Music: Off";
+    }
+
+    spawnEnemySafely() {
+      if (!this.battleStarted || this.gameOver) return;
+      try {
+        this.spawnEnemy();
+        if (this.enemies.length && this.message && this.message.textContent === "Prepare your defenses!") {
+          this.message.textContent = "Attackers incoming! Defend the keep!";
+        }
+      } catch (error) {
+        console.error("Enemy spawn failed:", error);
+        if (this.message) this.message.textContent = "Enemy spawn error: " + (error?.message || "unknown error");
+      }
     }
 
     spawnEnemy() {
