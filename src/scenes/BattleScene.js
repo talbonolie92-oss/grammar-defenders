@@ -28,6 +28,9 @@ export function createGameScene() {
       this.selectedTile = null;
       this.questionIndex = 0;
       this.bossQuestionIndex = 0;
+      this.questionDeck = [];
+      this.bossQuestionDeck = [];
+      this.questionResolutionToken = 0;
       this.questionActive = false;
       this.gameOver = false;
       this.spawnClock = 0;
@@ -112,6 +115,11 @@ export function createGameScene() {
             && Number.isInteger(Number(q.correct)) && Number(q.correct) >= 0 && Number(q.correct) < q.a.length;
         })
         .map(q => ({ ...q, topic: String(q.topic || "General"), effect: String(q.effect || "GRAMMAR POWER!"), correct: Number(q.correct) })) : [];
+      const regularPool = this.customQuestions.length ? this.customQuestions
+        : this.difficulty === "easy" ? QUESTIONS.filter(q => q.grade === "7–9")
+        : this.difficulty === "hard" ? QUESTIONS.filter(q => q.grade === "10–12") : QUESTIONS;
+      this.questionDeck = this.shuffleQuestionDeck(regularPool);
+      this.bossQuestionDeck = this.shuffleQuestionDeck(BOSS_QUESTIONS);
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
@@ -1167,7 +1175,7 @@ export function createGameScene() {
 
     update(time, delta) {
       if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
-      const dt = Math.min(delta / 1000, 0.1);
+      // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.\n      const dt = Math.min(delta / 1000, 0.25);
       const energyDt = Math.min(delta / 1000, 1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
       // Use a separate bounded clock so low frame rates do not silently slow energy income.
@@ -1663,11 +1671,13 @@ export function createGameScene() {
       this.questionAnswered = false;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
-      let pool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
-      if (!isBoss && !this.customQuestions.length && this.difficulty === "easy") pool = QUESTIONS.filter(q => q.grade === "7–9");
-      if (!isBoss && !this.customQuestions.length && this.difficulty === "hard") pool = QUESTIONS.filter(q => q.grade === "10–12");
-      if (!Array.isArray(pool) || pool.length === 0) pool = isBoss ? BOSS_QUESTIONS : QUESTIONS;
-      const item = pool[(isBoss ? this.bossQuestionIndex++ : this.questionIndex++) % pool.length];
+      const fallbackPool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
+      let deck = isBoss ? this.bossQuestionDeck : this.questionDeck;
+      if (!Array.isArray(deck) || deck.length === 0) deck = this.shuffleQuestionDeck(fallbackPool);
+      const counter = isBoss ? this.bossQuestionIndex++ : this.questionIndex++;
+      if (counter > 0 && counter % deck.length === 0) deck = this.shuffleQuestionDeck(fallbackPool);
+      if (isBoss) this.bossQuestionDeck = deck; else this.questionDeck = deck;
+      const item = deck[counter % deck.length];
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
@@ -1738,20 +1748,35 @@ export function createGameScene() {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
-      this.time.delayedCall(1150, () => {
-        if (this.questionOverlay) this.questionOverlay.destroy(true);
-        this.questionOverlay = null;
-        this.questionActive = false;
-        this.questionAnswered = false;
-        this.isBossQuestion = false;
-        if (this.pendingBossQuestion && !this.gameOver) {
-          this.pendingBossQuestion = false;
-          this.showQuestion(true);
-          return;
-        }
-        if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
-        if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
-      });
+      const resolutionToken = ++this.questionResolutionToken;
+      // Browser timer is a fallback in case the Phaser clock is interrupted on a busy boss wave.
+      this.time.delayedCall(1050, () => this.finishQuestion(resolutionToken));
+      window.setTimeout(() => this.finishQuestion(resolutionToken), 1800);
+    }
+
+    finishQuestion(resolutionToken) {
+      if (resolutionToken !== this.questionResolutionToken || !this.questionActive) return;
+      if (this.questionOverlay?.active) this.questionOverlay.destroy(true);
+      this.questionOverlay = null;
+      this.questionActive = false;
+      this.questionAnswered = false;
+      this.isBossQuestion = false;
+      if (this.pendingBossQuestion && !this.gameOver) {
+        this.pendingBossQuestion = false;
+        this.showQuestion(true);
+        return;
+      }
+      if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
+      if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
+    }
+
+    shuffleQuestionDeck(pool) {
+      const deck = Array.isArray(pool) ? pool.slice() : [];
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      return deck;
     }
 
     applyGrammarPower(effect = "POWER SURGE!") {
