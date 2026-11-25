@@ -12,6 +12,8 @@ export function createGameScene() {
     constructor() {
       super("BattleScene");
       this.energy = 150;
+      this.maxEnergy = 2000;
+      this.passiveEnergyBonus = 0;
       this.baseHealth = 100;
       this.baseShield = 0;
       this.laneLives = [3, 3, 3, 3, 3];
@@ -642,41 +644,49 @@ export function createGameScene() {
       if (this.questionTimer) this.questionTimer.paused = true;
       const overlay = this.add.container(0, 0).setDepth(950);
       this.upgradeChoiceOverlay = overlay;
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .88).setInteractive();
-      const panel = this.add.rectangle(480, 170, 820, 292, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
-      const heading = this.add.text(480, 43, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
-        fontFamily: "Nunito", fontSize: "20px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .9).setInteractive();
+      const panel = this.add.rectangle(480, 170, 940, 304, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const heading = this.add.text(480, 27, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
+        fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
       }).setOrigin(.5);
-      const sub = this.add.text(480, 70, defender.stats.name + " — select one permanent upgrade path", {
-        fontFamily: "Nunito", fontSize: "12px", color: "#d2e4f0", fontStyle: "800"
+      const sub = this.add.text(480, 50, defender.stats.name + " — choose one permanent upgrade", {
+        fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
       }).setOrigin(.5);
       overlay.add([shade, panel, heading, sub]);
       const choices = [
-        { id: "vanguard", title: "⚔ VANGUARD", desc: "More attack or counter damage\nand faster strikes", color: 0x70453e },
-        { id: "fortress", title: "🛡 FORTRESS", desc: "Much tougher defender\nand reduced incoming damage", color: 0x365a70 },
-        { id: "mystic", title: "✦ MYSTIC", desc: "Greater range / projectile speed\nor stronger energy production", color: 0x514477 }
+        { id: "vanguard", title: "⚔ VANGUARD", desc: "Attack power and\nfaster strikes", color: 0x70453e },
+        { id: "fortress", title: "🛡 FORTRESS", desc: "More health and\nstronger damage resistance", color: 0x365a70 },
+        { id: "mystic", title: "✦ MYSTIC", desc: "Better range, speed or\nSunwell production", color: 0x514477 },
+        { id: "ranger", title: "➶ RANGER", desc: "Longer range and\nfaster projectiles", color: 0x3e665d },
+        { id: "rapidfire", title: "⚡ RAPIDFIRE", desc: "Shorter attack cooldown\nand faster strikes", color: 0x665b32 },
+        { id: "executioner", title: "☠ EXECUTIONER", desc: "Higher damage against\ntough enemies and bosses", color: 0x69404b },
+        { id: "vitality", title: "♥ VITALITY", desc: "Major health increase\nand instant recovery", color: 0x3d5d73 },
+        { id: "energycore", title: "✧ ENERGY CORE", desc: "+1 energy per second\nand +100 energy now", color: 0x66518a }
       ];
       choices.forEach((choice, index) => {
-        const x = 205 + index * 275;
-        const card = this.add.rectangle(x, 190, 245, 165, choice.color, 1)
+        const col = index % 4;
+        const row = Math.floor(index / 4);
+        const x = 125 + col * 237;
+        const y = row === 0 ? 119 : 231;
+        const card = this.add.rectangle(x, y, 212, 99, choice.color, 1)
           .setStrokeStyle(2, 0xc8e7d8).setInteractive({ useHandCursor: true });
-        const title = this.add.text(x, 143, choice.title, {
-          fontFamily: "Nunito", fontSize: "16px", color: "#fff1c5", fontStyle: "1000"
+        const title = this.add.text(x, y - 29, choice.title, {
+          fontFamily: "Nunito", fontSize: "13px", color: "#fff1c5", fontStyle: "1000"
         }).setOrigin(.5);
-        const desc = this.add.text(x, 202, choice.desc, {
-          fontFamily: "Nunito", fontSize: "13px", color: "#f0f5f8", fontStyle: "800",
-          align: "center", lineSpacing: 7
+        const desc = this.add.text(x, y + 4, choice.desc, {
+          fontFamily: "Nunito", fontSize: "10px", color: "#f0f5f8", fontStyle: "800",
+          align: "center", lineSpacing: 3
         }).setOrigin(.5);
-        const pick = this.add.text(x, 251, "SELECT", {
-          fontFamily: "Nunito", fontSize: "12px", color: "#a9f0cf", fontStyle: "1000", letterSpacing: 1
+        const pick = this.add.text(x, y + 37, "SELECT", {
+          fontFamily: "Nunito", fontSize: "10px", color: "#a9f0cf", fontStyle: "1000", letterSpacing: 1
         }).setOrigin(.5);
-        card.on("pointerover", () => card.setStrokeStyle(4, 0xffdf78));
+        card.on("pointerover", () => card.setStrokeStyle(3, 0xffdf78));
         card.on("pointerout", () => card.setStrokeStyle(2, 0xc8e7d8));
         card.on("pointerdown", () => this.applyDefenderUpgradeChoice(defender, choice.id));
         overlay.add([card, title, desc, pick]);
       });
-      overlay.add(this.add.text(480, 300, "Battle pauses while you choose. Each tier grants one specialization.", {
-        fontFamily: "Nunito", fontSize: "11px", color: "#b8ccdc", fontStyle: "700"
+      overlay.add(this.add.text(480, 315, "Battle pauses while you choose. One choice is granted per evolution tier.", {
+        fontFamily: "Nunito", fontSize: "10px", color: "#b8ccdc", fontStyle: "700"
       }).setOrigin(.5));
     }
 
@@ -707,11 +717,42 @@ export function createGameScene() {
           defender.hp = Math.min(defender.maxHp, defender.hp + Math.round(defender.maxHp * .2));
           defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.15;
         }
+      } else if (choice === "ranger") {
+        if (defender.stats.damage > 0) {
+          defender.stats.range = Math.round(defender.stats.range * 1.22);
+          defender.stats.projectileSpeed = Math.round(defender.stats.projectileSpeed * 1.18);
+        } else {
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.2;
+        }
+      } else if (choice === "rapidfire") {
+        if (defender.stats.damage > 0) {
+          defender.stats.cooldown = Math.max(.3, defender.stats.cooldown * .82);
+        } else {
+          defender.retaliateCooldown = Math.max(.4, (defender.retaliateCooldown || .85) * .82);
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.12;
+        }
+      } else if (choice === "executioner") {
+        if (defender.stats.damage > 0) {
+          defender.stats.damage = Math.max(1, Math.round(defender.stats.damage * 1.2));
+        } else {
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.25;
+        }
+      } else if (choice === "vitality") {
+        const oldMax = defender.maxHp;
+        defender.maxHp = Math.round(defender.maxHp * 1.5);
+        defender.hp = Math.min(defender.maxHp, defender.hp + Math.round(oldMax * .5));
+      } else if (choice === "energycore") {
+        this.passiveEnergyBonus = Math.min(5, (this.passiveEnergyBonus || 0) + 1);
+        this.energy = Math.min(this.maxEnergy, this.energy + 100);
       }
       if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
       if (defender.group?.active) {
-        const color = choice === "vanguard" ? 0xffa27d : choice === "fortress" ? 0x9bc9ff : 0xc5a7ff;
-        const glow = this.add.circle(defender.x, defender.y, 34, color, .22).setDepth(47);
+        const colors = {
+          vanguard: 0xffa27d, fortress: 0x9bc9ff, mystic: 0xc5a7ff,
+          ranger: 0x9ce6c4, rapidfire: 0xffdf78, executioner: 0xff8a9c,
+          vitality: 0x9edbff, energycore: 0xd6a8ff
+        };
+        const glow = this.add.circle(defender.x, defender.y, 34, colors[choice] || 0xc5a7ff, .22).setDepth(47);
         this.tweens.add({ targets: glow, scale: 1.9, alpha: 0, duration: 420, onComplete: () => glow.destroy() });
       }
       if (this.upgradeChoiceOverlay) this.upgradeChoiceOverlay.destroy(true);
@@ -725,9 +766,6 @@ export function createGameScene() {
         if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
         if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
       }
-      const label = choice === "vanguard" ? "Vanguard" : choice === "fortress" ? "Fortress" : "Mystic";
-      this.message.textContent = defender.stats.name + " gained the " + label + " path!";
-      this.playSound("wave");
     }
 
     unlockAdvancedDeck() {
@@ -895,7 +933,7 @@ export function createGameScene() {
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
       const bossWave = this.wave % 5 === 0;
-      if (this.enemies.length >= (bossWave ? 34 : (this.wave > 5 ? 30 : 20))) return;
+      if (this.enemies.length >= (bossWave ? 46 : (this.wave > 5 ? 40 : 20))) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
@@ -1013,7 +1051,7 @@ export function createGameScene() {
       // The opening Grunt now survives five basic Archer hits. Elite classes
       // receive a meaningful durability jump, then scale with later waves.
       const baseHp = 5 + Math.floor((this.wave - 1) / 3);
-      const waveMultiplier = 1 + (this.wave - 1) * 0.18;
+      const waveMultiplier = 1 + (this.wave - 1) * 0.18 + Math.max(0, this.wave - 5) * 0.14;
       const enemyLevel = enemyRoster.indexOf(enemyType);
       const hpScale = [1, 1.2, 2, 1.6, 1.8, 1.7, 1.9, 2.4, 2.8, 4.2][Math.max(0, enemyLevel)];
       const hp = Math.max(5, Math.round((baseHp + [0, 1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
@@ -1077,15 +1115,21 @@ export function createGameScene() {
         this.enemiesSpawnedThisWave = 0;
         const bossWave = this.wave % 5 === 0;
         // Boss waves are full assaults: a larger minion wave followed by the boss.
+        // After the first boss, enemy waves become substantially larger.
+        // Later bosses bring heavier reinforcements; the active cap protects frame rate.
         this.enemiesPerWave = bossWave
-          ? Math.min(28, 16 + Math.floor(this.wave / 5) * 2 + (this.wave > 5 ? 3 : 0))
-          : Math.min(28, 8 + Math.floor((this.wave - 1) * 1.2) + (this.wave > 5 ? 3 : 0));
+          ? Math.min(55, this.wave === 5 ? 21 : 32 + Math.floor(this.wave / 5) * 3 + Math.max(0, this.wave - 10) * 2)
+          : this.wave <= 5
+            ? Math.min(20, 8 + Math.floor((this.wave - 1) * 1.2))
+            : Math.min(55, 22 + (this.wave - 6) * 4);
         if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
         this.waveActive = true;
         this.waveTransitioning = false;
         this.spawnTimer.delay = bossWave
-          ? Math.max(850, 1350 - Math.floor(this.wave / 5) * 45)
-          : Math.max(620, 3200 - (this.wave - 1) * 170 - (this.wave > 5 ? 250 : 0));
+          ? Math.max(650, 1150 - Math.floor(this.wave / 5) * 45)
+          : this.wave > 5
+            ? Math.max(480, 2050 - (this.wave - 6) * 130)
+            : Math.max(620, 3200 - (this.wave - 1) * 170);
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -1128,7 +1172,7 @@ export function createGameScene() {
       while (this.passiveEnergyClock >= 1) {
         this.passiveEnergyClock -= 1;
         const before = this.energy;
-        this.energy = Math.min(300, this.energy + 3);
+        this.energy = Math.min(this.maxEnergy, this.energy + 3 + (this.passiveEnergyBonus || 0));
         passiveEnergyGained ||= this.energy > before;
       }
       if (passiveEnergyGained) this.updateHud();
@@ -1155,7 +1199,7 @@ export function createGameScene() {
           while (d.energyClock >= d.stats.energyInterval) {
             d.energyClock -= d.stats.energyInterval;
             const before = this.energy;
-            this.energy = Math.min(300, this.energy + d.stats.energyRate);
+            this.energy = Math.min(this.maxEnergy, this.energy + d.stats.energyRate);
             const gained = this.energy - before;
             if (gained > 0) this.showSunwellEnergy(d, gained);
           }
@@ -1296,7 +1340,7 @@ export function createGameScene() {
           e.attackCooldown = (e.attackCooldown || 0) - dt;
           if (e.attackCooldown <= 0) {
             const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
-            const rawHit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
+            const rawHit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1 + Math.max(0, this.wave - 5) * 0.05));
             const guardReduction = blocker.unitType === "guardian" && blocker.level >= 2
               ? (blocker.level >= 3 ? .45 : .25) : 0;
             const hit = Math.max(1, Math.ceil(rawHit * (1 - guardReduction) * (1 - Math.min(.35, blocker.damageReduction || 0))));
@@ -1565,7 +1609,7 @@ export function createGameScene() {
         if (defeatedIndex !== -1) this.enemies.splice(defeatedIndex, 1);
         this.kills++;
         this.playSound("defeat");
-        this.energy = Math.min(300, this.energy + (enemy.isBoss ? 25 : 8));
+        this.energy = Math.min(this.maxEnergy, this.energy + (enemy.isBoss ? 25 : 8));
         this.updateHud();
       }
     }
@@ -1741,7 +1785,7 @@ export function createGameScene() {
         const restored = Math.min(25, 100 - this.baseHealth);
         this.baseHealth += restored;
         this.baseShield = Math.min(60, this.baseShield + 12);
-        this.energy = Math.min(300, this.energy + 25);
+        this.energy = Math.min(this.maxEnergy, this.energy + 25);
         feedback = "FORTIFY! +" + restored + "% keep health, +12 shield, +25 energy.";
         color = "#8de1a4";
       } else if (label.includes("ARMOR BREAK") || label.includes("SHIELD PIERCE") || label.includes("WEAKNESS")) {
@@ -1755,23 +1799,23 @@ export function createGameScene() {
         if (target) {
           dealt = target.isBoss ? bossDamage(.18, 30) : (this.damageEnemy(target, 12), 12);
         }
-        this.energy = Math.min(300, this.energy + 15);
+        this.energy = Math.min(this.maxEnergy, this.energy + 15);
         feedback = target ? (target.isBoss ? "BOSS CRITICAL! " + dealt + " armor-piercing damage!" : "CRITICAL STRIKE! 12 damage!") : "CRITICAL STRIKE! +15 ENERGY";
         color = "#ffb3a8";
       } else if (label.includes("GUARDIAN SHIELD")) {
         this.baseShield = Math.min(60, this.baseShield + 30);
-        this.energy = Math.min(300, this.energy + 25);
+        this.energy = Math.min(this.maxEnergy, this.energy + 25);
         feedback = "GUARDIAN SHIELD! +30 shield and +25 energy.";
         color = "#b9d8ff";
       } else if (label.includes("DRAGON FURY")) {
         const enemies = activeEnemies();
         enemies.forEach(enemy => { if (!enemy.isBoss) this.damageEnemy(enemy, 8); });
         const dealt = bossDamage(.12, 24);
-        this.energy = Math.min(300, this.energy + 20);
+        this.energy = Math.min(this.maxEnergy, this.energy + 20);
         feedback = "DRAGON FURY! Battlefield blast" + (dealt ? " + " + dealt + " boss damage!" : " +20 energy!");
         color = "#ffb27c";
       } else if (label.includes("SUPPLY") || label.includes("ENERGY SURGE") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
-        this.energy = Math.min(300, this.energy + 45);
+        this.energy = Math.min(this.maxEnergy, this.energy + 45);
         // Correct answers also briefly empower every deployed attacker.
         this.teamSurgeUntil = this.time.now + 9000;
         feedback = "TEAM SURGE! +45 energy and 9 seconds of faster attacks.";
@@ -1779,7 +1823,7 @@ export function createGameScene() {
       } else {
         const count = damageFrontEnemies(3, 4);
         const dealt = bossDamage(.08, 15);
-        this.energy = Math.min(300, this.energy + 20);
+        this.energy = Math.min(this.maxEnergy, this.energy + 20);
         feedback = "GRAMMAR POWER! " + count + " enemies hit" + (dealt ? "; boss takes " + dealt + " damage." : "; +20 energy.");
       }
 
@@ -1799,7 +1843,7 @@ export function createGameScene() {
 
     updateHud() {
       this.energyText.textContent = this.energy;
-      this.energyFill.style.width = (this.energy / 300 * 100) + "%";
+      this.energyFill.style.width = (this.energy / this.maxEnergy * 100) + "%";
       this.unitCards.forEach(card => {
         const stats = this.unitStats[card.dataset.unit];
         if (stats) {
