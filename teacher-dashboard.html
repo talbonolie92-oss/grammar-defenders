@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101b35">
+  <title>Teacher Dashboard • Grammar Defenders</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <header class="dash-header">
+    <a class="brand" href="./"><span class="brand-mark">GD</span><span><b>Grammar Defenders</b><small>TEACHER DASHBOARD</small></span></a>
+    <div class="header-actions"><span id="teacher-email"></span><button id="logout-button" class="button ghost hidden">Sign out</button></div>
+  </header>
+  <main class="dashboard">
+    <section id="firebase-notice" class="notice hidden">
+      <h2>Firebase setup is required</h2>
+      <p>The dashboard is ready, but this game has not been connected to a Firebase project yet. Add the web app settings in <code>src/firebase-config.js</code>, enable Email/Password and Anonymous sign-in, and create a Realtime Database. The setup instructions are in the repository README.</p>
+    </section>
+    <section id="login-panel" class="login-panel">
+      <p class="eyebrow">TEACHER ACCESS</p><h1>Welcome back, Teacher</h1>
+      <p>Sign in to create sessions, display joining QR codes, monitor students, and review results.</p>
+      <form id="login-form">
+        <label>Email address<input id="login-email" type="email" autocomplete="username" required></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
+        <button class="button primary" type="submit">Sign in</button>
+        <p id="login-status" class="status" role="status"></p>
+      </form>
+    </section>
+    <section id="dashboard-panel" class="hidden">
+      <div class="welcome-row"><div><p class="eyebrow">CLASSROOM CONTROL CENTER</p><h1>Your game sessions</h1><p>Create a session, share its QR code, and manage your students.</p></div><a class="button ghost" href="./">Open game</a></div>
+      <div class="dashboard-grid">
+        <section class="panel create-panel">
+          <div class="panel-title"><div><p class="eyebrow">NEW SESSION</p><h2>Create a game</h2></div><span class="step">01</span></div>
+          <form id="session-form" class="form-grid">
+            <label class="wide">Session name<input id="session-title" maxlength="70" placeholder="e.g. Grade 10 Grammar Challenge" required></label>
+            <label>Grade<select id="session-grade"><option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option selected>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>Mixed</option></select></label>
+            <label>Class / section<input id="session-section" placeholder="e.g. 10A"></label>
+            <label class="wide">Topic<input id="session-topic" placeholder="e.g. Articles and prepositions"></label>
+            <label>Game mode<select id="session-mode"><option value="endless">Endless Survival</option><option value="fixed">Fixed Waves</option></select></label>
+            <label>Time limit<select id="session-minutes"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option><option>45</option><option>60</option><option>90</option></select></label>
+            <label>Question interval<select id="session-interval"><option>30</option><option selected>45</option><option>60</option><option>90</option></select></label>
+            <label>Difficulty<select id="session-difficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></label>
+            <label class="check wide"><input id="session-late-join" type="checkbox" checked> Allow students to join after the game starts</label>
+            <button class="button primary wide" type="submit">Create session &amp; QR code</button>
+            <p id="create-status" class="status wide" role="status"></p>
+          </form>
+        </section>
+        <section class="panel sessions-panel">
+          <div class="panel-title"><div><p class="eyebrow">SESSION HISTORY</p><h2>Manage sessions</h2></div><span id="session-count" class="count">0</span></div>
+          <div class="session-filters"><input id="session-search" placeholder="Search your sessions..."><select id="session-filter"><option value="all">All sessions</option><option value="waiting">Waiting</option><option value="running">Running</option><option value="ended">Ended</option></select></div>
+          <div id="sessions-list" class="sessions-list"><div class="empty">Your sessions will appear here.</div></div>
+        </section>
+      </div>
+      <section id="session-detail" class="panel detail-panel hidden">
+        <div class="panel-title"><div><p class="eyebrow">SESSION MANAGEMENT</p><h2 id="detail-title">Session details</h2><p id="detail-meta" class="muted"></p></div><button id="close-detail" class="button ghost">Close</button></div>
+        <div id="session-share" class="share-box hidden"><div><b>Student joining QR</b><p>Students scan this code, enter their name and class/section, then wait for you to start.</p><input id="detail-link" readonly></div><div id="detail-qr" class="qr"></div></div>
+        <div class="detail-actions" id="detail-actions"></div>
+        <div class="detail-columns">
+          <section><h3>Live student roster <span id="player-count" class="count">0</span></h3><div id="players-list" class="players-list"></div></section>
+          <section><h3>Performance report</h3><div id="report-summary" class="report-summary"></div><div id="report-list" class="report-list"></div><button id="export-report" class="button ghost">Export CSV report</button></section>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="src/dashboard.js"></script>
+</body>
+</html>
