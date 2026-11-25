@@ -196,7 +196,8 @@ export function createGameScene() {
         if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
         e.currentTarget.textContent = this.soundOn ? "♫ Sound: On" : "♫ Sound: Off";
         this.message.textContent = this.soundOn ? "Battle sounds enabled." : "Battle sounds muted.";
-        if (this.soundOn) this.playSound("deploy");
+        if (this.soundOn) { this.startMusic(); this.playSound("deploy"); }
+        else this.stopMusic();
       });
     }
 
@@ -246,7 +247,7 @@ export function createGameScene() {
         const crystal = this.add.triangle(20, -31, -8, 9, 8, 9, 0, 0x9df5ff).setStrokeStyle(2, 0xf2ffff);
         const cape = this.add.triangle(-2, 8, -13, -12, 14, -12, 0, 27, 0x444d8e);
         parts.push(...legs, cape, torso, head, hood, face, staff, crystal);
-      } else if (unitType === "guardian") {
+      } else if (stats.health) {
         // Armored lane guardian with a broad shield held forward.
         legs = [this.add.rectangle(-8, 16, 10, 14, 0x46556b), this.add.rectangle(8, 16, 10, 14, 0x46556b)];
         const torso = this.add.rectangle(0, 1, 31, 29, 0x718ba8).setStrokeStyle(3, 0x354d6b);
@@ -259,20 +260,34 @@ export function createGameScene() {
         const sword = this.add.rectangle(20, -8, 4, 29, 0xdce9f5).setRotation(.25);
         parts.push(...legs, torso, head, helmet, crest, visor, shield, shieldMark, sword);
       } else {
-        // Friendly seedling hero with leaf ears.
-        legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
-        const body = this.add.circle(0, 0, 21, stats.body).setStrokeStyle(3, 0x2b7957);
-        const leafL = this.add.ellipse(-14, -22, 17, 28, 0x4baf77).setRotation(-.65);
-        const leafR = this.add.ellipse(14, -22, 17, 28, 0x5fc98a).setRotation(.65);
-        const eyes = [this.add.circle(-7, -3, 2.5, 0x20343b), this.add.circle(7, -3, 2.5, 0x20343b)];
-        const smile = this.add.arc(0, 4, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
-        parts.push(...legs, leafL, leafR, body, ...eyes, smile);
+        if (unitType === "sprout") {
+          legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
+          const body = this.add.circle(0, 0, 21, stats.body).setStrokeStyle(3, 0x2b7957);
+          const leafL = this.add.ellipse(-14, -22, 17, 28, 0x4baf77).setRotation(-.65);
+          const leafR = this.add.ellipse(14, -22, 17, 28, 0x5fc98a).setRotation(.65);
+          const eyes = [this.add.circle(-7, -3, 2.5, 0x20343b), this.add.circle(7, -3, 2.5, 0x20343b)];
+          const smile = this.add.arc(0, 4, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
+          parts.push(...legs, leafL, leafR, body, ...eyes, smile);
+        } else {
+          // Elite heroes use distinct silhouettes, armor, horns, and magical crests.
+          legs = [this.add.rectangle(-9, 16, 9, 14, 0x263748), this.add.rectangle(9, 16, 9, 14, 0x263748)];
+          const torso = this.add.triangle(0, 2, -18, -15, 18, -15, 0, 24, stats.body).setStrokeStyle(3, 0x28354a);
+          const head = this.add.circle(0, -20, 11, 0xe6b997).setStrokeStyle(2, 0x493c3b);
+          const brow = this.add.rectangle(0, -23, 20, 4, 0x352b37);
+          const eyes = [this.add.circle(-5, -19, 2.5, 0xfff3d2), this.add.circle(5, -19, 2.5, 0xfff3d2)];
+          const crest = this.add.star(0, -38, unitType === "titan" ? 8 : 5, 7, unitType === "titan" ? 23 : 15, stats.color).setStrokeStyle(2, 0xfff4d4);
+          const leftHorn = this.add.triangle(-14, -28, -7, 15, 7, 15, 0, stats.color);
+          const rightHorn = this.add.triangle(14, -28, -7, 15, 7, 15, 0, stats.color);
+          const weapon = this.add.rectangle(23, 0, unitType === "thorn" ? 9 : 5, 44, stats.color).setRotation(-.2);
+          const glow = this.add.circle(0, 0, unitType === "phoenix" || unitType === "titan" ? 32 : 25, stats.color, .18).setStrokeStyle(2, stats.color, .5);
+          parts.push(...legs, glow, torso, head, brow, ...eyes, crest, leftHorn, rightHorn, weapon);
+        }
       }
 
       group.add(parts);
       this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
       this.tweens.add({ targets: aura, alpha: .035, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
-      if (unitType !== "guardian") this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+      if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
 
       let healthBar = null;
       if (stats.health) {
@@ -329,6 +344,55 @@ export function createGameScene() {
       gain.connect(this.audioContext.destination);
       oscillator.start(now);
       oscillator.stop(now + duration + 0.02);
+    }
+
+    startMusic() {
+      if (!this.audioContext || this.musicGain) return;
+      const ctx = this.audioContext;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, ctx.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.055, ctx.currentTime + 1.2);
+      master.connect(ctx.destination);
+      this.musicGain = master;
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 1100;
+      filter.connect(master);
+      const notes = [110, 164.81, 220];
+      this.musicNodes = notes.map((hz, index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = index === 0 ? "sine" : "triangle";
+        osc.frequency.value = hz;
+        gain.gain.value = index === 0 ? 0.34 : 0.12;
+        osc.connect(gain);
+        gain.connect(filter);
+        osc.start();
+        return osc;
+      });
+      const chords = [
+        [110, 164.81, 220], [98, 146.83, 196],
+        [130.81, 196, 261.63], [87.31, 130.81, 174.61]
+      ];
+      this.musicEvent = this.time.addEvent({
+        delay: 5200, loop: true, callback: () => {
+          this.musicChordIndex = (this.musicChordIndex + 1) % chords.length;
+          const chord = chords[this.musicChordIndex];
+          this.musicNodes.forEach((osc, i) => osc.frequency.setTargetAtTime(chord[i], ctx.currentTime, 1.1));
+        }
+      });
+    }
+
+    stopMusic() {
+      if (this.musicEvent) { this.musicEvent.remove(false); this.musicEvent = null; }
+      if (this.musicGain && this.audioContext) {
+        try {
+          this.musicGain.gain.setTargetAtTime(0.0001, this.audioContext.currentTime, 0.18);
+          this.musicNodes.forEach(osc => { try { osc.stop(this.audioContext.currentTime + 0.7); } catch (_) {} });
+        } catch (_) {}
+      }
+      this.musicNodes = [];
+      this.musicGain = null;
     }
 
     spawnEnemy() {
@@ -510,8 +574,18 @@ export function createGameScene() {
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
             if (p.unitType === "mage" && p.target.group.active) {
-              p.target.slowUntil = this.time.now + 2600;
+              p.target.slowUntil = this.time.now + 3000;
               this.message.textContent = "Frost magic slows an enemy!";
+            }
+            if (p.unitType === "ember" || p.unitType === "phoenix") {
+              const splashDamage = p.unitType === "phoenix" ? 3 : 1;
+              this.enemies.slice().filter(e => e !== p.target && e.lane === p.target.lane && Math.abs(e.x - p.target.x) < 92)
+                .forEach(e => this.damageEnemy(e, splashDamage));
+            }
+            if (p.unitType === "volt") {
+              const chainTarget = this.enemies.filter(e => e !== p.target && e.lane === p.target.lane && Math.abs(e.x - p.target.x) < 145)
+                .sort((a, b) => Math.abs(a.x - p.target.x) - Math.abs(b.x - p.target.x))[0];
+              if (chainTarget) this.damageEnemy(chainTarget, 2);
             }
           }
         } else {
@@ -524,7 +598,7 @@ export function createGameScene() {
           e.x = Math.max(e.x, blocker.x + 34);
           e.attackCooldown = (e.attackCooldown || 0) - dt;
           if (e.attackCooldown <= 0) {
-            const hit = e.enemyType === "Brute" ? 5 : e.enemyType === "Runner" ? 2 : 3;
+            const hit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
             blocker.hp -= hit;
             blocker.healthBar && this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
@@ -560,7 +634,18 @@ export function createGameScene() {
     fireProjectile(defender, target) {
       const stats = defender.stats;
       const p = this.add.container(defender.x + 18, defender.y - 5);
-      if (defender.unitType === "archer") {
+      if (defender.unitType === "ember" || defender.unitType === "phoenix") {
+        const glow = this.add.circle(0, 0, defender.unitType === "phoenix" ? 22 : 16, stats.color, .3);
+        const core = this.add.star(0, 0, 6, 6, 13, stats.color).setStrokeStyle(2, 0xffefc4);
+        p.add([glow, core]);
+      } else if (defender.unitType === "volt") {
+        const glow = this.add.circle(0, 0, 18, 0xf4ed8b, .25);
+        const bolt = this.add.star(0, 0, 4, 4, 14, 0xf9f6bd).setStrokeStyle(2, 0xffffff);
+        p.add([glow, bolt]);
+      } else if (defender.unitType === "thorn") {
+        const spike = this.add.triangle(0, 0, -12, 8, 12, 8, 0, -12, 0x9ce28c).setStrokeStyle(2, 0xe6ffd9);
+        p.add([spike]);
+      } else if (defender.unitType === "archer") {
         const shaft = this.add.rectangle(0, 0, 23, 3, 0xffe4a5);
         const tip = this.add.triangle(13, 0, -5, -5, -5, 5, 5, 0xfff4d0);
         const tail = this.add.triangle(-11, 0, 4, -5, 4, 5, -4, 0xd9e7f5);
@@ -594,7 +679,7 @@ export function createGameScene() {
 
     damageEnemy(enemy, amount) {
       if (!enemy.group.active) return;
-      const appliedDamage = enemy.enemyType === "Brute" && !enemy.isBoss ? Math.max(0.75, amount * 0.75) : amount;
+      const appliedDamage = ["Brute", "Bone Warrior", "War Crusher"].includes(enemy.enemyType) && !enemy.isBoss ? Math.max(0.75, amount * (enemy.enemyType === "Bone Warrior" ? 0.65 : 0.75)) : amount;
       enemy.hp -= appliedDamage;
       if (enemy.isBoss) {
         const healthRatio = enemy.hp / enemy.maxHp;
