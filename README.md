@@ -41,7 +41,7 @@ The dashboard is designed for authenticated teachers and includes:
 
 ## Firebase setup required
 
-The teacher dashboard, student lobby, live roster, and saved reports use Firebase Authentication and Realtime Database. The UI and integration code are in the repository, but a Firebase project has not yet been connected.
+The teacher dashboard, student lobby, live roster, and saved reports are connected to the Grammar Defenders Firebase project through the browser Web SDK. The Firebase web configuration is stored in `src/firebase-config.js`; teacher sign-in uses Email/Password and students use Anonymous Authentication. Keep the database rules published from `database.rules.json` in sync with the repository version.
 
 1. Create a Firebase project for Grammar Defenders.
 2. In **Authentication → Sign-in method**, enable **Email/Password** and **Anonymous**.
