@@ -15,6 +15,7 @@ export function createGameScene() {
       this.baseHealth = 100;
       this.baseShield = 0;
       this.laneLives = [3, 3, 3, 3, 3];
+      this.laneLifeLabels = [];
       this.wave = 1;
       this.defenders = [];
       this.enemies = [];
@@ -160,10 +161,15 @@ export function createGameScene() {
       g.fillStyle(0x2b314b); g.fillRoundedRect(868, GRID_Y + 66, 55, GRID_H - 82, 24);
       g.fillStyle(0x9c5b87, 0.25); g.fillEllipse(895, GRID_Y + GRID_H / 2, 44, GRID_H - 60);
       g.lineStyle(3, 0xe08eb5, 0.75); g.strokeEllipse(895, GRID_Y + GRID_H / 2, 44, GRID_H - 60);
+      this.laneLifeLabels = [];
       for (let i = 0; i < LANES; i++) {
-        this.add.text(39, GRID_Y + i * TILE_H + TILE_H / 2, String(i + 1), {
-          fontFamily: "Nunito", fontSize: "15px", color: "#173f38", fontStyle: "900"
+        this.add.text(39, GRID_Y + i * TILE_H + 13, String(i + 1), {
+          fontFamily: "Nunito", fontSize: "11px", color: "#173f38", fontStyle: "900"
         }).setOrigin(.5);
+        const laneLife = this.add.text(39, GRID_Y + i * TILE_H + 40, "♥♥♥", {
+          fontFamily: "Arial", fontSize: "8px", color: "#ffb5c8", fontStyle: "bold"
+        }).setOrigin(.5);
+        this.laneLifeLabels.push(laneLife);
       }
       this.add.text(39, 24, "KEEP", { fontFamily: "Nunito", fontSize: "12px", color: "#e0ffe4", fontStyle: "900" }).setOrigin(.5);
       this.add.text(895, 24, "DARK GATE", { fontFamily: "Nunito", fontSize: "12px", color: "#ffe0ee", fontStyle: "900" }).setOrigin(.5);
@@ -1075,6 +1081,7 @@ export function createGameScene() {
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%" + (this.baseShield > 0 ? " +" + this.baseShield : "");
       if (this.laneLivesText) this.laneLivesText.textContent = this.laneLives.map((lives, lane) => (lane + 1) + ":" + "♥".repeat(lives) + "♡".repeat(3 - lives)).join("  ");
+      this.laneLifeLabels?.forEach((label, lane) => label.setText("♥".repeat(this.laneLives[lane]) + "♡".repeat(3 - this.laneLives[lane])));
       if (this.timerText) {
         const seconds = this.remainingSeconds;
         const mins = Math.floor(seconds / 60);
