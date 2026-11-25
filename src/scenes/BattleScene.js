@@ -849,7 +849,8 @@ export function createGameScene() {
             if (gained > 0) this.showSunwellEnergy(d, gained);
           }
         }
-        if (d.stats.role === "Lane blocker" || d.stats.role === "Heavy blocker" || d.stats.role === "Ultimate fortress" || d.stats.energyRate) return;
+        // Only units with an actual attack value fire projectiles; blockers and energy units remain support units.
+        if (!(d.stats.damage > 0) || d.stats.energyRate) return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
           // Select the nearest valid target in one pass; avoid allocating and sorting
