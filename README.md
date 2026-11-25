@@ -18,7 +18,9 @@ The browser game currently includes:
 - Twenty-four categorized grammar questions across middle- and upper-secondary topics
 - Distinct grammar-triggered tactical powers: freeze, keep restoration, armor-breaking damage, critical strikes, and energy surges
 - Optional synthesized battle sound effects
-- Responsive HTML/CSS shell and Phaser 3 battlefield
+- Responsive fantasy-themed interface with layered procedural scenery, rune-marked lanes, a glowing Dark Gate, and animated defender auras
+- Lightweight ambient particles, deployment animations, and keep-damage camera feedback
+- Performance-conscious Phaser rendering with a capped device-pixel ratio, 60 FPS target, and suspended rendering when the tab is hidden
 
 ## Controls
 
@@ -56,4 +58,4 @@ Then visit http://localhost:8000.
 - GitHub Pages deployment
 - Firebase Realtime Database planned for classroom data and multiplayer
 
-The current build is an active development milestone. Endless Survival accepts a session configuration through window.GRAMMAR_DEFENDERS_CONFIG = { mode: "endless", timeLimitMinutes: 15 } before the game module loads, or for testing through ?mode=endless&minutes=15. The teacher dashboard will provide these settings through the session setup screen. Teacher tools, cloud saving, student joining, and multiplayer are not yet implemented.
+The current build is an active development milestone. Visual polish uses original procedural Phaser graphics rather than downloaded or copyrighted game art. The renderer caps high-density displays at 1.5x resolution and sleeps while the browser tab is hidden to reduce unnecessary GPU and battery use. Endless Survival accepts a session configuration through window.GRAMMAR_DEFENDERS_CONFIG = { mode: "endless", timeLimitMinutes: 15 } before the game module loads, or for testing through ?mode=endless&minutes=15. The teacher dashboard will provide these settings through the session setup screen. Teacher tools, cloud saving, student joining, and multiplayer are not yet implemented.
