@@ -502,14 +502,24 @@ export function createGameScene() {
 
     stopMusic() {
       if (this.musicEvent) { this.musicEvent.remove(false); this.musicEvent = null; }
-      if (this.musicGain && this.audioContext) {
+      const master = this.musicGain;
+      const ctx = this.audioContext;
+      this.musicGain = null;
+      this.musicOn = false;
+      if (master && ctx) {
         try {
-          this.musicGain.gain.setTargetAtTime(0.0001, this.audioContext.currentTime, 0.18);
-          this.musicNodes.forEach(osc => { try { osc.stop(this.audioContext.currentTime + 0.7); } catch (_) {} });
-        } catch (_) {}
+          const now = ctx.currentTime;
+          master.gain.cancelScheduledValues(now);
+          master.gain.setTargetAtTime(0.0001, now, 0.06);
+          this.musicNodes.forEach(osc => { try { osc.stop(now + 0.25); } catch (_) {} });
+          window.setTimeout(() => { try { master.disconnect(); } catch (_) {} }, 500);
+        } catch (_) {
+          try { master.disconnect(); } catch (_) {}
+        }
       }
       this.musicNodes = [];
-      this.musicGain = null;
+      const toggle = document.getElementById("music-toggle");
+      if (toggle) toggle.textContent = "♫ Music: Off";
     }
 
     spawnEnemy() {
