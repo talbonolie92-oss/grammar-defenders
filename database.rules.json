@@ -12,6 +12,7 @@
         "players": {
           ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$uid": {
+            ".read": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
             ".write": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
             ".validate": "auth != null && (root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid || !data.exists() || (newData.child('name').val() === data.child('name').val() && newData.child('classSection').val() === data.child('classSection').val()))"
           }
