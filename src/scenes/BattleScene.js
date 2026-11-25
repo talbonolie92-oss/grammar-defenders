@@ -40,6 +40,9 @@ export function createGameScene() {
       this.musicNodes = [];
       this.musicGain = null;
       this.musicChordIndex = 0;
+      this.lastCombatSoundAt = Object.create(null);
+      this.lastCombatVisualAt = 0;
+      this.lastKillVisualAt = 0;
       this.enemiesSpawnedThisWave = 0;
       this.enemiesPerWave = 8;
       this.waveActive = true;
@@ -806,11 +809,11 @@ export function createGameScene() {
         victory: [520, 1040, 0.5, "sine"],
         lane: [150, 65, 0.22, "sawtooth"]
       };
-      if (kind === "shot") {
-        const stamp = performance.now();
-        if (stamp - (this.lastShotSoundAt || 0) < 110) return;
-        this.lastShotSoundAt = stamp;
-      }
+      // Dense volleys and mass kills can request dozens of sounds in one frame.
+      const stamp = performance.now();
+      const soundGap = kind === "shot" ? 110 : kind === "defeat" ? 95 : kind === "hit" ? 70 : kind === "energy" ? 180 : 0;
+      if (soundGap && stamp - (this.lastCombatSoundAt[kind] || 0) < soundGap) return;
+      if (soundGap) this.lastCombatSoundAt[kind] = stamp;
       const [startHz, endHz, duration, type] = presets[kind] || presets.hit;
       const now = this.audioContext.currentTime;
       const oscillator = this.audioContext.createOscillator();
@@ -1359,8 +1362,13 @@ export function createGameScene() {
               blocker.hp = Math.max(0, blocker.hp - Math.ceil(hit * .35));
             }
             if (blocker.healthBar?.active) this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
-            this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
-            this.tweens.add({ targets: e.group, x: e.x + 2, yoyo: true, duration: 70 });
+            // Rate-limit impact tweens when several lanes are fighting at once.
+            const meleeVisualNow = this.time.now;
+            if (!this.lastMeleeVisualAt || meleeVisualNow - this.lastMeleeVisualAt >= 75) {
+              this.lastMeleeVisualAt = meleeVisualNow;
+              this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
+              this.tweens.add({ targets: e.group, x: e.x + 2, yoyo: true, duration: 70 });
+            }
             e.attackCooldown = 0.85;
             // A defender struck in melee also retaliates. Ranged defenders keep their
             // projectile damage; support/tank units gain a small close-range counter.
@@ -1564,20 +1572,24 @@ export function createGameScene() {
       }
       // Throttle cosmetic hit feedback so dense waves do not create
       // overlapping tweens or a burst of identical hit sounds.
-      const hitFeedbackReady = !enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140;
+      const hitFeedbackReady = (!enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140)
+        && (!this.lastCombatVisualAt || this.time.now - this.lastCombatVisualAt >= 45);
       if (hitFeedbackReady) {
         enemy.lastHitFeedbackAt = this.time.now;
+        this.lastCombatVisualAt = this.time.now;
         enemy.group.setScale(1.08);
         this.tweens.add({ targets: enemy.group, scale: 1, duration: 110 });
       }
-      if (!this.lastHitSoundAt || this.time.now - this.lastHitSoundAt >= 75) {
-        this.lastHitSoundAt = this.time.now;
-        this.playSound("hit");
-      }
+      this.playSound("hit");
       if (enemy.hp <= 0) {
         if (enemy.laneAlert?.active) enemy.laneAlert.destroy();
-        const burst = this.add.circle(enemy.x, enemy.y, 12, 0xffd58c, .8);
-        this.tweens.add({ targets: burst, scale: 2.8, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
+        // Mass splash kills get a capped rate of decorative death bursts.
+        const killVisualNow = this.time.now;
+        if (!this.lastKillVisualAt || killVisualNow - this.lastKillVisualAt >= 65) {
+          this.lastKillVisualAt = killVisualNow;
+          const burst = this.add.circle(enemy.x, enemy.y, 12, 0xffd58c, .8);
+          this.tweens.add({ targets: burst, scale: 2.8, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
+        }
         enemy.group.destroy();
         const defeatedIndex = this.enemies.indexOf(enemy);
         if (defeatedIndex !== -1) this.enemies.splice(defeatedIndex, 1);
@@ -1753,7 +1765,14 @@ export function createGameScene() {
           } else {
             enemy.slowUntil = this.time.now + 5200;
           }
-          this.tweens.add({ targets: enemy.body, tint: 0x8feaff, duration: 180, yoyo: true, repeat: 2 });
+          if (enemy.body?.active) enemy.body.setTint(0x8feaff);
+        });
+        // One shared reset replaces a repeating tween for every enemy.
+        this.time.delayedCall(620, () => {
+          for (let i = 0; i < this.enemies.length; i++) {
+            const enemy = this.enemies[i];
+            if (enemy.body?.active) enemy.body.clearTint();
+          }
         });
         feedback = boss ? "BOSS FROZEN! The boss is stopped for 4.8 seconds." : "FREEZE BLAST! All attackers slowed.";
         color = "#9deaff";
