@@ -703,9 +703,14 @@ export function createGameScene() {
       if (this.upgradeChoiceOverlay) this.upgradeChoiceOverlay.destroy(true);
       this.upgradeChoiceOverlay = null;
       this.upgradeChoiceActive = false;
-      if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
-      if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
       this.updateHud();
+      if (this.pendingBossQuestion && !this.gameOver) {
+        this.pendingBossQuestion = false;
+        this.showQuestion(true);
+      } else {
+        if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
+        if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
+      }
       const label = choice === "vanguard" ? "Vanguard" : choice === "fortress" ? "Fortress" : "Mystic";
       this.message.textContent = defender.stats.name + " gained the " + label + " path!";
       this.playSound("wave");
@@ -1500,6 +1505,10 @@ export function createGameScene() {
 
     showQuestion(isBoss = false) {
       if (!this.battleStarted || this.gameOver) return;
+      if (this.upgradeChoiceActive) {
+        if (isBoss) this.pendingBossQuestion = true;
+        return;
+      }
       if (this.questionActive) {
         if (isBoss) this.pendingBossQuestion = true;
         return;
