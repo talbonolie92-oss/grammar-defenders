@@ -246,3 +246,7 @@ button{font:inherit}
 @keyframes waitPulse{50%{box-shadow:0 0 0 13px #79e9b311,0 0 25px #79e9b3}}
 .dashboard-link{text-decoration:none;font-size:11px;padding:9px 12px}
 @media(max-width:560px){.dashboard-link{font-size:9px;padding:7px 8px}.top-actions{gap:5px}.brand{gap:7px}}
+
+.setup-actions{grid-template-columns:1fr 1fr}
+.dashboard-setup-link{display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;min-height:42px}
+@media(max-width:560px){.setup-actions{grid-template-columns:1fr}}
