@@ -93,7 +93,6 @@ export function createGameScene() {
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
-      // Energy now comes from Sunwell Keepers, enemy defeats, and grammar rewards.
       // Spawn the first attacker immediately so the battlefield never starts empty.
       this.spawnEnemySafely();
       this.spawnTimer = this.time.addEvent({
@@ -814,10 +813,14 @@ export function createGameScene() {
       const dt = Math.min(delta / 1000, 0.05);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
       this.passiveEnergyClock += dt;
+      let passiveEnergyGained = false;
       while (this.passiveEnergyClock >= 1) {
         this.passiveEnergyClock -= 1;
+        const before = this.energy;
         this.energy = Math.min(300, this.energy + 1);
+        passiveEnergyGained ||= this.energy > before;
       }
+      if (passiveEnergyGained) this.updateHud();
       this.defenders.forEach(d => {
         if (d.stats.energyRate) {
           d.energyClock = (d.energyClock || 0) + dt;
