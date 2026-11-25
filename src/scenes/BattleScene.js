@@ -61,33 +61,82 @@ export function createGameScene() {
 
     drawWorld() {
       const g = this.add.graphics();
-      g.fillGradientStyle(0x244c4b, 0x244c4b, 0x365d50, 0x365d50, 1);
+      // Distant twilight sky and layered mountain silhouettes.
+      g.fillGradientStyle(0x142b43, 0x1d4050, 0x426b58, 0x315b4d, 1);
       g.fillRect(0, 0, 960, 540);
+      g.fillStyle(0x9ac9a0, 0.12);
+      g.fillCircle(770, 48, 58);
+      g.fillStyle(0xd9efbb, 0.13);
+      g.fillCircle(770, 48, 39);
+      g.fillStyle(0x183c43, 0.48);
+      g.fillTriangle(0, 150, 180, 42, 365, 150);
+      g.fillTriangle(260, 150, 500, 30, 740, 150);
+      g.fillTriangle(620, 150, 825, 55, 1020, 150);
+      // Forest silhouettes behind the lanes.
+      for (let i = 0; i < 20; i++) {
+        const x = (i * 53) % 950;
+        const y = 62 + (i % 3) * 19;
+        g.fillStyle(i % 2 ? 0x173b3e : 0x204b45, 0.55);
+        g.fillTriangle(x, y + 48, x + 17, y, x + 34, y + 48);
+        g.fillRect(x + 13, y + 37, 8, 24);
+      }
+      // Stone-and-moss lane foundations.
       for (let lane = 0; lane < LANES; lane++) {
         const y = GRID_Y + lane * TILE_H;
-        g.fillStyle(lane % 2 ? 0x3b7058 : 0x477b5e, 0.9);
-        g.fillRoundedRect(GRID_X, y, GRID_W, TILE_H, 5);
-        g.lineStyle(2, 0x8bb78a, 0.22);
-        g.strokeRoundedRect(GRID_X, y, GRID_W, TILE_H, 5);
+        g.fillStyle(0x102b2c, 0.42);
+        g.fillRoundedRect(GRID_X - 5, y + 4, GRID_W + 10, TILE_H, 9);
+        g.fillStyle(lane % 2 ? 0x376b55 : 0x477b5d, 0.98);
+        g.fillRoundedRect(GRID_X, y, GRID_W, TILE_H - 3, 8);
+        g.lineStyle(2, 0xb4d89a, 0.22);
+        g.strokeRoundedRect(GRID_X, y, GRID_W, TILE_H - 3, 8);
+        g.fillStyle(0x1c4c43, 0.2);
+        g.fillRect(GRID_X + 2, y + TILE_H - 13, GRID_W - 4, 9);
         for (let col = 0; col < 7; col++) {
           const x = GRID_X + col * TILE_W;
-          g.lineStyle(1, 0xd1e3ad, 0.18);
-          g.strokeRect(x, y, TILE_W, TILE_H);
+          g.lineStyle(1, 0xe1efbd, 0.18);
+          g.strokeRoundedRect(x + 2, y + 2, TILE_W - 4, TILE_H - 7, 5);
           if ((lane + col) % 3 === 0) {
-            g.fillStyle(0x9dc57c, 0.18);
-            g.fillCircle(x + 24, y + 24, 3);
-            g.fillCircle(x + 78, y + 63, 2);
+            g.fillStyle(0xc6e69a, 0.25);
+            g.fillCircle(x + 21, y + 22, 2.5);
+            g.fillCircle(x + 83, y + 61, 2);
+            g.fillStyle(0x244d3e, 0.25);
+            g.fillEllipse(x + 54, y + 70, 26, 5);
+          }
+          // Tiny rune stones give each tile a readable fantasy identity.
+          if ((lane * 7 + col) % 5 === 0) {
+            g.lineStyle(1, 0xe7d59a, 0.26);
+            g.strokeCircle(x + 91, y + 17, 5);
+            g.lineBetween(x + 91, y + 12, x + 91, y + 22);
           }
         }
       }
-      // Friendly base and enemy gate
-      g.fillStyle(0x9ad5a4, 1); g.fillRoundedRect(18, GRID_Y + 68, 42, 350, 12);
-      g.fillStyle(0x6b4b54, 1); g.fillRoundedRect(850, GRID_Y + 68, 88, 350, 12);
-      this.add.text(28, 54, "KEEP", { fontFamily: "Nunito", fontSize: "13px", color: "#d8ffe4", fontStyle: "900" });
-      this.add.text(864, 54, "DARK GATE", { fontFamily: "Nunito", fontSize: "13px", color: "#ffe1e1", fontStyle: "900" });
-      this.add.text(480, 28, "THE EMERALD FRONTIER", { fontFamily: "Nunito", fontSize: "16px", color: "#e8f5d5", fontStyle: "900" }).setOrigin(.5);
+      // Keep: layered walls, roof, banner and glowing crystal.
+      g.fillStyle(0x0c292b, 0.55); g.fillRoundedRect(13, GRID_Y + 61, 51, 365, 13);
+      g.fillStyle(0x6fae87); g.fillRoundedRect(18, GRID_Y + 69, 42, 348, 10);
+      g.fillStyle(0xb8e5a6); g.fillRoundedRect(23, GRID_Y + 78, 32, 330, 7);
+      g.fillStyle(0x315d55); g.fillTriangle(12, GRID_Y + 77, 39, GRID_Y + 39, 66, GRID_Y + 77);
+      g.fillStyle(0xf4dc8d); g.fillCircle(39, GRID_Y + 56, 8);
+      // Dark gate: stone pillars and a glowing portal.
+      g.fillStyle(0x182638); g.fillRoundedRect(850, GRID_Y + 60, 91, 365, 13);
+      g.fillStyle(0x624d60); g.fillRoundedRect(858, GRID_Y + 72, 75, 340, 9);
+      g.fillStyle(0x2b314b); g.fillRoundedRect(868, GRID_Y + 100, 55, 284, 24);
+      g.fillStyle(0x9c5b87, 0.25); g.fillEllipse(895, GRID_Y + 242, 44, 260);
+      g.lineStyle(3, 0xe08eb5, 0.75); g.strokeEllipse(895, GRID_Y + 242, 44, 260);
       for (let i = 0; i < LANES; i++) {
-        this.add.text(39, GRID_Y + i * TILE_H + TILE_H / 2, String(i + 1), { fontFamily: "Nunito", fontSize: "16px", color: "#163d36", fontStyle: "900" }).setOrigin(.5);
+        this.add.text(39, GRID_Y + i * TILE_H + TILE_H / 2, String(i + 1), {
+          fontFamily: "Nunito", fontSize: "15px", color: "#173f38", fontStyle: "900"
+        }).setOrigin(.5);
+      }
+      this.add.text(39, 55, "KEEP", { fontFamily: "Nunito", fontSize: "12px", color: "#e0ffe4", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(895, 55, "DARK GATE", { fontFamily: "Nunito", fontSize: "12px", color: "#ffe0ee", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(480, 27, "THE EMERALD FRONTIER", {
+        fontFamily: "Nunito", fontSize: "16px", color: "#efffce", fontStyle: "900",
+        stroke: "#173a3a", strokeThickness: 4
+      }).setOrigin(.5);
+      // Ambient drifting motes, deliberately few and lightweight.
+      for (let i = 0; i < 12; i++) {
+        const mote = this.add.circle(95 + i * 67, 58 + (i % 4) * 11, 1.8, 0xd9efaa, 0.5);
+        this.tweens.add({ targets: mote, y: mote.y - 12, alpha: 0.12, duration: 2400 + i * 90, yoyo: true, repeat: -1, delay: i * 110 });
       }
     }
 
@@ -115,7 +164,7 @@ export function createGameScene() {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (AudioContextClass) this.audioContext = new AudioContextClass();
         }
-        if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume();
+        if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
         e.currentTarget.textContent = this.soundOn ? "♫ Sound: On" : "♫ Sound: Off";
         this.message.textContent = this.soundOn ? "Battle sounds enabled." : "Battle sounds muted.";
         if (this.soundOn) this.playSound("deploy");
@@ -139,14 +188,25 @@ export function createGameScene() {
       const x = GRID_X + col * TILE_W + TILE_W / 2;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const group = this.add.container(x, y);
-      const shadow = this.add.ellipse(0, 25, 58, 14, 0x10251d, .28);
-      const body = this.add.circle(0, 0, unitType === "mage" ? 23 : 22, stats.body).setStrokeStyle(3, unitType === "archer" ? 0x8a5d28 : 0x2b7957);
-      const accent = unitType === "sprout"
-        ? [this.add.ellipse(-13, -21, 18, 29, 0x4baf77).setRotation(-.65), this.add.ellipse(13, -21, 18, 29, 0x5fc98a).setRotation(.65)]
-        : [this.add.circle(0, -25, 9, unitType === "mage" ? 0x83eaff : 0xf5d58e)];
-      const face = this.add.text(0, 0, stats.symbol, { fontFamily: "Arial", fontSize: unitType === "archer" ? "21px" : "22px", color: "#fff6c9", fontStyle: "bold" }).setOrigin(.5);
-      group.add([shadow, ...accent, body, face]);
-      this.tweens.add({ targets: group, scale: { from: .3, to: 1 }, duration: 260, ease: "Back.Out" });
+      const shadow = this.add.ellipse(0, 25, 58, 14, 0x10251d, .34);
+      const aura = this.add.circle(0, 0, 29, stats.body, .13).setStrokeStyle(2, stats.color, .5);
+      const body = this.add.circle(0, 0, unitType === "mage" ? 22 : 21, stats.body).setStrokeStyle(3, unitType === "archer" ? 0x8a5d28 : 0x2b7957);
+      const feet = this.add.ellipse(0, 15, 25, 10, 0x25443b, .5);
+      const eyeL = this.add.circle(-7, -3, 2.5, 0x20343b);
+      const eyeR = this.add.circle(7, -3, 2.5, 0x20343b);
+      const smile = this.add.arc(0, 3, 7, 15, 15, 165, false, 0x28463c).setStrokeStyle(1.5, 0x28463c);
+      const ornament = unitType === "sprout"
+        ? [this.add.ellipse(-13, -21, 17, 28, 0x4baf77).setRotation(-.65), this.add.ellipse(13, -21, 17, 28, 0x5fc98a).setRotation(.65)]
+        : unitType === "archer"
+          ? [this.add.arc(0, -8, 24, 205, 335, false, 0x855a2d).setStrokeStyle(4, 0x855a2d), this.add.line(0, -28, 0, -2, 0, 19, 0xffe3a1).setLineWidth(2)]
+          : [this.add.circle(0, -24, 9, 0x83eaff).setStrokeStyle(2, 0xf2ffff), this.add.triangle(0, -34, -7, 8, 7, 8, 0, 0xd7f6ff)];
+      const emblem = this.add.text(0, 1, unitType === "sprout" ? "✦" : unitType === "archer" ? "➶" : "✧", {
+        fontFamily: "Arial", fontSize: "17px", color: "#fff8d7", fontStyle: "bold"
+      }).setOrigin(.5);
+      group.add([shadow, aura, feet, ...ornament, body, eyeL, eyeR, smile, emblem]);
+      this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 300, ease: "Back.Out" });
+      this.tweens.add({ targets: aura, alpha: .04, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
+      this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
       this.defenders.push({ lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35), unitType, stats });
       this.message.textContent = stats.name + " deployed!";
       this.playSound("deploy");
@@ -256,7 +316,7 @@ export function createGameScene() {
 
     update(time, delta) {
       if (this.gameOver) return;
-      const dt = delta / 1000;
+      const dt = Math.min(delta / 1000, 0.05);
       this.defenders.forEach(d => {
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
