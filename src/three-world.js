@@ -280,7 +280,7 @@ export async function createThreeWorld(container) {
       mesh.position.set((projectile.x - 480) / 50, 0.24, (projectile.y - 170) / 50);
       mesh.rotation.z += 0.12;
       mesh.visible = true;
-      projectile.setVisible?.(false);
+      // Keep Phaser projectiles visible until the 3D overlay is verified on devices.
       activeProjectiles.add(projectile);
     });
     for (const [projectile, mesh] of projectileMeshes) {
