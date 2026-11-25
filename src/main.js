@@ -22,7 +22,7 @@ const config = {
   type: Phaser.AUTO,
   parent: "game-container",
   width: 960,
-  height: 540,
+  height: 340,
   backgroundColor: "#173b43",
   resolution: pixelRatio,
   render: {
