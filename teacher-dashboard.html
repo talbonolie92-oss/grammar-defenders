@@ -62,7 +62,7 @@
           <label>Topic / lesson<input id="bank-topic" maxlength="70" placeholder="e.g. Customer Service"></label>
           <label class="wide">Upload questions (.JSON or .CSV)<input id="bank-file" type="file" accept=".json,.csv,application/json,text/csv"></label>
           <button id="bank-load-file" class="button ghost" type="button">Load file into draft</button>
-          <p class="bank-help">CSV columns: topic, grade, question, answer1, answer2, answer3, correct, effect. For JSON, use an array of question objects with q, a, and correct fields.</p>
+          <p class="bank-help">CSV columns: topic, grade, question, answer1, answer2, answer3, correct, effect. Correct accepts A/B/C or 1/2/3. <a class="bank-template-link" href="question-bank-template.csv" download>Download CSV template</a>. For JSON, use an array of question objects with q, a, and correct fields.</p>
         </div>
         <form id="manual-question-form" class="manual-question-form">
           <h3>Add a question manually</h3>
