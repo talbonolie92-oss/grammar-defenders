@@ -200,9 +200,22 @@ export function createGameScene() {
       this.modeText = document.getElementById("battle-mode");
       this.message = document.getElementById("battle-message");
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
+      this.removeModeButton = document.getElementById("remove-mode-button");
+      this.removeMode = false;
+      this.removeModeButton?.addEventListener("click", () => {
+        this.removeMode = !this.removeMode;
+        this.removeModeButton.classList.toggle("active", this.removeMode);
+        this.removeModeButton.setAttribute("aria-pressed", String(this.removeMode));
+        this.message.textContent = this.removeMode
+          ? "Remove mode: tap a deployed defender to remove it. No energy refund."
+          : "Remove mode cancelled. Select a defender to deploy.";
+      });
       this.unitCards.forEach(card => {
         card.addEventListener("click", () => {
           if (card.disabled) return;
+          this.removeMode = false;
+          this.removeModeButton?.classList.remove("active");
+          this.removeModeButton?.setAttribute("aria-pressed", "false");
           this.selectedUnit = card.dataset.unit;
           this.unitCards.forEach(c => {
             const selected = c === card;
@@ -240,7 +253,13 @@ export function createGameScene() {
       if (!this.battleStarted || this.gameOver || this.questionActive || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
       const col = Math.floor((pointer.x - GRID_X) / TILE_W);
       const lane = Math.floor((pointer.y - GRID_Y) / TILE_H);
-      if (this.defenders.some(d => d.lane === lane && d.col === col)) return;
+      const existing = this.defenders.find(d => d.lane === lane && d.col === col);
+      if (this.removeMode) {
+        if (existing) this.removeDefender(existing);
+        else this.message.textContent = "No defender on that tile. Tap a deployed defender to remove it.";
+        return;
+      }
+      if (existing) return;
       const stats = this.unitStats[this.selectedUnit];
       if (this.energy < stats.cost) { this.message.textContent = "Not enough energy for " + stats.name + "."; return; }
       try {
@@ -251,6 +270,22 @@ export function createGameScene() {
         console.error("Defender deployment failed:", error);
         this.message.textContent = "Deployment failed. Energy was not spent. Please reload and try again.";
       }
+    }
+
+    removeDefender(defender) {
+      if (!defender || !this.defenders.includes(defender)) return;
+      this.defenders = this.defenders.filter(item => item !== defender);
+      if (defender.healthBar?.active) defender.healthBar.destroy();
+      if (defender.group?.active) {
+        this.tweens.add({
+          targets: defender.group, alpha: 0, scale: 0.55, duration: 180,
+          ease: "Cubic.In",
+          onComplete: () => defender.group?.destroy()
+        });
+      }
+      this.message.textContent = defender.stats.name + " removed. Energy is not refunded.";
+      this.playSound("remove");
+      this.updateHud();
     }
 
     deployDefender(lane, col, unitType = "sprout") {
@@ -448,6 +483,7 @@ export function createGameScene() {
       if (!this.soundOn || !this.audioContext) return;
       const presets = {
         deploy: [420, 660, 0.09, "sine"],
+        remove: [420, 210, 0.11, "triangle"],
         energy: [720, 1120, 0.16, "sine"],
         shot: [520, 380, 0.045, "triangle"],
         hit: [190, 115, 0.07, "square"],
