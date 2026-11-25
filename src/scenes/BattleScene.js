@@ -1,8 +1,8 @@
 const LANES = 5;
 const TILE_W = 108;
-const TILE_H = 88;
+const TILE_H = 54;
 const GRID_X = 72;
-const GRID_Y = 86;
+const GRID_Y = 38;
 const GRID_W = TILE_W * 7;
 const GRID_H = TILE_H * LANES;
 import { QUESTIONS, BOSS_QUESTIONS } from "../data/questions.js";
@@ -95,7 +95,7 @@ export function createGameScene() {
       const g = this.add.graphics();
       // Distant twilight sky and layered mountain silhouettes.
       g.fillGradientStyle(0x142b43, 0x1d4050, 0x426b58, 0x315b4d, 1);
-      g.fillRect(0, 0, 960, 540);
+      g.fillRect(0, 0, 960, 340);
       g.fillStyle(0x9ac9a0, 0.12);
       g.fillCircle(770, 48, 58);
       g.fillStyle(0xd9efbb, 0.13);
@@ -143,24 +143,24 @@ export function createGameScene() {
         }
       }
       // Keep: layered walls, roof, banner and glowing crystal.
-      g.fillStyle(0x0c292b, 0.55); g.fillRoundedRect(13, GRID_Y + 61, 51, 365, 13);
-      g.fillStyle(0x6fae87); g.fillRoundedRect(18, GRID_Y + 69, 42, 348, 10);
-      g.fillStyle(0xb8e5a6); g.fillRoundedRect(23, GRID_Y + 78, 32, 330, 7);
+      g.fillStyle(0x0c292b, 0.55); g.fillRoundedRect(13, GRID_Y + 35, 51, GRID_H - 20, 13);
+      g.fillStyle(0x6fae87); g.fillRoundedRect(18, GRID_Y + 42, 42, GRID_H - 34, 10);
+      g.fillStyle(0xb8e5a6); g.fillRoundedRect(23, GRID_Y + 49, 32, GRID_H - 48, 7);
       g.fillStyle(0x315d55); g.fillTriangle(12, GRID_Y + 77, 39, GRID_Y + 39, 66, GRID_Y + 77);
       g.fillStyle(0xf4dc8d); g.fillCircle(39, GRID_Y + 56, 8);
       // Dark gate: stone pillars and a glowing portal.
-      g.fillStyle(0x182638); g.fillRoundedRect(850, GRID_Y + 60, 91, 365, 13);
-      g.fillStyle(0x624d60); g.fillRoundedRect(858, GRID_Y + 72, 75, 340, 9);
-      g.fillStyle(0x2b314b); g.fillRoundedRect(868, GRID_Y + 100, 55, 284, 24);
-      g.fillStyle(0x9c5b87, 0.25); g.fillEllipse(895, GRID_Y + 242, 44, 260);
-      g.lineStyle(3, 0xe08eb5, 0.75); g.strokeEllipse(895, GRID_Y + 242, 44, 260);
+      g.fillStyle(0x182638); g.fillRoundedRect(850, GRID_Y + 35, 91, GRID_H - 20, 13);
+      g.fillStyle(0x624d60); g.fillRoundedRect(858, GRID_Y + 43, 75, GRID_H - 36, 9);
+      g.fillStyle(0x2b314b); g.fillRoundedRect(868, GRID_Y + 66, 55, GRID_H - 82, 24);
+      g.fillStyle(0x9c5b87, 0.25); g.fillEllipse(895, GRID_Y + GRID_H / 2, 44, GRID_H - 60);
+      g.lineStyle(3, 0xe08eb5, 0.75); g.strokeEllipse(895, GRID_Y + GRID_H / 2, 44, GRID_H - 60);
       for (let i = 0; i < LANES; i++) {
         this.add.text(39, GRID_Y + i * TILE_H + TILE_H / 2, String(i + 1), {
           fontFamily: "Nunito", fontSize: "15px", color: "#173f38", fontStyle: "900"
         }).setOrigin(.5);
       }
-      this.add.text(39, 55, "KEEP", { fontFamily: "Nunito", fontSize: "12px", color: "#e0ffe4", fontStyle: "900" }).setOrigin(.5);
-      this.add.text(895, 55, "DARK GATE", { fontFamily: "Nunito", fontSize: "12px", color: "#ffe0ee", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(39, 24, "KEEP", { fontFamily: "Nunito", fontSize: "12px", color: "#e0ffe4", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(895, 24, "DARK GATE", { fontFamily: "Nunito", fontSize: "12px", color: "#ffe0ee", fontStyle: "900" }).setOrigin(.5);
       this.add.text(480, 27, "THE EMERALD FRONTIER", {
         fontFamily: "Nunito", fontSize: "16px", color: "#efffce", fontStyle: "900",
         stroke: "#173a3a", strokeThickness: 4
@@ -754,26 +754,26 @@ export function createGameScene() {
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
-      const shade = this.add.rectangle(480, 270, 960, 540, 0x071321, .82).setInteractive();
-      const panel = this.add.rectangle(480, 270, 770, 410, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
-      const topGlow = this.add.rectangle(480, 82, 760, 5, 0x91e5c2, .9);
-      const eyebrow = this.add.text(480, 111, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .84).setInteractive();
+      const panel = this.add.rectangle(480, 170, 770, 310, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
+      const topGlow = this.add.rectangle(480, 22, 760, 5, 0x91e5c2, .9);
+      const eyebrow = this.add.text(480, 43, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: "15px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
       }).setOrigin(.5);
-      const topic = this.add.text(480, 145, item.topic.toUpperCase(), {
+      const topic = this.add.text(480, 72, item.topic.toUpperCase(), {
         fontFamily: "Nunito", fontSize: "12px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
       }).setOrigin(.5);
-      const question = this.add.text(480, 198, item.q, {
+      const question = this.add.text(480, 111, item.q, {
         fontFamily: "Nunito", fontSize: "22px", color: "#ffffff", fontStyle: "900",
         align: "center", wordWrap: { width: 680 }, lineSpacing: 7
       }).setOrigin(.5);
-      const instruction = this.add.text(480, 256, "Choose the correct answer to unleash a battle power", {
+      const instruction = this.add.text(480, 158, "Choose the correct answer to unleash a battle power", {
         fontFamily: "Nunito", fontSize: "12px", color: "#b6c8dc", fontStyle: "700"
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       item.a.forEach((answer, index) => {
-        const y = 312 + index * 58;
-        const button = this.add.rectangle(480, y, 660, 48, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        const y = 192 + index * 40;
+        const button = this.add.rectangle(480, y, 660, 34, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
           fontFamily: "Nunito", fontSize: "16px", color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 620 }
@@ -803,7 +803,7 @@ export function createGameScene() {
         label.setColor("#ffe1e1");
         this.message.textContent = "Not quite! Your defenders keep fighting.";
       }
-      const feedback = this.add.text(480, 492, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
+      const feedback = this.add.text(480, 319, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
@@ -873,9 +873,9 @@ export function createGameScene() {
       }
 
       this.updateHud();
-      const flash = this.add.rectangle(480, 315, 720, 440, 0xffe58c, .12);
+      const flash = this.add.rectangle(480, 185, 720, 270, 0xffe58c, .12);
       this.tweens.add({ targets: flash, alpha: 0, duration: 420, onComplete: () => flash.destroy() });
-      const toast = this.add.text(480, 66, feedback, {
+      const toast = this.add.text(480, 42, feedback, {
         fontFamily: "Nunito", fontSize: "17px", color, fontStyle: "900",
         stroke: "#17233a", strokeThickness: 4, align: "center",
         wordWrap: { width: 680 }
@@ -920,9 +920,9 @@ export function createGameScene() {
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer) this.questionTimer.paused = true;
       this.stopMusic();
-      this.add.rectangle(480, 315, 960, 540, 0x081323, .76);
-      this.add.text(480, 260, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
-      this.add.text(480, 315, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
+      this.add.rectangle(480, 170, 960, 340, 0x081323, .78);
+      this.add.text(480, 145, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(480, 190, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
       this.message.textContent = won ? "Victory!" : "Defeat!";
       this.playSound(won ? "victory" : "defeat");
     }
