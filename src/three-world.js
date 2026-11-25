@@ -231,10 +231,8 @@ export async function createThreeWorld(container) {
       if (!mesh) {
         mesh = makeActor(actor, isEnemy);
         actorMeshes.set(actor, mesh);
-        (actor.group.list || []).forEach(child => {
-          if (child === actor.bar || child === actor.healthBar || child === actor.levelBadge) return;
-          child.setVisible?.(false);
-        });
+        // Keep Phaser actor sprites visible as a guaranteed fallback layer.
+        // Three.js rigs render behind the Phaser canvas until device testing confirms parity.
       }
       const px = actor.group.x;
       const py = actor.group.y;
