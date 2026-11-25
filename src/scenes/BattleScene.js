@@ -432,11 +432,16 @@ export function createGameScene() {
       oscillator.stop(now + duration + 0.02);
     }
 
-    enableMusic() {
+    prepareAudio() {
       if (!this.audioContext) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) this.audioContext = new AudioContextClass();
       }
+      if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
+    }
+
+    enableMusic() {
+      this.prepareAudio();
       if (!this.audioContext) return;
       if (this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
       this.musicOn = true;
