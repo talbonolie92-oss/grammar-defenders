@@ -10,10 +10,11 @@ export async function createThreeWorld(container) {
   scene.fog = new THREE.Fog(0x10283a, 16, 34);
 
   const camera = new THREE.OrthographicCamera(-9.6, 9.6, 3.4, -3.4, 0.1, 80);
-  // A lower, more angled view gives the five lane rows enough screen height
-  // while keeping the complete seven-column board inside the landscape frame.
-  camera.position.set(0, 14, 16);
-  camera.up.set(0, 1, 0);
+  // Exact top-down orthographic alignment keeps the 3D tile grid registered
+  // pixel-for-pixel with Phaser's 960x340 gameplay coordinates. A tilted
+  // camera shifts projected lane rows and makes 2D combat sprites look off-tile.
+  camera.position.set(0, 20, 0);
+  camera.up.set(0, 0, -1);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({
@@ -247,7 +248,8 @@ export async function createThreeWorld(container) {
       const px = actor.group.x;
       const py = actor.group.y;
       const bob = Math.sin(now * 0.004 + (actor.bobOffset || 0)) * (isEnemy ? 0.035 : 0.025);
-      mesh.position.set((px - 480) / 50, 0.02 + bob, (py - 170) / 50);
+      // Tile tops sit at y=0.17; lift actor feet just above the surface.
+      mesh.position.set((px - 480) / 50, 0.19 + bob, (py - 170) / 50);
       mesh.rotation.y = isEnemy ? Math.PI : 0;
       mesh.rotation.z = Math.sin(now * 0.0025 + (actor.bobOffset || 0)) * 0.025;
       const hp = Number.isFinite(actor.hp) ? actor.hp : null;
