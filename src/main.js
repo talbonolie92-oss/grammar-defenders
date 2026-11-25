@@ -87,10 +87,12 @@ async function initializeStudentJoin() {
       document.getElementById("student-waiting").classList.remove("hidden");
       status.textContent = "";
       stopSessionWatch = dbWatch("sessions/" + sessionId + "/public", snap => {
-        if (!snap.exists()) { status.textContent = "Your teacher removed this session."; return; }
+        if (!snap.exists()) { const scene=game.scene.getScene("BattleScene"); if(scene?.battleStarted&&!scene.gameOver)scene.endGame(false,"SESSION REMOVED BY TEACHER"); else status.textContent = "Your teacher removed this session."; return; }
         studentSession = snap.val();
         if (studentSession.status === "ended") {
-          document.getElementById("student-waiting").innerHTML = "<b>Session ended</b><p>Your teacher has ended this game.</p>";
+          const scene=game.scene.getScene("BattleScene");
+          if(scene?.battleStarted&&!scene.gameOver)scene.endGame(false,"SESSION ENDED BY TEACHER");
+          else document.getElementById("student-waiting").innerHTML = "<b>Session ended</b><p>Your teacher has ended this game.</p>";
         } else if (studentSession.status === "running") {
           launchStudentGame(name, classSection);
         }
