@@ -1033,8 +1033,11 @@ export function createGameScene() {
         laneAlert: null,
         // Dread Beasts periodically telegraph and perform a short lane charge.
         chargeCooldown: enemyType === "Dread Beast" && this.wave >= 8 ? Phaser.Math.FloatBetween(3.5, 5.5) : 0,
+        chargeWindup: 0,
         chargeRemaining: 0,
-        charging: false
+        charging: false,
+        chargeBodyColor: palette.body,
+        chargeBodyStroke: palette.dark
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
@@ -1323,23 +1326,32 @@ export function createGameScene() {
           const slowed = e.slowUntil && this.time.now < e.slowUntil;
           const pressured = this.time.now < this.enemyPressureUntil;
           const pressureFactor = pressured ? (e.isBoss ? 1.1 : 1.18) : 1;
-          if (e.enemyType === "Dread Beast" && e.chargeCooldown > 0 && !stunned) {
-            e.chargeCooldown -= dt;
-            if (e.chargeCooldown <= 0 && !e.charging) {
-              e.charging = true;
-              e.chargeRemaining = .8;
-              e.chargeCooldown = Phaser.Math.FloatBetween(6.5, 8.5);
-              if (e.aura?.active) e.aura.setFillStyle(0xff8d6b, .3);
-              if (e.body?.active) e.body.setStrokeStyle(4, 0xffd27a);
-              this.message.textContent = "DREAD BEAST CHARGING — reinforce lane " + (e.lane + 1) + "!";
+          if (e.enemyType === "Dread Beast" && !stunned) {
+            if (e.chargeCooldown > 0 && !e.chargeWindup && !e.charging) {
+              e.chargeCooldown -= dt;
+              if (e.chargeCooldown <= 0) {
+                // A readable wind-up gives players a brief chance to react.
+                e.chargeWindup = .7;
+                if (e.aura?.active) e.aura.setFillStyle(0xff8d6b, .34);
+                if (e.body?.active) e.body.setStrokeStyle(4, 0xffd27a);
+                this.message.textContent = "DREAD BEAST WINDING UP — lane " + (e.lane + 1) + "!";
+              }
             }
-          }
-          if (e.charging) {
-            e.chargeRemaining = Math.max(0, e.chargeRemaining - dt);
-            if (e.chargeRemaining === 0) {
-              e.charging = false;
-              if (e.aura?.active) e.aura.setFillStyle(0xf08ba7, .07);
-              if (e.body?.active) e.body.setStrokeStyle(3, 0x421c3b);
+            if (e.chargeWindup > 0) {
+              e.chargeWindup = Math.max(0, e.chargeWindup - dt);
+              if (e.chargeWindup === 0) {
+                e.charging = true;
+                e.chargeRemaining = .8;
+                e.chargeCooldown = Phaser.Math.FloatBetween(6.5, 8.5);
+              }
+            }
+            if (e.charging) {
+              e.chargeRemaining = Math.max(0, e.chargeRemaining - dt);
+              if (e.chargeRemaining === 0) {
+                e.charging = false;
+                if (e.aura?.active) e.aura.setFillStyle(0xf08ba7, .07);
+                if (e.body?.active) e.body.setStrokeStyle(3, e.chargeBodyStroke);
+              }
             }
           }
           const chargeFactor = e.charging ? 2.15 : 1;
