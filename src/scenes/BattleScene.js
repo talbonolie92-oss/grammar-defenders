@@ -866,12 +866,27 @@ export function createGameScene() {
             }
             if (p.unitType === "ember" || p.unitType === "phoenix") {
               const splashDamage = p.unitType === "phoenix" ? 3 : 1;
-              this.enemies.slice().filter(e => e !== p.target && e.lane === p.target.lane && Math.abs(e.x - p.target.x) < 92)
-                .forEach(e => this.damageEnemy(e, splashDamage));
+              // Walk backwards because defeated enemies are removed from this.enemies.
+              for (let i = this.enemies.length - 1; i >= 0; i--) {
+                const nearby = this.enemies[i];
+                if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < 92) {
+                  this.damageEnemy(nearby, splashDamage);
+                }
+              }
             }
             if (p.unitType === "volt") {
-              const chainTarget = this.enemies.filter(e => e !== p.target && e.lane === p.target.lane && Math.abs(e.x - p.target.x) < 145)
-                .sort((a, b) => Math.abs(a.x - p.target.x) - Math.abs(b.x - p.target.x))[0];
+              // Ignore destroyed targets and select the nearest live enemy without sorting.
+              let chainTarget = null;
+              let nearestChainDistance = 145;
+              for (let i = 0; i < this.enemies.length; i++) {
+                const candidate = this.enemies[i];
+                if (candidate === p.target || !candidate.group.active || candidate.lane !== p.target.lane) continue;
+                const distance = Math.abs(candidate.x - p.target.x);
+                if (distance < nearestChainDistance) {
+                  nearestChainDistance = distance;
+                  chainTarget = candidate;
+                }
+              }
               if (chainTarget) this.damageEnemy(chainTarget, 2);
             }
           }
