@@ -127,9 +127,10 @@ async function editSession(s){
   const minutes=Number(prompt("Time limit in minutes (5–90):",String(s.timeLimitMinutes||10)));if(!Number.isFinite(minutes)||minutes<5||minutes>90)return alert("Enter a time limit from 5 to 90 minutes.");
   const interval=Number(prompt("Question interval in seconds (30, 45, 60, 90):",String(s.questionIntervalSeconds||45)));if(![30,45,60,90].includes(interval))return alert("Choose 30, 45, 60, or 90 seconds.");
   const difficulty=prompt("Difficulty: easy, normal, hard",s.difficulty||"normal");if(difficulty===null)return;
+  const allowLateJoin=confirm("Allow students to join after the game starts? Press OK for Yes, Cancel for No.");
   if(!["endless","fixed"].includes(mode)||!["easy","normal","hard"].includes(difficulty))return alert("Please use a valid mode and difficulty.");
   const clean=safeName(title);if(!clean)return;
-  const updated={title:clean,grade:safeName(grade),topic:safeName(topic),section:safeName(section),mode,timeLimitMinutes:minutes,questionIntervalSeconds:interval,difficulty,updatedAt:Date.now()};
+  const updated={title:clean,grade:safeName(grade),topic:safeName(topic),section:safeName(section),mode,timeLimitMinutes:minutes,questionIntervalSeconds:interval,difficulty,allowLateJoin,updatedAt:Date.now()};
   await dbUpdate("sessions/"+s.id+"/public",updated);
   await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{title:clean});
 }
