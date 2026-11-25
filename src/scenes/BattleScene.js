@@ -220,10 +220,7 @@ export function createGameScene() {
             this.damageEnemy(p.target, p.damage);
             if (p.unitType === "mage" && p.target.group.active) {
               p.target.slowUntil = this.time.now + 2600;
-              p.target.group.setTint(0xb8f0ff);
-              this.time.delayedCall(2650, () => {
-                if (p.target.group.active && (!p.target.slowUntil || this.time.now >= p.target.slowUntil)) p.target.group.clearTint();
-              });
+              this.message.textContent = "Frost magic slows an enemy!";
             }
           }
         } else {
