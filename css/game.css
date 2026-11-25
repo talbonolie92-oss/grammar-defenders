@@ -402,3 +402,28 @@ body.playing .battle-footer #battle-message{font-size:9px}
   body.playing .hud-stat strong{font-size:11px}
   body.playing .battle-footer{display:none}
 }
+
+
+/* PLAY-ONLY SCREEN: keep every homepage element outside the active game. */
+body.playing{
+  position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;
+  min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  background:#081426!important;
+}
+body.playing > .app-shell{
+  position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;
+  min-height:0!important;max-width:none!important;margin:0!important;padding:0!important;overflow:hidden!important;
+}
+body.playing > .app-shell > :not(#game-layout){display:none!important}
+body.playing #game-layout,
+body.playing #game-layout:not(.hidden){
+  display:flex!important;position:relative!important;flex:1 1 auto!important;flex-direction:column!important;
+  width:100%!important;height:100%!important;min-height:0!important;max-height:100dvh!important;
+  margin:0!important;padding:5px!important;overflow:hidden!important;gap:5px!important;
+}
+body.playing #game-container{
+  flex:1 1 auto!important;min-height:0!important;height:100%!important;max-height:none!important;
+}
+@media(orientation:portrait) and (max-width:900px){
+  body.playing > .app-shell:after{content:"Rotate your device to landscape to play.";position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:28px;background:#081426;color:#fff;text-align:center;font-weight:900;font-size:20px}
+}
