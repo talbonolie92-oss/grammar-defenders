@@ -67,7 +67,8 @@ export async function createThreeWorld(container) {
   const trimGeometry = new THREE.BoxGeometry(2.13, 0.055, 1.04);
   const tileMeshes = [];
   for (let lane = 0; lane < 5; lane++) {
-    const z = (38 + lane * 54 + 24) / 50 - 3.4;
+    // Match Phaser's exact lane center: GRID_Y + lane * TILE_H + TILE_H / 2 (65 + 54 * lane).
+    const z = (38 + lane * 54 + 27) / 50 - 3.4;
     for (let col = 0; col < 7; col++) {
       const x = (72 + col * 108 + 54 - 480) / 50;
       const trim = new THREE.Mesh(trimGeometry, tileEdge);
