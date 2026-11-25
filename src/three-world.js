@@ -30,6 +30,7 @@ export async function createThreeWorld(container) {
   renderer.toneMappingExposure = 1.12;
   renderer.domElement.className = "three-world-canvas";
   renderer.domElement.setAttribute("aria-hidden", "true");
+  renderer.domElement.style.background = "transparent";
   container.prepend(renderer.domElement);
 
   scene.add(new THREE.HemisphereLight(0xc9f4e5, 0x18352c, 2.1));
@@ -303,7 +304,10 @@ export async function createThreeWorld(container) {
   let raf = 0;
   let lastFrame = 0;
   const render = now => {
-    raf = requestAnimationFrame(render);
+    // Render once before reporting successful initialization; if WebGL fails,
+  // BattleScene keeps its original Phaser battlefield instead of going blank.
+  renderer.render(scene, camera);
+  raf = requestAnimationFrame(render);
     if (now - lastFrame < (isSmallScreen ? 42 : 32)) return;
     lastFrame = now;
     portal.rotation.z = now * 0.00022;
