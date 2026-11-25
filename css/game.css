@@ -427,3 +427,18 @@ body.playing #game-container{
 @media(orientation:portrait) and (max-width:900px){
   body.playing > .app-shell:after{content:"Rotate your device to landscape to play.";position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:28px;background:#081426;color:#fff;text-align:center;font-weight:900;font-size:20px}
 }
+
+
+/* Defender removal control */
+.remove-mode-button{
+  border:1px solid #bd8585;background:#442d39;color:#ffe3e3;
+  border-radius:9px;padding:6px 10px;font:800 11px Nunito, sans-serif;
+  cursor:pointer;white-space:nowrap
+}
+.remove-mode-button:hover,.remove-mode-button:focus-visible{
+  border-color:#ffd0a8;outline:2px solid #ffd0a8;outline-offset:2px
+}
+.remove-mode-button.active{
+  background:#9b3f46;color:#fff;border-color:#ffd0a8;
+  box-shadow:0 0 0 2px #ffb1a044,0 0 14px #ff8b8b55
+}
