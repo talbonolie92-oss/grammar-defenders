@@ -187,17 +187,26 @@ export function createGameScene() {
         });
       });
       document.getElementById("restart-button").addEventListener("click", () => window.location.reload());
-      document.getElementById("sound-toggle").addEventListener("click", e => {
-        this.soundOn = !this.soundOn;
-        if (this.soundOn && !this.audioContext) {
+      const prepareAudio = () => {
+        if (!this.audioContext) {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (AudioContextClass) this.audioContext = new AudioContextClass();
         }
         if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
-        e.currentTarget.textContent = this.soundOn ? "♫ Sound: On" : "♫ Sound: Off";
-        this.message.textContent = this.soundOn ? "Battle sounds enabled." : "Battle sounds muted.";
-        if (this.soundOn) { this.startMusic(); this.playSound("deploy"); }
+      };
+      document.getElementById("music-toggle").addEventListener("click", e => {
+        this.musicOn = !this.musicOn;
+        prepareAudio();
+        e.currentTarget.textContent = this.musicOn ? "♫ Music: On" : "♫ Music: Off";
+        if (this.musicOn) this.startMusic();
         else this.stopMusic();
+      });
+      document.getElementById("sound-toggle").addEventListener("click", e => {
+        this.soundOn = !this.soundOn;
+        prepareAudio();
+        e.currentTarget.textContent = this.soundOn ? "SFX: On" : "SFX: Off";
+        this.message.textContent = this.soundOn ? "Sound effects enabled." : "Sound effects muted.";
+        if (this.soundOn) this.playSound("deploy");
       });
     }
 
@@ -548,7 +557,7 @@ export function createGameScene() {
 
     regenerateEnergy() {
       if (this.gameOver || this.questionActive) return;
-      this.energy = Math.min(150, this.energy + 8);
+      this.energy = Math.min(300, this.energy + 8);
       this.updateHud();
     }
 
@@ -814,7 +823,7 @@ export function createGameScene() {
       } else if (label.includes("REGENERATION") || label.includes("DEFENSE UP")) {
         const restored = Math.min(20, 100 - this.baseHealth);
         this.baseHealth += restored;
-        this.energy = Math.min(150, this.energy + 12);
+        this.energy = Math.min(300, this.energy + 12);
         feedback = restored > 0 ? "KEEP RESTORED +" + restored + "%!" : "DEFENSE SURGE! +12 ENERGY";
         color = "#8de1a4";
       } else if (label.includes("ARMOR BREAK") || label.includes("SHIELD PIERCE") || label.includes("WEAKNESS")) {
@@ -831,16 +840,16 @@ export function createGameScene() {
       } else if (label.includes("GUARDIAN SHIELD")) {
         const restored = Math.min(35, 100 - this.baseHealth);
         this.baseHealth += restored;
-        this.energy = Math.min(150, this.energy + 20);
+        this.energy = Math.min(300, this.energy + 20);
         feedback = "GUARDIAN SHIELD! Keep restored and +20 energy.";
         color = "#b9d8ff";
       } else if (label.includes("DRAGON FURY")) {
         this.enemies.slice().forEach(enemy => this.damageEnemy(enemy, 6));
-        this.energy = Math.min(150, this.energy + 15);
+        this.energy = Math.min(300, this.energy + 15);
         feedback = "DRAGON FURY! Heavy damage across the battlefield.";
         color = "#ffb27c";
-      } else if (label.includes("SUPPLY") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
-        this.energy = Math.min(150, this.energy + 30);
+      } else if (label.includes("SUPPLY") || label.includes("ENERGY SURGE") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
+        this.energy = Math.min(300, this.energy + 30);
         feedback = "ENERGY SURGE! +30 ENERGY";
         color = "#ffe58c";
       } else {
@@ -866,7 +875,7 @@ export function createGameScene() {
 
     updateHud() {
       this.energyText.textContent = this.energy;
-      this.energyFill.style.width = (this.energy / 150 * 100) + "%";
+      this.energyFill.style.width = (this.energy / 300 * 100) + "%";
       this.unitCards.forEach(card => {
         const stats = this.unitStats[card.dataset.unit];
         if (stats) card.classList.toggle("unaffordable", this.energy < stats.cost);
