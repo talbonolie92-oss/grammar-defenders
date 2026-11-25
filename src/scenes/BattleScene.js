@@ -1385,6 +1385,7 @@ export function createGameScene() {
         for (let i = this.enemies.length - 1; i >= 0; i--) {
           const other = this.enemies[i];
           if (other.lane !== lane) continue;
+          if (other.laneAlert?.active) other.laneAlert.destroy();
           if (other.group.active) other.group.destroy();
           this.enemies.splice(i, 1);
         }
