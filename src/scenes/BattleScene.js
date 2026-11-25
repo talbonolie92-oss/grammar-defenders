@@ -202,7 +202,7 @@ export function createGameScene() {
       const speedFactor = [1, 1.65, 0.68][type];
       this.enemies.push({
         lane, x, y, group, hp, maxHp: hp,
-        speed: ((isBoss ? 10 : 17) + this.wave * 1.2) * speedFactor,
+        speed: isBoss ? 10 + this.wave * 0.6 : (17 + this.wave * 1.2) * speedFactor,
         bar, isBoss, enemyType, phase: 1, body
       });
       this.enemiesSpawnedThisWave++;
