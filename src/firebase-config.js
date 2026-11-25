@@ -1,11 +1,11 @@
-// Firebase Web App configuration.
-// Fill this with the config from Firebase Console > Project settings > Your apps.
+// Firebase Web App configuration for Grammar Defenders.
+// This browser configuration is public; never place service-account credentials here.
 export const firebaseConfig = {
-  apiKey: "PASTE_FIREBASE_API_KEY",
-  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://PASTE_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT_ID.appspot.com",
-  messagingSenderId: "PASTE_MESSAGING_SENDER_ID",
-  appId: "PASTE_FIREBASE_APP_ID"
+  apiKey: "AIzaSyB3DXRbu7Q9xdsLQRT7u8DFSERLvx37viQ",
+  authDomain: "grammar-defenders.firebaseapp.com",
+  databaseURL: "https://grammar-defenders-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "grammar-defenders",
+  storageBucket: "grammar-defenders.firebasestorage.app",
+  messagingSenderId: "836834384056",
+  appId: "1:836834384056:web:4fb287533064b15979bc4d"
 };
