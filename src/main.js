@@ -132,6 +132,7 @@ async function launchStudentGame(name, classSection) {
     sessionId, playerId: studentUid, playerName: name, classSection
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
+  await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
   window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
   document.getElementById("student-join-screen")?.classList.add("hidden");
   gameLayout?.classList.remove("hidden");
