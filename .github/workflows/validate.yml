@@ -22,3 +22,5 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done
+      - name: Validate question bank data
+        run: node scripts/validate-data.mjs
