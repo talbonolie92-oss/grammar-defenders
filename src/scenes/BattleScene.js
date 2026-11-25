@@ -19,6 +19,7 @@ export function createGameScene() {
       this.projectiles = [];
       this.selectedTile = null;
       this.questionIndex = 0;
+      this.bossQuestionIndex = 0;
       this.questionActive = false;
       this.gameOver = false;
       this.spawnClock = 0;
@@ -337,14 +338,24 @@ export function createGameScene() {
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
-      const type = (this.wave - 1) % 3;
-      const enemyType = ["Grunt", "Runner", "Brute"][type];
-      const palette = [
-        { body: 0xc87973, dark: 0x783f50, light: 0xf1b09a, eye: 0xffe5cb },
-        { body: 0x8c82c7, dark: 0x4e477f, light: 0xc5baff, eye: 0xf5eaff },
-        { body: 0xc69b5b, dark: 0x75502f, light: 0xf0cf8c, eye: 0xfff0c5 }
-      ][type];
+      const enemyRoster = ["Grunt", "Runner", "Brute", "Shadow Stalker", "Bone Warrior", "Venom Beast", "Dark Caster", "War Crusher", "Dread Beast", "Dark Overlord"];
+      const enemyIndex = Math.min(9, this.wave - 1);
+      const type = enemyIndex % 3;
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
+      const enemyType = isBoss ? "Dark Overlord" : enemyRoster[enemyIndex];
+      const palettes = [
+        { body: 0xb94f54, dark: 0x542b3b, light: 0xf18a83, eye: 0xffd6bd },
+        { body: 0x6555a8, dark: 0x302b62, light: 0xb9a8ff, eye: 0xf5eaff },
+        { body: 0x9a673c, dark: 0x493024, light: 0xe9b66e, eye: 0xffe2a8 },
+        { body: 0x4f657e, dark: 0x202d44, light: 0xa8c7e8, eye: 0xe8f6ff },
+        { body: 0x9b9ca8, dark: 0x454958, light: 0xe0e2e9, eye: 0xffffff },
+        { body: 0x4e916e, dark: 0x1d493c, light: 0xa5e17d, eye: 0xf4ffbd },
+        { body: 0x66508f, dark: 0x302449, light: 0xc3a3f4, eye: 0xf7e3ff },
+        { body: 0x786c62, dark: 0x39312e, light: 0xd5c0a7, eye: 0xffe8cf },
+        { body: 0x8d3f57, dark: 0x421c3b, light: 0xf08ba7, eye: 0xffd8e4 },
+        { body: 0x7e294e, dark: 0x29172f, light: 0xf1a0c4, eye: 0xffffff }
+      ];
+      const palette = palettes[isBoss ? 9 : enemyIndex];
       const radius = isBoss ? 31 : [23, 19, 27][type];
       const group = this.add.container(x, y);
       const shadow = this.add.ellipse(0, 25, isBoss ? 78 : radius * 2.3, 13, 0x10251d, .38);
@@ -354,7 +365,7 @@ export function createGameScene() {
         .setStrokeStyle(isBoss ? 4 : 3, isBoss ? 0xf0a0c3 : palette.dark);
       const belly = this.add.ellipse(-2, 10, radius * 1.25, radius * .72, palette.dark, .34);
       const eyeY = -4;
-      const eyes = this.add.text(0, eyeY, isBoss ? "◆" : type === 0 ? "••" : type === 1 ? "»" : "▰", {
+      const eyes = this.add.text(0, eyeY, isBoss ? "◆◆" : type === 0 ? "××" : type === 1 ? "◥◤" : "▰", {
         fontFamily: "Arial", fontSize: isBoss ? "21px" : "17px", color: "#fff"
       }).setOrigin(.5);
       const feet = [
@@ -378,6 +389,28 @@ export function createGameScene() {
         details.push(this.add.ellipse(radius * .83, -2, 19, 25, palette.dark).setStrokeStyle(2, palette.light));
         details.push(this.add.rectangle(0, -radius * .62, radius * 1.3, 7, palette.light, .9));
       }
+      if (enemyType === "Shadow Stalker" || enemyType === "Dread Beast" || isBoss) {
+        details.push(this.add.triangle(-radius * .62, -radius * .78, -5, 16, 8, 7, 0, palette.light).setStrokeStyle(2, palette.dark));
+        details.push(this.add.triangle(radius * .62, -radius * .78, -8, 7, 5, 16, 0, palette.light).setStrokeStyle(2, palette.dark));
+      }
+      if (enemyType === "Bone Warrior" || enemyType === "War Crusher") {
+        details.push(this.add.rectangle(0, 4, radius * 1.45, 12, palette.light).setStrokeStyle(2, palette.dark));
+        details.push(this.add.circle(-radius * .8, 1, 8, palette.dark).setStrokeStyle(2, palette.light));
+        details.push(this.add.circle(radius * .8, 1, 8, palette.dark).setStrokeStyle(2, palette.light));
+      }
+      if (enemyType === "Venom Beast") {
+        details.push(this.add.circle(0, -radius * .78, 8, 0xb5f16c).setStrokeStyle(2, 0x315b3d));
+        details.push(this.add.triangle(-radius * .7, -radius * .65, -7, 10, 7, 10, 0, 0xb5f16c));
+        details.push(this.add.triangle(radius * .7, -radius * .65, -7, 10, 7, 10, 0, 0xb5f16c));
+      }
+      if (enemyType === "Dark Caster") {
+        details.push(this.add.rectangle(radius * .8, -3, 5, radius * 2.1, 0x3c244f).setRotation(-.18));
+        details.push(this.add.star(radius * .8, -radius * 1.25, 5, 4, 10, 0xc7a0ff).setStrokeStyle(2, 0xffffff));
+      }
+      if (enemyType === "War Crusher" || enemyType === "Dread Beast" || isBoss) {
+        details.push(this.add.triangle(-radius * .9, 4, -7, 14, 7, 14, 0, 0xe7c4a3));
+        details.push(this.add.triangle(radius * .9, 4, -7, 14, 7, 14, 0, 0xe7c4a3));
+      }
       if (isBoss) {
         // Boss: crown, horns, glowing rune and a permanent aura.
         details.push(this.add.triangle(0, -radius - 13, -19, 17, 19, 17, 0, 0xf0d58b).setStrokeStyle(2, 0x75445f));
@@ -388,18 +421,20 @@ export function createGameScene() {
       group.add([shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes]);
 
       const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
-      const hp = (baseHp + [0, -1, 2][type]) * (isBoss ? 5 : 1);
+      const enemyLevel = enemyRoster.indexOf(enemyType);
+      const hpScale = [1, .8, 1.5, 1.2, 1.35, 1.25, 1.15, 1.8, 2.1, 3.2][Math.max(0, enemyLevel)];
+      const hp = Math.max(1, Math.round((baseHp + [0, -1, 2][type]) * hpScale * (isBoss ? 5 : 1)));
       const barWidth = isBoss ? 70 : 46;
       const bar = this.add.graphics();
       bar.fillStyle(0x342d39); bar.fillRoundedRect(-barWidth / 2, isBoss ? -57 : -39, barWidth, 7, 3);
       bar.fillStyle(0x83e39a); bar.fillRoundedRect(-barWidth / 2 + 1, isBoss ? -56 : -38, barWidth - 2, 5, 2);
       group.add(bar);
 
-      const speedFactor = [1, 1.65, 0.68][type];
+      const speedFactor = [1, 1.65, 0.68, 1.35, .82, 1.05, .9, .62, .78, .55][Math.max(0, enemyLevel)];
       const enemy = {
         lane, x, y, baseY: y, group, hp, maxHp: hp,
         speed: isBoss ? 10 + this.wave * 0.6 : (17 + this.wave * 1.2) * speedFactor,
-        bar, isBoss, enemyType, phase: 1, body, aura, frostRing, feet,
+        bar, isBoss, enemyType, enemyLevel, phase: 1, body, aura, frostRing, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
       };
       this.enemies.push(enemy);
@@ -411,6 +446,7 @@ export function createGameScene() {
         this.message.textContent = "BOSS APPROACHING!";
         this.cameras.main.flash(180, 110, 35, 70, false);
         this.playSound("boss");
+        this.time.delayedCall(900, () => this.showQuestion(true));
       } else {
         const portal = this.add.circle(x, y, 8, palette.light, .55);
         this.tweens.add({ targets: portal, scale: 2.7, alpha: 0, duration: 260, onComplete: () => portal.destroy() });
@@ -603,18 +639,22 @@ export function createGameScene() {
       if (this.baseHealth <= 0) this.endGame(false);
     }
 
-    showQuestion() {
-      if (this.gameOver || this.questionActive) return;
+    showQuestion(isBoss = false) {
+      if (!this.battleStarted || this.gameOver || this.questionActive) return;
       this.questionActive = true;
       if (this.spawnTimer) this.spawnTimer.paused = true;
-      const item = QUESTIONS[this.questionIndex % QUESTIONS.length];
-      this.questionIndex++;
+      if (this.questionTimer && isBoss) this.questionTimer.paused = true;
+      let pool = isBoss ? BOSS_QUESTIONS : QUESTIONS;
+      if (!isBoss && this.difficulty === "easy") pool = QUESTIONS.filter(q => q.grade === "7–9");
+      if (!isBoss && this.difficulty === "hard") pool = QUESTIONS.filter(q => q.grade === "10–12");
+      const item = pool[(isBoss ? this.bossQuestionIndex++ : this.questionIndex++) % pool.length];
+      this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
       const shade = this.add.rectangle(480, 270, 960, 540, 0x071321, .82).setInteractive();
-      const panel = this.add.rectangle(480, 270, 770, 410, 0x172d49, .99).setStrokeStyle(3, 0x91d8c2);
+      const panel = this.add.rectangle(480, 270, 770, 410, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
       const topGlow = this.add.rectangle(480, 82, 760, 5, 0x91e5c2, .9);
-      const eyebrow = this.add.text(480, 111, "✦  GRAMMAR CHALLENGE  ✦", {
+      const eyebrow = this.add.text(480, 111, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: "15px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
       }).setOrigin(.5);
       const topic = this.add.text(480, 145, item.topic.toUpperCase(), {
@@ -668,7 +708,9 @@ export function createGameScene() {
         if (this.questionOverlay) this.questionOverlay.destroy(true);
         this.questionOverlay = null;
         this.questionActive = false;
+        this.isBossQuestion = false;
         if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
+        if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
       });
     }
 
@@ -701,6 +743,17 @@ export function createGameScene() {
         this.energy = Math.min(150, this.energy + 8);
         feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
         color = "#ffb3a8";
+      } else if (label.includes("GUARDIAN SHIELD")) {
+        const restored = Math.min(35, 100 - this.baseHealth);
+        this.baseHealth += restored;
+        this.energy = Math.min(150, this.energy + 20);
+        feedback = "GUARDIAN SHIELD! Keep restored and +20 energy.";
+        color = "#b9d8ff";
+      } else if (label.includes("DRAGON FURY")) {
+        this.enemies.slice().forEach(enemy => this.damageEnemy(enemy, 6));
+        this.energy = Math.min(150, this.energy + 15);
+        feedback = "DRAGON FURY! Heavy damage across the battlefield.";
+        color = "#ffb27c";
       } else if (label.includes("SUPPLY") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
         this.energy = Math.min(150, this.energy + 30);
         feedback = "ENERGY SURGE! +30 ENERGY";
