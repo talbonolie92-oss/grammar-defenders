@@ -115,28 +115,28 @@ button{font:inherit}
   .panel-heading{margin:0 2px 6px;font-size:9px}
 }
 @media(orientation:landscape) and (max-height:600px){
-  body{min-height:100dvh;height:100dvh;overflow:hidden;padding:5px 8px}
+  body{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px}
   .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
-  .topbar{flex:0 0 38px;margin:0 0 5px;min-height:0;align-items:center}
+  .topbar{flex:0 0 25px;margin:0 0 4px;min-height:0;align-items:center}
   .brand{gap:7px}
-  .brand-mark{width:31px;height:31px;border-radius:9px;font-size:12px}
-  .brand h1{font-size:14px}
+  .brand-mark{width:23px;height:23px;border-radius:7px;font-size:9px}
+  .brand h1{font-size:11px}
   .brand p{display:none}
   .top-actions{flex-direction:row;gap:5px}
   .icon-button,.secondary-button{padding:5px 8px;font-size:9px;border-radius:7px}
   .game-layout{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px}
-  .battle-panel{flex:1;min-height:0;padding:5px;display:flex;flex-direction:column;gap:2px}
-  .battle-hud{flex:0 0 23px;min-height:23px;padding:0 3px 2px;gap:8px}
+  .battle-panel{flex:1;min-height:0;padding:4px;display:flex;flex-direction:column;gap:2px}
+  .battle-hud{flex:0 0 20px;min-height:20px;padding:0 3px 1px;gap:8px}
   .hud-stat{gap:4px}
   .hud-stat strong{font-size:12px}
   .hud-label{font-size:7px}
   .energy-track{height:7px}
   #game-container{flex:1;min-height:0;width:100%;height:100%;max-height:none;aspect-ratio:auto}
-  .battle-footer{flex:0 0 15px;padding:1px 3px 0;font-size:8px;line-height:14px}
-  .side-panel{flex:0 0 65px;min-height:65px;padding:3px 5px}
+  .battle-footer{display:none}
+  .side-panel{flex:0 0 56px;min-height:56px;padding:2px 5px}
   .panel-heading{display:none}
   .deck-grid{height:100%;display:flex;align-items:center;gap:5px;overflow-x:auto}
-  .deck-grid .unit-card{flex:0 0 112px;min-width:112px;height:54px;min-height:54px;padding:4px 5px;gap:5px}
+  .deck-grid .unit-card{flex:0 0 112px;min-width:112px;height:49px;min-height:49px;padding:3px 5px;gap:5px}
   .deck-grid .unit-icon{width:27px;height:27px;flex-basis:27px;font-size:15px}
   .deck-grid .unit-copy strong{font-size:9px}
   .deck-grid .unit-copy small{font-size:8px}
