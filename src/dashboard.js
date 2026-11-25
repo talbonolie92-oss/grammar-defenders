@@ -2,7 +2,7 @@ import { firebaseReady, watchAuth, teacherSignIn, teacherSignOut, dbRef, dbGet, 
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
-let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[];
+let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0;
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const setStatus=(id,msg)=>{if($(id))$(id).textContent=msg;};
 const statusClass=s=>["waiting","running","ended"].includes(s)?s:"ended";
@@ -124,21 +124,29 @@ function watchSessions(){
   },err=>setStatus("create-status",err.message));
 }
 async function loadSessions(entries){
+  // Ignore older Firebase snapshots if a newer update arrives while reads are pending.
+  const loadVersion=++sessionsLoadVersion;
   const loaded=await Promise.all(entries.map(async entry=>{
-    const snap=await dbGet("sessions/"+entry.id+"/public");
-    return snap.exists()?{id:entry.id,...snap.val()}:null;
+    try{
+      const snap=await dbGet("sessions/"+entry.id+"/public");
+      return snap.exists()?{id:entry.id,...snap.val()}:null;
+    }catch(error){
+      console.warn("Could not refresh session "+entry.id,error);
+      return null;
+    }
   }));
+  if(loadVersion!==sessionsLoadVersion||!teacher)return;
   sessionCache=loaded.filter(Boolean).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   renderSessions();
-  if(selectedSession){const fresh=sessionCache.find(s=>s.id===selectedSession.id);if(fresh)selectedSession=fresh;renderDetail();}
+  if(selectedSession){const fresh=sessionCache.find(s=>s.id===selectedSession.id);if(fresh)selectedSession={...selectedSession,...fresh};renderDetail();}
 }
 function renderSessions(){
   const q=$("session-search").value.trim().toLowerCase(),filter=$("session-filter").value;
-  const list=sessionCache.filter(s=>(filter==="all"||s.status===filter)&&(!q||[s.title,s.grade,s.topic,s.section].join(" ").toLowerCase().includes(q)));
+  const list=sessionCache.filter(s=>(filter==="all"||s.status===filter)&&(!q||[s.title,s.grade,s.subject,s.topic,s.section].join(" ").toLowerCase().includes(q)));
   $("session-count").textContent=String(sessionCache.length);
   $("sessions-list").innerHTML=list.length?list.map(s=>`
     <article class="session-card" data-id="${escapeHtml(s.id)}">
-      <div class="session-top"><div><b>${escapeHtml(s.title||"Untitled session")}</b><div class="session-sub">${escapeHtml(s.grade||"")}${s.section?" • "+escapeHtml(s.section):""} • ${escapeHtml(s.topic||"General grammar")}<br>${formatDate(s.createdAt)}</div></div><span class="status-pill ${statusClass(s.status)}">${escapeHtml(s.status||"waiting").toUpperCase()}</span></div>
+      <div class="session-top"><div><b>${escapeHtml(s.title||"Untitled session")}</b><div class="session-sub">${escapeHtml(s.grade||"")}${s.section?" • "+escapeHtml(s.section):""}${s.subject?" • "+escapeHtml(s.subject):""} • ${escapeHtml(s.topic||"General grammar")}<br>${formatDate(s.createdAt)}</div></div><span class="status-pill ${statusClass(s.status)}">${escapeHtml(s.status||"waiting").toUpperCase()}</span></div>
       <div class="session-card-actions"><button class="button ghost" data-action="open">Open / Manage</button><button class="button ghost" data-action="rename">Rename</button><button class="button ghost" data-action="delete">Delete</button></div>
     </article>`).join(""):'<div class="empty">No sessions match this filter.</div>';
 }
