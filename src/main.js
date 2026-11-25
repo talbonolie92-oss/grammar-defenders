@@ -175,6 +175,9 @@ async function launchStudentGame(name, classSection) {
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
   try {
+    await gameReady;
+    const battleScene = game.scene.getScene("BattleScene");
+    if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
     await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
   } catch (error) {
     studentLaunchStarted = false;
@@ -196,7 +199,15 @@ async function launchStudentGame(name, classSection) {
   requestAnimationFrame(() => {
     game.scale.refresh();
     const scene = game.scene.getScene("BattleScene");
-    if (scene?.sys?.isActive()) scene.startBattle(settings);
+    if (!scene) {
+      document.getElementById("student-join-status").textContent = "The battle could not start. Please reload and rejoin.";
+      return;
+    }
+    if (scene.sys.isActive()) scene.startBattle(settings);
+    else {
+      scene.events.once("create", () => scene.startBattle(settings));
+      scene.scene.start();
+    }
   });
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
