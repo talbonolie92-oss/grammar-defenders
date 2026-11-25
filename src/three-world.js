@@ -225,7 +225,7 @@ export async function createThreeWorld(container) {
       if (!mesh) {
         mesh = makeActor(actor, isEnemy);
         actorMeshes.set(actor, mesh);
-        actor.group.iterate?.(child => {
+        (actor.group.list || []).forEach(child => {
           if (child === actor.bar || child === actor.healthBar || child === actor.levelBadge) return;
           child.setVisible?.(false);
         });
