@@ -7,7 +7,8 @@ const gameLayout = document.getElementById("game-layout");
 const studentJoinScreen = document.getElementById("student-join-screen");
 const landingHero = document.getElementById("landing-hero");
 const sessionId = params.get("session");
-const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+const isSmallScreen = window.matchMedia?.("(max-width: 900px)").matches || false;
+const pixelRatio = Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1 : 1.5);
 const config = {
   type: Phaser.AUTO,
   parent: "game-container",
@@ -15,7 +16,7 @@ const config = {
   height: 340,
   transparent: true,
   resolution: pixelRatio,
-  render: { antialias: true, pixelArt: false, roundPixels: true, powerPreference: "high-performance" },
+  render: { antialias: !isSmallScreen, pixelArt: false, roundPixels: true, powerPreference: isSmallScreen ? "low-power" : "high-performance" },
   fps: { target: 60, min: 30, forceSetTimeOut: false },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [createGameScene()]
