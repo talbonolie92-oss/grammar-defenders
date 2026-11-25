@@ -567,6 +567,9 @@ export function createGameScene() {
       defender.levelBadge?.setText(nextLevel === 2 ? "II" : "III");
       defender.levelBadge?.setColor(nextLevel === 3 ? "#ffe18b" : "#d9f4ff");
       if (defender.evolutionMark?.active) defender.evolutionMark.destroy();
+      const burst = this.add.circle(defender.x, defender.y, 18, nextLevel === 3 ? 0xffdf78 : 0x9ce8ff, .28).setDepth(48);
+      const ring = this.add.circle(defender.x, defender.y, 25, 0xffffff, 0).setStrokeStyle(3, nextLevel === 3 ? 0xffdf78 : 0x9ce8ff, .9).setDepth(49);
+      this.tweens.add({ targets: [burst, ring], scale: 2.8, alpha: 0, duration: 420, ease: "Cubic.Out", onComplete: () => { burst.destroy(); ring.destroy(); } });
       const mark = this.add.star(0, -57, nextLevel + 3, 5, 10 + nextLevel * 2, nextLevel === 3 ? 0xffdf78 : 0x9ce8ff)
         .setStrokeStyle(2, 0xffffff);
       defender.group.add(mark);
@@ -889,7 +892,8 @@ export function createGameScene() {
         lane, x, y, baseY: y, group, hp, maxHp: hp, armorLevel,
         speed: isBoss ? 10 + this.wave * 0.8 : Math.min(48, (17 + this.wave * 1.7) * speedFactor),
         bar, isBoss, enemyType, enemyLevel, phase: 1, body, aura, frostRing, feet,
-        bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
+        bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2),
+        specialCooldown: Phaser.Math.FloatBetween(1.8, 3.2)
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
@@ -976,6 +980,22 @@ export function createGameScene() {
       }
       if (passiveEnergyGained) this.updateHud();
       this.defenders.forEach(d => {
+        if (d.poisonUntil && this.time.now < d.poisonUntil && this.time.now >= (d.poisonNextTick || 0)) {
+          d.hp = Math.max(0, d.hp - 2);
+          d.poisonNextTick = this.time.now + 700;
+          if (d.healthBar?.active) this.drawGuardianHealth(d.healthBar, d.hp, d.maxHp);
+          if (d.group?.active) {
+            const poisonSpark = this.add.circle(d.x + Phaser.Math.Between(-12, 12), d.y - 17, 3, 0x9ee66b, .85).setDepth(50);
+            this.tweens.add({ targets: poisonSpark, y: "-=13", alpha: 0, duration: 350, onComplete: () => poisonSpark.destroy() });
+          }
+          if (d.hp <= 0) {
+            if (d.healthBar?.active) d.healthBar.destroy();
+            this.tweens.add({ targets: d.group, alpha: 0, scale: .6, duration: 220, onComplete: () => d.group?.destroy() });
+            this.defenders = this.defenders.filter(item => item !== d);
+            this.message.textContent = d.stats.name + " succumbed to venom!";
+            this.playSound("defeat");
+          }
+        }
         if (d.stats.energyRate) {
           d.energyClock = (d.energyClock || 0) + energyDt;
           while (d.energyClock >= d.stats.energyInterval) {
@@ -1113,6 +1133,18 @@ export function createGameScene() {
               ? Math.max(1, Math.ceil(rawHit * (blocker.level >= 3 ? .55 : .75)))
               : rawHit;
             blocker.hp = Math.max(0, blocker.hp - hit);
+            if (e.enemyType === "Venom Beast") {
+              blocker.poisonUntil = this.time.now + 3200;
+              blocker.poisonNextTick = Math.min(blocker.poisonNextTick || 0, this.time.now + 700);
+            }
+            if (e.enemyType === "Dark Caster") {
+              const drained = Math.min(this.energy, 4);
+              this.energy -= drained;
+              if (drained > 0) this.message.textContent = "Dark Caster drained " + drained + " energy!";
+            }
+            if (e.enemyType === "War Crusher" && blocker.unitType === "guardian") {
+              blocker.hp = Math.max(0, blocker.hp - Math.ceil(hit * .35));
+            }
             if (blocker.healthBar?.active) this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
             this.tweens.add({ targets: e.group, x: e.x + 2, yoyo: true, duration: 70 });
