@@ -104,8 +104,14 @@ export function createGameScene() {
       document.getElementById("restart-button").addEventListener("click", () => window.location.reload());
       document.getElementById("sound-toggle").addEventListener("click", e => {
         this.soundOn = !this.soundOn;
+        if (this.soundOn && !this.audioContext) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) this.audioContext = new AudioContextClass();
+        }
+        if (this.audioContext && this.audioContext.state === "suspended") this.audioContext.resume();
         e.currentTarget.textContent = this.soundOn ? "♫ Sound: On" : "♫ Sound: Off";
-        this.message.setText ? this.message.setText(this.soundOn ? "Sound enabled." : "Sound muted.") : null;
+        this.message.textContent = this.soundOn ? "Battle sounds enabled." : "Battle sounds muted.";
+        if (this.soundOn) this.playSound("deploy");
       });
     }
 
@@ -136,6 +142,35 @@ export function createGameScene() {
       this.tweens.add({ targets: group, scale: { from: .3, to: 1 }, duration: 260, ease: "Back.Out" });
       this.defenders.push({ lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35), unitType, stats });
       this.message.textContent = stats.name + " deployed!";
+      this.playSound("deploy");
+    }
+
+    playSound(kind) {
+      if (!this.soundOn || !this.audioContext) return;
+      const presets = {
+        deploy: [420, 660, 0.09, "sine"],
+        shot: [520, 380, 0.045, "triangle"],
+        hit: [190, 115, 0.07, "square"],
+        defeat: [260, 90, 0.16, "sawtooth"],
+        correct: [520, 880, 0.2, "sine"],
+        boss: [110, 65, 0.42, "sawtooth"],
+        wave: [360, 560, 0.22, "triangle"],
+        victory: [520, 1040, 0.5, "sine"]
+      };
+      const [startHz, endHz, duration, type] = presets[kind] || presets.hit;
+      const now = this.audioContext.currentTime;
+      const oscillator = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(startHz, now);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endHz), now + duration);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.075, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      oscillator.connect(gain);
+      gain.connect(this.audioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.02);
     }
 
     spawnEnemy() {
@@ -163,7 +198,10 @@ export function createGameScene() {
       group.add(bar);
       this.enemies.push({ lane, x, y, group, hp, maxHp: hp, speed: (isBoss ? 10 : 17) + this.wave * 1.2, bar, isBoss });
       this.enemiesSpawnedThisWave++;
-      if (isBoss) this.message.textContent = "BOSS APPROACHING!";
+      if (isBoss) {
+        this.message.textContent = "BOSS APPROACHING!";
+        this.playSound("boss");
+      }
     }
 
     checkWaveProgress() {
@@ -179,6 +217,7 @@ export function createGameScene() {
       }
 
       this.message.textContent = "Wave cleared! The next wave approaches...";
+      this.playSound("wave");
       this.time.delayedCall(5000, () => {
         if (this.gameOver) return;
         this.wave++;
@@ -188,6 +227,7 @@ export function createGameScene() {
         this.waveTransitioning = false;
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
+        this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
         this.updateHud();
       });
     }
@@ -233,6 +273,7 @@ export function createGameScene() {
         e.group.x = e.x;
         if (e.x < 65) this.damageBase(e);
       });
+      this.projectiles = this.projectiles.filter(p => p.active);
       this.checkWaveProgress();
     }
 
@@ -244,12 +285,22 @@ export function createGameScene() {
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       this.projectiles.push(p);
+      this.playSound("shot");
       this.tweens.add({ targets: defender.group, scaleY: .92, yoyo: true, duration: 100 });
     }
 
     damageEnemy(enemy, amount) {
       if (!enemy.group.active) return;
       enemy.hp -= amount;
+      enemy.bar.clear();
+      const barWidth = enemy.isBoss ? 64 : 46;
+      const barY = enemy.isBoss ? -48 : -37;
+      const ratio = Phaser.Math.Clamp(enemy.hp / enemy.maxHp, 0, 1);
+      enemy.bar.fillStyle(0x342d39);
+      enemy.bar.fillRoundedRect(-barWidth / 2, barY, barWidth, 6, 3);
+      enemy.bar.fillStyle(ratio > 0.45 ? 0x83e39a : 0xe58b8b);
+      enemy.bar.fillRoundedRect(-barWidth / 2 + 1, barY + 1, Math.max(0, (barWidth - 2) * ratio), 4, 2);
+      this.playSound("hit");
       enemy.group.setScale(1.12);
       this.tweens.add({ targets: enemy.group, scale: 1, duration: 120 });
       if (enemy.hp <= 0) {
@@ -258,6 +309,7 @@ export function createGameScene() {
         enemy.group.destroy();
         this.enemies = this.enemies.filter(e => e !== enemy);
         this.kills++;
+        this.playSound("defeat");
         this.energy = Math.min(150, this.energy + (enemy.isBoss ? 25 : 8));
         this.updateHud();
       }
@@ -289,6 +341,7 @@ export function createGameScene() {
           [...options.children].forEach(b => b.disabled = true);
           if (index === item.correct) {
             this.message.textContent = item.effect + " Grammar power activated!";
+            this.playSound("correct");
             this.applyGrammarPower();
             button.style.borderColor = "#76e0b2";
           } else {
@@ -331,6 +384,7 @@ export function createGameScene() {
       this.add.text(480, 260, won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN", { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
       this.add.text(480, 315, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
       this.message.textContent = won ? "Victory!" : "Defeat!";
+      this.playSound(won ? "victory" : "defeat");
     }
 
     clearTimers() { this.time.removeAllEvents(); }
