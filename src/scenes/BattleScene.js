@@ -371,7 +371,7 @@ export function createGameScene() {
       const enemy = {
         lane, x, y, baseY: y, group, hp, maxHp: hp,
         speed: isBoss ? 10 + this.wave * 0.6 : (17 + this.wave * 1.2) * speedFactor,
-        bar, isBoss, enemyType, phase: 1, body, aura,
+        bar, isBoss, enemyType, phase: 1, body, aura, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
       };
       this.enemies.push(enemy);
@@ -477,6 +477,10 @@ export function createGameScene() {
         }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
+        if (e.feet) {
+          e.feet[0].rotation = Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
+          e.feet[1].rotation = -Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
+        }
         if (e.x < 65) this.damageBase(e);
       });
       this.projectiles = this.projectiles.filter(p => p.active);
@@ -486,16 +490,36 @@ export function createGameScene() {
     fireProjectile(defender, target) {
       const stats = defender.stats;
       const p = this.add.container(defender.x + 18, defender.y - 5);
-      const glow = this.add.circle(0, 0, stats.radius * 2.2, stats.color, .22);
-      const core = this.add.circle(0, 0, stats.radius, stats.color).setStrokeStyle(2, 0xfff8d8);
-      p.add([glow, core]);
+      if (defender.unitType === "archer") {
+        const shaft = this.add.rectangle(0, 0, 23, 3, 0xffe4a5);
+        const tip = this.add.triangle(13, 0, -5, -5, -5, 5, 5, 0xfff4d0);
+        const tail = this.add.triangle(-11, 0, 4, -5, 4, 5, -4, 0xd9e7f5);
+        p.add([shaft, tip, tail]);
+      } else if (defender.unitType === "mage") {
+        const glow = this.add.circle(0, 0, 18, 0x9deaff, .2);
+        const core = this.add.star(0, 0, 6, 5, 10, 0xb9f4ff).setStrokeStyle(2, 0xffffff);
+        p.add([glow, core]);
+      } else {
+        const glow = this.add.circle(0, 0, 14, stats.color, .22);
+        const core = this.add.circle(0, 0, 7, stats.color).setStrokeStyle(2, 0xfff8d8);
+        p.add([glow, core]);
+      }
       p.target = target;
       p.damage = stats.damage;
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       this.projectiles.push(p);
       this.playSound("shot");
-      this.tweens.add({ targets: defender.group, scaleY: .92, yoyo: true, duration: 100 });
+      this.tweens.add({
+        targets: defender.group,
+        scaleY: .94,
+        angle: defender.unitType === "archer" ? 4 : -3,
+        yoyo: true,
+        duration: defender.unitType === "mage" ? 180 : 95
+      });
+      if (defender.legs && defender.legs.length) {
+        this.tweens.add({ targets: defender.legs, y: "+=3", yoyo: true, duration: 90 });
+      }
     }
 
     damageEnemy(enemy, amount) {
