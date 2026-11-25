@@ -467,16 +467,19 @@ export function createGameScene() {
       this.tweens.add({ targets: aura, alpha: .035, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
       if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
 
-      let healthBar = null;
-      if (stats.health) {
-        healthBar = this.add.graphics();
-        group.add(healthBar);
-        healthBar.setVisible(true).setAlpha(1).setDepth(0);
-        this.drawGuardianHealth(healthBar, stats.health, stats.health);
-      }
+      // Every deployed unit is a physical target: attackers can be damaged and destroyed too.
+      const unitHealth = {
+        sprout: 24, archer: 20, guardian: 38, mage: 22, ember: 26,
+        volt: 28, thorn: 36, knight: 70, phoenix: 44, sunwell: 18, titan: 130
+      };
+      const maxHp = unitHealth[unitType] || 24;
+      const healthBar = this.add.graphics();
+      group.add(healthBar);
+      healthBar.setVisible(true).setAlpha(1).setDepth(0);
+      this.drawGuardianHealth(healthBar, maxHp, maxHp);
       this.defenders.push({
         lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35),
-        unitType, stats, hp: stats.health || 0, maxHp: stats.health || 0,
+        unitType, stats, hp: maxHp, maxHp,
         healthBar, attackCooldown: 0, legs
       });
       this.message.textContent = stats.name + " deployed!";
@@ -846,7 +849,7 @@ export function createGameScene() {
             if (gained > 0) this.showSunwellEnergy(d, gained);
           }
         }
-        if (d.stats.health || d.stats.energyRate) return;
+        if (d.stats.role === "Lane blocker" || d.stats.role === "Heavy blocker" || d.stats.role === "Ultimate fortress" || d.stats.energyRate) return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
           // Select the nearest valid target in one pass; avoid allocating and sorting
@@ -914,10 +917,11 @@ export function createGameScene() {
           this.enemies.splice(enemyIndex, 1);
           continue;
         }
+        // Enemies must collide with and attack ANY defender, not walk through attackers.
         let blocker = null;
         for (let i = 0; i < this.defenders.length; i++) {
           const candidate = this.defenders[i];
-          if (candidate.stats.health && candidate.lane === e.lane && candidate.hp > 0 && candidate.x < e.x && e.x - candidate.x < 42) {
+          if (candidate.group.active && candidate.lane === e.lane && candidate.hp > 0 && candidate.x < e.x && e.x - candidate.x < 42) {
             blocker = candidate;
             break;
           }
@@ -928,14 +932,17 @@ export function createGameScene() {
           if (e.attackCooldown <= 0) {
             const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
             const hit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1));
-            blocker.hp -= hit;
-            blocker.healthBar && this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
+            blocker.hp = Math.max(0, blocker.hp - hit);
+            if (blocker.healthBar?.active) this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
+            this.tweens.add({ targets: e.group, x: e.x + 2, yoyo: true, duration: 70 });
             e.attackCooldown = 0.85;
             if (blocker.hp <= 0) {
-              this.tweens.add({ targets: blocker.group, alpha: 0, scale: .65, duration: 260, onComplete: () => blocker.group.destroy() });
+              if (blocker.healthBar?.active) blocker.healthBar.destroy();
+              this.tweens.add({ targets: blocker.group, alpha: 0, scale: .65, duration: 260, onComplete: () => blocker.group?.destroy() });
               this.defenders = this.defenders.filter(d => d !== blocker);
-              this.message.textContent = "Aegis Guardian has fallen! The lane is open.";
+              this.message.textContent = blocker.stats.name + " has fallen! The lane is open.";
+              this.playSound("defeat");
             }
           }
         } else {
