@@ -35,6 +35,13 @@ export function createGameScene() {
       this.waveTransitioning = false;
       this.maxWaves = 10;
       this.kills = 0;
+      this.selectedUnit = "sprout";
+      this.unitCards = [...document.querySelectorAll("[data-unit]")];
+      this.unitStats = {
+        sprout: { name: "Grammar Sprout", cost: 50, damage: 1, cooldown: 1.15, range: 490, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
+        archer: { name: "Rune Archer", cost: 65, damage: 1, cooldown: 0.62, range: 560, color: 0xffd27a, projectileSpeed: 470, radius: 5, symbol: "➶", body: 0xe8b96f, role: "Rapid fire" },
+        mage: { name: "Frost Mage", cost: 80, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "✧", body: 0xb9a8f5, role: "Frost slow" }
+      };
     }
 
     create() {
@@ -86,10 +93,12 @@ export function createGameScene() {
       this.waveText = document.getElementById("wave-value");
       this.baseText = document.getElementById("base-value");
       this.message = document.getElementById("battle-message");
-      document.querySelectorAll("[data-unit]").forEach(card => {
+      this.unitCards.forEach(card => {
         card.addEventListener("click", () => {
-          document.querySelectorAll("[data-unit]").forEach(c => c.classList.remove("selected"));
-          card.classList.add("selected");
+          if (card.disabled) return;
+          this.selectedUnit = card.dataset.unit;
+          this.unitCards.forEach(c => c.classList.toggle("selected", c === card));
+          this.message.textContent = this.unitStats[this.selectedUnit].name + " selected. Choose a tile.";
         });
       });
       document.getElementById("restart-button").addEventListener("click", () => window.location.reload());
@@ -105,25 +114,28 @@ export function createGameScene() {
       const col = Math.floor((pointer.x - GRID_X) / TILE_W);
       const lane = Math.floor((pointer.y - GRID_Y) / TILE_H);
       if (this.defenders.some(d => d.lane === lane && d.col === col)) return;
-      if (this.energy < 50) { this.message.textContent = "Not enough energy!"; return; }
-      this.energy -= 50;
-      this.deployDefender(lane, col);
+      const stats = this.unitStats[this.selectedUnit];
+      if (this.energy < stats.cost) { this.message.textContent = "Not enough energy for " + stats.name + "."; return; }
+      this.energy -= stats.cost;
+      this.deployDefender(lane, col, this.selectedUnit);
       this.updateHud();
     }
 
-    deployDefender(lane, col) {
+    deployDefender(lane, col, unitType = "sprout") {
+      const stats = this.unitStats[unitType] || this.unitStats.sprout;
       const x = GRID_X + col * TILE_W + TILE_W / 2;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const group = this.add.container(x, y);
       const shadow = this.add.ellipse(0, 25, 58, 14, 0x10251d, .28);
-      const body = this.add.circle(0, 0, 22, 0x8de1a4).setStrokeStyle(3, 0x2b7957);
-      const leaf = this.add.ellipse(-13, -21, 18, 29, 0x4baf77).setRotation(-.65);
-      const leaf2 = this.add.ellipse(13, -21, 18, 29, 0x5fc98a).setRotation(.65);
-      const face = this.add.text(0, 0, "✦", { fontFamily: "Arial", fontSize: "22px", color: "#fff6c9", fontStyle: "bold" }).setOrigin(.5);
-      group.add([shadow, leaf, leaf2, body, face]);
+      const body = this.add.circle(0, 0, unitType === "mage" ? 23 : 22, stats.body).setStrokeStyle(3, unitType === "archer" ? 0x8a5d28 : 0x2b7957);
+      const accent = unitType === "sprout"
+        ? [this.add.ellipse(-13, -21, 18, 29, 0x4baf77).setRotation(-.65), this.add.ellipse(13, -21, 18, 29, 0x5fc98a).setRotation(.65)]
+        : [this.add.circle(0, -25, 9, unitType === "mage" ? 0x83eaff : 0xf5d58e)];
+      const face = this.add.text(0, 0, stats.symbol, { fontFamily: "Arial", fontSize: unitType === "archer" ? "21px" : "22px", color: "#fff6c9", fontStyle: "bold" }).setOrigin(.5);
+      group.add([shadow, ...accent, body, face]);
       this.tweens.add({ targets: group, scale: { from: .3, to: 1 }, duration: 260, ease: "Back.Out" });
-      this.defenders.push({ lane, col, x, y, group, cooldown: 0 });
-      this.message.textContent = "Grammar Sprout deployed!";
+      this.defenders.push({ lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35), unitType, stats });
+      this.message.textContent = stats.name + " deployed!";
     }
 
     spawnEnemy() {
@@ -192,8 +204,10 @@ export function createGameScene() {
       this.defenders.forEach(d => {
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
-          const target = this.enemies.find(e => e.lane === d.lane && e.x > d.x && e.x - d.x < 490);
-          if (target) { this.fireProjectile(d, target); d.cooldown = 1.15; }
+          const target = this.enemies
+            .filter(e => e.lane === d.lane && e.x > d.x && e.x - d.x < d.stats.range)
+            .sort((a, b) => a.x - b.x)[0];
+          if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown; }
         }
       });
       this.projectiles.forEach(p => {
@@ -202,13 +216,23 @@ export function createGameScene() {
         const dist = Math.hypot(dx, dy);
         if (dist < 13 || !p.target.group.active) {
           p.destroy(); p.active = false;
-          if (p.target.group.active) this.damageEnemy(p.target, 1);
+          if (p.target.group.active) {
+            this.damageEnemy(p.target, p.damage);
+            if (p.unitType === "mage" && p.target.group.active) {
+              p.target.slowUntil = this.time.now + 2600;
+              p.target.group.setTint(0xb8f0ff);
+              this.time.delayedCall(2650, () => {
+                if (p.target.group.active && (!p.target.slowUntil || this.time.now >= p.target.slowUntil)) p.target.group.clearTint();
+              });
+            }
+          }
         } else {
-          p.x += dx / dist * 330 * dt; p.y += dy / dist * 330 * dt;
+          p.x += dx / dist * p.projectileSpeed * dt; p.y += dy / dist * p.projectileSpeed * dt;
         }
       });
       this.enemies.slice().forEach(e => {
-        e.x -= e.speed * dt;
+        const slowed = e.slowUntil && this.time.now < e.slowUntil;
+        e.x -= e.speed * (slowed ? 0.48 : 1) * dt;
         e.group.x = e.x;
         if (e.x < 65) this.damageBase(e);
       });
@@ -216,8 +240,13 @@ export function createGameScene() {
     }
 
     fireProjectile(defender, target) {
-      const p = this.add.circle(defender.x + 18, defender.y - 5, 7, 0xffe58c).setStrokeStyle(2, 0xfff8d8);
-      p.target = target; this.projectiles.push(p);
+      const stats = defender.stats;
+      const p = this.add.circle(defender.x + 18, defender.y - 5, stats.radius, stats.color).setStrokeStyle(2, 0xfff8d8);
+      p.target = target;
+      p.damage = stats.damage;
+      p.projectileSpeed = stats.projectileSpeed;
+      p.unitType = defender.unitType;
+      this.projectiles.push(p);
       this.tweens.add({ targets: defender.group, scaleY: .92, yoyo: true, duration: 100 });
     }
 
@@ -290,6 +319,10 @@ export function createGameScene() {
     updateHud() {
       this.energyText.textContent = this.energy;
       this.energyFill.style.width = (this.energy / 150 * 100) + "%";
+      this.unitCards.forEach(card => {
+        const stats = this.unitStats[card.dataset.unit];
+        if (stats) card.classList.toggle("unaffordable", this.energy < stats.cost);
+      });
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%";
     }
