@@ -40,7 +40,7 @@ function watchQuestionBanks(){
 }
 function normalizeBankQuestion(raw, subject, topic){
   const q=String(raw.q??raw.question??"").trim();
-  const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1??raw.optiona??raw.choicea,raw.answer2??raw.optionb??raw.choiceb,raw.answer3??raw.optionc??raw.choicec,raw.answer4??raw.optiond??raw.choiced].filter(v=>v!==undefined&&v!==null&&String(v).trim()!==""));
+  const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1??raw.optiona??raw.choicea,raw.answer2??raw.optionb??raw.choiceb,raw.answer3??raw.optionc??raw.choicec,raw.answer4??raw.optiond??raw.choiced]);
   const a=answers.map(v=>String(v??"").trim());
   while(a.length>2&&!a[a.length-1])a.pop();
   if(a.some(v=>!v))throw new Error("Answer choices cannot contain blank gaps. Fill each choice or remove unused choices at the end.");
