@@ -910,7 +910,9 @@ export function createGameScene() {
         speed: isBoss ? 10 + this.wave * 0.8 : Math.min(48, (17 + this.wave * 1.7) * speedFactor),
         bar, isBoss, enemyType, enemyLevel, phase: 1, body, aura, frostRing, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2),
-        specialCooldown: Phaser.Math.FloatBetween(1.8, 3.2)
+        specialCooldown: isBoss && this.wave >= 10 ? Phaser.Math.FloatBetween(4.2, 5.2) : 0,
+        specialWindup: 0,
+        specialRing: null
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
@@ -1011,6 +1013,7 @@ export function createGameScene() {
             this.defenders = this.defenders.filter(item => item !== d);
             this.message.textContent = d.stats.name + " succumbed to venom!";
             this.playSound("defeat");
+            return;
           }
         }
         if (d.stats.energyRate) {
@@ -1151,8 +1154,9 @@ export function createGameScene() {
               : rawHit;
             blocker.hp = Math.max(0, blocker.hp - hit);
             if (e.enemyType === "Venom Beast") {
+              const poisonAlreadyActive = blocker.poisonUntil && blocker.poisonUntil > this.time.now;
               blocker.poisonUntil = this.time.now + 3200;
-              blocker.poisonNextTick = Math.min(blocker.poisonNextTick || 0, this.time.now + 700);
+              if (!poisonAlreadyActive) blocker.poisonNextTick = this.time.now + 700;
             }
             if (e.enemyType === "Dark Caster") {
               const drained = Math.min(this.energy, 4);
@@ -1197,6 +1201,55 @@ export function createGameScene() {
           const pressured = this.time.now < this.enemyPressureUntil;
           const pressureFactor = pressured ? (e.isBoss ? 1.1 : 1.18) : 1;
           e.x -= stunned ? 0 : e.speed * (slowed ? 0.38 : 1) * pressureFactor * dt;
+        }
+        // From the second boss onward, the Dark Overlord charges a lane-targeted
+        // Rift Pulse. The expanding ring gives players time to react; a boss freeze
+        // pauses the charge rather than letting the attack bypass the control power.
+        if (e.isBoss && this.wave >= 10 && !(e.stunnedUntil && this.time.now < e.stunnedUntil)) {
+          if (e.specialWindup > 0) {
+            e.specialWindup = Math.max(0, e.specialWindup - dt);
+            if (e.specialWindup === 0) {
+              if (e.specialRing?.active) e.specialRing.destroy();
+              e.specialRing = null;
+              const pulseDamage = 8 + Math.floor(this.wave / 5) * 2;
+              let defendersHit = 0;
+              for (let i = this.defenders.length - 1; i >= 0; i--) {
+                const defender = this.defenders[i];
+                if (defender.lane !== e.lane || defender.hp <= 0) continue;
+                defender.hp = Math.max(0, defender.hp - pulseDamage);
+                defendersHit++;
+                if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
+                if (defender.hp <= 0) {
+                  if (defender.healthBar?.active) defender.healthBar.destroy();
+                  this.tweens.add({ targets: defender.group, alpha: 0, scale: .65, duration: 220, onComplete: () => defender.group?.destroy() });
+                  this.defenders.splice(i, 1);
+                }
+              }
+              const drained = Math.min(this.energy, 8);
+              this.energy -= drained;
+              this.message.textContent = "RIFT PULSE! Lane " + (e.lane + 1) + " takes " + pulseDamage + " damage" + (defendersHit ? " — " + defendersHit + " defender(s) struck" : "") + "; -" + drained + " energy.";
+              this.cameras.main.shake(120, .0025);
+              this.playSound("boss");
+              this.updateHud();
+              e.specialCooldown = 7.5;
+            }
+          } else {
+            e.specialCooldown -= dt;
+            if (e.specialCooldown <= 0) {
+              e.specialWindup = 1.15;
+              e.specialRing = this.add.circle(0, 0, 48, 0xf06caa, .12)
+                .setStrokeStyle(3, 0xff9bc8, .95);
+              e.group.add(e.specialRing);
+              this.tweens.add({
+                targets: e.specialRing,
+                scale: 1.45,
+                alpha: .72,
+                duration: 1150,
+                ease: "Quad.Out"
+              });
+              this.message.textContent = "RIFT PULSE CHARGING — defend lane " + (e.lane + 1) + "!";
+            }
+          }
         }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
