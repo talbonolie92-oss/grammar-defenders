@@ -307,19 +307,21 @@ export async function createThreeWorld(container) {
 
   let raf = 0;
   let lastFrame = 0;
+  const frameInterval = isSmallScreen ? 42 : 32;
   const render = now => {
-    // Render once before reporting successful initialization; if WebGL fails,
-  // BattleScene keeps its original Phaser battlefield instead of going blank.
-  renderer.render(scene, camera);
-  raf = requestAnimationFrame(render);
-    if (document.hidden || now - lastFrame < (isSmallScreen ? 42 : 32)) return;
-    lastFrame = now;
-    portal.rotation.z = now * 0.00022;
-    portalMat.emissiveIntensity = 1.05 + Math.sin(now * 0.0018) * 0.28;
-    crystal.rotation.y = now * 0.00065;
-    crystal.rotation.z = Math.sin(now * 0.0012) * 0.12;
-    renderer.render(scene, camera);
+    if (!document.hidden && now - lastFrame >= frameInterval) {
+      lastFrame = now;
+      portal.rotation.z = now * 0.00022;
+      portalMat.emissiveIntensity = 1.05 + Math.sin(now * 0.0018) * 0.28;
+      crystal.rotation.y = now * 0.00065;
+      crystal.rotation.z = Math.sin(now * 0.0012) * 0.12;
+      renderer.render(scene, camera);
+    }
+    raf = requestAnimationFrame(render);
   };
+  // Draw the first frame synchronously. A WebGL failure throws before the
+  // caller switches away from the classic Phaser battlefield.
+  renderer.render(scene, camera);
   raf = requestAnimationFrame(render);
 
   let disposed = false;
