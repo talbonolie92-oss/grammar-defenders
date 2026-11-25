@@ -29,6 +29,7 @@ export function createGameScene() {
       this.questionClock = 0;
       this.soundOn = false;
       this.battleStarted = false;
+      this.enemyPressureUntil = 0;
       this.questionIntervalSeconds = 45;
       this.difficulty = "normal";
       this.musicNodes = [];
@@ -897,7 +898,9 @@ export function createGameScene() {
           }
         } else {
           const slowed = e.slowUntil && this.time.now < e.slowUntil;
-          e.x -= e.speed * (slowed ? 0.48 : 1) * dt;
+          const pressured = this.time.now < this.enemyPressureUntil;
+          const pressureFactor = pressured ? (e.isBoss ? 1.1 : 1.18) : 1;
+          e.x -= e.speed * (slowed ? 0.48 : 1) * pressureFactor * dt;
         }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
@@ -1099,7 +1102,10 @@ export function createGameScene() {
         button.setFillStyle(0x713f50);
         button.setStrokeStyle(2, 0xf0a2a2);
         label.setColor("#ffe1e1");
-        this.message.textContent = "Not quite! Your defenders keep fighting.";
+        // A wrong answer briefly increases enemy pressure; repeated mistakes
+        // extend the effect rather than stacking unbounded speed multipliers.
+        this.enemyPressureUntil = Math.max(this.enemyPressureUntil || 0, this.time.now) + 5000;
+        this.message.textContent = "Not quite! Enemies surge forward for a moment — defend your lanes!";
       }
       const feedback = this.add.text(480, 319, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
