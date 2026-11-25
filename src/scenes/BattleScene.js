@@ -1040,6 +1040,7 @@ export function createGameScene() {
     }
 
     endGame(won, customTitle = "") {
+      if (this.gameOver) return;
       this.gameOver = true;
       if (typeof window.GD_SAVE_RESULT === "function") {
         const result = {
