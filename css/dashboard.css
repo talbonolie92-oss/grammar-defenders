@@ -12,3 +12,5 @@ button,input,select{font:inherit}.hidden{display:none!important}.dash-header{hei
 @media(max-width:650px){.bank-import-grid,.bank-answer-grid{grid-template-columns:1fr}.bank-import-grid .wide,.manual-question-form .wide{grid-column:auto}.bank-manual-actions{align-items:stretch;flex-direction:column}.bank-row{align-items:flex-start;flex-direction:column}}
 
 .bank-draft-preview{display:grid;gap:6px;margin:10px 0}.draft-question{padding:8px 10px;border:1px solid #304e68;border-radius:8px;background:#0b1e33}.draft-question b,.draft-question small{display:block}.draft-question b{font-size:10px;line-height:1.45}.draft-question small{font-size:9px;color:var(--muted);margin-top:3px}
+
+.bank-template-link{display:inline-block;margin-left:5px;color:#9af0c2;font-weight:1000;text-decoration:underline;text-underline-offset:3px}.bank-template-link:hover{color:#ffe08a}
