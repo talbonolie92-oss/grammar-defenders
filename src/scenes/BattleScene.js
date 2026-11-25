@@ -719,7 +719,7 @@ export function createGameScene() {
         this.enemies = this.enemies.filter(e => e !== enemy);
         this.kills++;
         this.playSound("defeat");
-        this.energy = Math.min(150, this.energy + (enemy.isBoss ? 25 : 8));
+        this.energy = Math.min(300, this.energy + (enemy.isBoss ? 25 : 8));
         this.updateHud();
       }
     }
@@ -843,7 +843,7 @@ export function createGameScene() {
       } else if (label.includes("CRITICAL") || label.includes("PRECISION") || label.includes("RAPID STRIKE") || label.includes("ECHO STRIKE")) {
         const target = this.enemies.slice().sort((a, b) => a.x - b.x)[0];
         if (target) this.damageEnemy(target, 5);
-        this.energy = Math.min(150, this.energy + 8);
+        this.energy = Math.min(300, this.energy + 8);
         feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
         color = "#ffb3a8";
       } else if (label.includes("GUARDIAN SHIELD")) {
@@ -864,7 +864,7 @@ export function createGameScene() {
       } else {
         const targets = this.enemies.slice().sort((a, b) => a.x - b.x).slice(0, 3);
         targets.forEach(enemy => this.damageEnemy(enemy, 1));
-        this.energy = Math.min(150, this.energy + 12);
+        this.energy = Math.min(300, this.energy + 12);
         feedback = "GRAMMAR POWER! Damage dealt and +12 energy.";
       }
 
