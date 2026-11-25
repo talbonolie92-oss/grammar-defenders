@@ -13,6 +13,7 @@ export function createGameScene() {
       super("BattleScene");
       this.energy = 100;
       this.baseHealth = 100;
+      this.baseShield = 0;
       this.wave = 1;
       this.defenders = [];
       this.enemies = [];
@@ -729,7 +730,9 @@ export function createGameScene() {
     damageBase(enemy) {
       enemy.group.destroy();
       this.enemies = this.enemies.filter(e => e !== enemy);
-      this.baseHealth = Math.max(0, this.baseHealth - 10);
+      const shieldAbsorbed = Math.min(this.baseShield, 10);
+      this.baseShield -= shieldAbsorbed;
+      this.baseHealth = Math.max(0, this.baseHealth - (10 - shieldAbsorbed));
       this.cameras.main.shake(130, 0.004);
       this.updateHud();
       if (this.baseHealth <= 0) this.endGame(false);
@@ -849,10 +852,9 @@ export function createGameScene() {
         feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
         color = "#ffb3a8";
       } else if (label.includes("GUARDIAN SHIELD")) {
-        const restored = Math.min(35, 100 - this.baseHealth);
-        this.baseHealth += restored;
+        this.baseShield = Math.min(40, this.baseShield + 20);
         this.energy = Math.min(300, this.energy + 20);
-        feedback = "GUARDIAN SHIELD! Keep restored and +20 energy.";
+        feedback = "GUARDIAN SHIELD! +20% shield and +20 energy.";
         color = "#b9d8ff";
       } else if (label.includes("DRAGON FURY")) {
         this.enemies.slice().forEach(enemy => this.damageEnemy(enemy, 6));
@@ -892,7 +894,7 @@ export function createGameScene() {
         if (stats) card.classList.toggle("unaffordable", this.energy < stats.cost);
       });
       this.waveText.textContent = this.wave;
-      this.baseText.textContent = this.baseHealth + "%";
+      this.baseText.textContent = this.baseHealth + "%" + (this.baseShield > 0 ? " +" + this.baseShield : "");
       if (this.timerText) {
         const seconds = this.remainingSeconds;
         const mins = Math.floor(seconds / 60);
