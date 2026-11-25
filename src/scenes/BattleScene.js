@@ -89,7 +89,14 @@ export function createGameScene() {
       this.elapsedSeconds = 0;
       this.questionIntervalSeconds = Phaser.Math.Clamp(Number(config.questionIntervalSeconds) || 45, 15, 180);
       this.difficulty = ["easy", "normal", "hard"].includes(config.difficulty) ? config.difficulty : "normal";
-      this.customQuestions = Array.isArray(config.questions) ? config.questions.filter(q => q && q.q && Array.isArray(q.a) && q.a.length >= 2 && Number.isInteger(Number(q.correct)) && Number(q.correct) >= 0 && Number(q.correct) < q.a.length) : [];
+      this.customQuestions = Array.isArray(config.questions) ? config.questions
+        .filter(q => {
+          if (!q || typeof q.q !== "string" || !q.q.trim() || !Array.isArray(q.a) || q.a.length < 2 || q.a.length > 4) return false;
+          if (q.a.some(answer => typeof answer !== "string" || !answer.trim())) return false;
+          return (typeof q.correct === "number" || (typeof q.correct === "string" && q.correct.trim() !== ""))
+            && Number.isInteger(Number(q.correct)) && Number(q.correct) >= 0 && Number(q.correct) < q.a.length;
+        })
+        .map(q => ({ ...q, topic: String(q.topic || "General"), effect: String(q.effect || "GRAMMAR POWER!"), correct: Number(q.correct) })) : [];
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
@@ -1073,6 +1080,7 @@ export function createGameScene() {
       let pool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
       if (!isBoss && !this.customQuestions.length && this.difficulty === "easy") pool = QUESTIONS.filter(q => q.grade === "7–9");
       if (!isBoss && !this.customQuestions.length && this.difficulty === "hard") pool = QUESTIONS.filter(q => q.grade === "10–12");
+      if (!Array.isArray(pool) || pool.length === 0) pool = isBoss ? BOSS_QUESTIONS : QUESTIONS;
       const item = pool[(isBoss ? this.bossQuestionIndex++ : this.questionIndex++) % pool.length];
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
