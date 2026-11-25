@@ -13,9 +13,10 @@ const config = {
   parent: "game-container",
   width: 960,
   height: 340,
-  backgroundColor: "#000000",
+  backgroundColor: "rgba(0,0,0,0)",
+  transparent: true,
   resolution: pixelRatio,
-  render: { antialias: true, pixelArt: false, roundPixels: true, powerPreference: "high-performance", transparent: true },
+  render: { antialias: true, pixelArt: false, roundPixels: true, powerPreference: "high-performance" },
   fps: { target: 60, min: 30, forceSetTimeOut: false },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [createGameScene()]
