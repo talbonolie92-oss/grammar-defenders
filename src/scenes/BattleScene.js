@@ -908,7 +908,7 @@ export function createGameScene() {
       {
         this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
         if (this.remainingSeconds === 0) {
-          this.endGame(true, "TIME LIMIT REACHED!");
+          this.endGame(this.endlessMode, this.endlessMode ? "TIME LIMIT REACHED!" : "TIME IS UP! DEFENSE INCOMPLETE");
           return;
         }
       }
