@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101b35">
+  <meta name="description" content="Grammar Defenders — Defend. Strategize. Master Grammar.">
+  <title>Grammar Defenders</title>
+  <link rel="stylesheet" href="css/game.css">
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">GD</div>
+        <div><h1>Grammar Defenders</h1><p>Defend. Strategize. Master Grammar.</p></div>
+      </div>
+      <div class="top-actions">
+        <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound">♫ Sound: Off</button>
+        <button id="restart-button" class="secondary-button" type="button">Restart</button>
+      </div>
+    </header>
+
+    <section class="game-layout" aria-label="Game">
+      <aside class="side-panel">
+        <div class="panel-heading"><span>DEFENDER DECK</span><span class="small-label">SELECT</span></div>
+        <button class="unit-card selected" data-unit="sprout" type="button">
+          <span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Grammar Sprout</strong><small>Balanced defender</small></span><span class="unit-cost">50</span>
+        </button>
+        <div class="unit-card locked" aria-disabled="true">
+          <span class="unit-icon archer-icon">➶</span><span class="unit-copy"><strong>Rune Archer</strong><small>Coming soon</small></span><span class="unit-cost">—</span>
+        </div>
+        <div class="unit-card locked" aria-disabled="true">
+          <span class="unit-icon mage-icon">✧</span><span class="unit-copy"><strong>Frost Mage</strong><small>Coming soon</small></span><span class="unit-cost">—</span>
+        </div>
+        <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then click or tap an empty tile to deploy it. Defenders attack enemies automatically.</p></div>
+      </aside>
+
+      <section class="battle-panel">
+        <div class="battle-hud">
+          <div class="hud-stat"><span class="hud-label">ENERGY</span><strong id="energy-value">100</strong></div>
+          <div class="energy-track"><div id="energy-fill"></div></div>
+          <div class="hud-stat wave-stat"><span class="hud-label">WAVE</span><strong id="wave-value">1</strong></div>
+          <div class="hud-stat"><span class="hud-label">BASE</span><strong id="base-value">100%</strong></div>
+        </div>
+        <div id="game-container" aria-label="Five-lane fantasy battlefield"></div>
+        <div class="battle-footer"><span><i class="status-dot"></i> BATTLE SIMULATION</span><span id="battle-message">Prepare your defenses!</span></div>
+      </section>
+    </section>
+
+    <section class="question-strip">
+      <div class="question-icon">?</div>
+      <div class="question-content"><span class="hud-label">GRAMMAR CHALLENGE</span><strong id="question-text">A challenge will appear during battle.</strong></div>
+      <div id="answer-options" class="answer-options"><span class="waiting-label">Stay alert, Defender!</span></div>
+    </section>
+    <footer class="page-footer">A classroom strategy game • Early playable prototype</footer>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
