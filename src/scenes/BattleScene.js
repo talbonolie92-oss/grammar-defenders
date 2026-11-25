@@ -343,7 +343,7 @@ export function createGameScene() {
       this.questionActive = true;
       const item = QUESTIONS[this.questionIndex % QUESTIONS.length];
       this.questionIndex++;
-      document.getElementById("question-text").textContent = item.q;
+      document.getElementById("question-text").textContent = item.topic + " · " + item.q;
       const options = document.getElementById("answer-options");
       options.innerHTML = "";
       item.a.forEach((answer, index) => {
