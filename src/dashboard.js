@@ -2,7 +2,7 @@ import { firebaseReady, watchAuth, teacherSignIn, teacherSignOut, dbRef, dbGet, 
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
-let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, selectedSession=null, sessionCache=[];
+let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, selectedSession=null, sessionCache=[];
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const setStatus=(id,msg)=>{if($(id))$(id).textContent=msg;};
 const statusClass=s=>["waiting","running","ended"].includes(s)?s:"ended";
@@ -29,7 +29,7 @@ else{
   });
 }
 
-function stopWatching(){if(stopSessions)stopSessions();if(stopPlayers)stopPlayers();if(stopResults)stopResults();stopSessions=stopPlayers=stopResults=null;}
+function stopWatching(){if(stopSessions)stopSessions();if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();stopSessions=stopPlayers=stopResults=stopAttempts=null;}
 function watchSessions(){
   if(stopSessions)stopSessions();
   stopSessions=dbWatch("teacherSessions/"+teacher.uid,snap=>{
@@ -93,6 +93,7 @@ function openSession(s){
   if(stopPlayers)stopPlayers();if(stopResults)stopResults();
   stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};renderPlayers();},err=>console.warn(err));
   stopResults=dbWatch("sessions/"+s.id+"/results",snap=>{selectedSession.results=snap.val()||{};renderReport();},err=>console.warn(err));
+  stopAttempts=dbWatch("sessions/"+s.id+"/attempts",snap=>{selectedSession.attempts=snap.val()||{};renderReport();},err=>console.warn(err));
   $("session-detail").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderDetail(){
@@ -125,7 +126,7 @@ async function editSession(s){
   await dbUpdate("sessions/"+s.id+"/public",{title:clean,topic:safeName(topic),section:safeName(section),updatedAt:Date.now()});
   await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{title:clean});
 }
-$("close-detail").addEventListener("click",()=>{$("session-detail").classList.add("hidden");selectedSession=null;if(stopPlayers)stopPlayers();if(stopResults)stopResults();});
+$("close-detail").addEventListener("click",()=>{$("session-detail").classList.add("hidden");selectedSession=null;if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();});
 function renderPlayers(){
   const players=Object.entries(selectedSession?.players||{});$("player-count").textContent=String(players.length);
   $("players-list").innerHTML=players.length?players.map(([uid,p])=>`
@@ -145,6 +146,12 @@ function renderReport(){
   const total=results.length,correct=results.reduce((n,r)=>n+(Number(r.correctAnswers)||0),0),answered=results.reduce((n,r)=>n+(Number(r.questionsAnswered)||0),0),accuracy=answered?Math.round(correct/answered*100):0;
   $("report-summary").innerHTML=[["Students",Object.keys(selectedSession?.players||{}).length],["Completed",total],["Accuracy",accuracy+"%"]].map(([label,value])=>'<div class="metric"><strong>'+escapeHtml(value)+'</strong><small>'+label+'</small></div>').join("");
   $("report-list").innerHTML=results.length?results.map(r=>'<div class="report-row"><div><b>'+escapeHtml(r.name||"Student")+'</b><small>'+escapeHtml(r.classSection||"")+'</small></div><b>'+escapeHtml(r.correctAnswers||0)+' / '+escapeHtml(r.questionsAnswered||0)+'</b><small>'+escapeHtml(r.accuracy||0)+'% accuracy</small></div>').join(""):'<div class="empty">Results will appear after students finish.</div>';
+  const attempts=Object.values(selectedSession?.attempts||{});
+  const topics={}; const misses={};
+  attempts.forEach(a=>{const topic=a.topic||"Uncategorized";topics[topic]??={total:0,correct:0};topics[topic].total++;if(a.correct)topics[topic].correct++;else{const key=a.question||"Unknown question";misses[key]=(misses[key]||0)+1;}});
+  const topicRows=Object.entries(topics).sort((a,b)=>(a[1].correct/a[1].total)-(b[1].correct/b[1].total)).map(([topic,v])=>'<div class="report-row"><div><b>'+escapeHtml(topic)+'</b><small>'+v.total+' attempts</small></div><b>'+Math.round(v.correct/v.total*100)+'%</b><small>'+v.correct+' correct</small></div>');
+  const missedRows=Object.entries(misses).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([q,n])=>'<div class="report-row"><div><b>'+escapeHtml(q)+'</b><small>Most commonly missed</small></div><b>'+n+'</b><small>wrong</small></div>');
+  $("topic-analysis").innerHTML=topicRows.length?topicRows.join("")+(missedRows.length?'<p class="muted">Most commonly missed questions</p>'+missedRows.join(""):''):'<div class="empty">Topic and question analysis will appear as students answer questions.</div>';
 }
 $("export-report").addEventListener("click",()=>{
   const results=Object.values(selectedSession?.results||{});const rows=[["Student","Class/Section","Questions","Correct","Incorrect","Accuracy","Kills","Waves","Outcome"],...results.map(r=>[r.name,r.classSection,r.questionsAnswered,r.correctAnswers,r.incorrectAnswers,r.accuracy,r.kills,r.wave,r.won?"Victory":"Defeat"])];
