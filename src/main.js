@@ -5,6 +5,7 @@ const params = new URLSearchParams(window.location.search);
 const setupScreen = document.getElementById("setup-screen");
 const gameLayout = document.getElementById("game-layout");
 const studentJoinScreen = document.getElementById("student-join-screen");
+const landingHero = document.getElementById("landing-hero");
 const sessionId = params.get("session");
 const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
 const config = {
@@ -31,6 +32,7 @@ let pendingResult = null;
 let studentLaunchStarted = false;
 
 if (sessionId) {
+  landingHero?.classList.add("hidden");
   setupScreen?.classList.add("hidden");
   studentJoinScreen?.classList.remove("hidden");
   gameLayout?.classList.add("hidden");
