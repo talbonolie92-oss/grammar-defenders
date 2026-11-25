@@ -29,12 +29,15 @@
           <span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Grammar Sprout</strong><small>Balanced defender</small></span><span class="unit-cost">50</span>
         </button>
         <button class="unit-card" data-unit="archer" type="button">
-          <span class="unit-icon archer-icon">➶</span><span class="unit-copy"><strong>Rune Archer</strong><small>Fast ranged attacker</small></span><span class="unit-cost">65</span>
+          <span class="unit-icon archer-icon"><span class="portrait-head"></span><span class="portrait-weapon">➶</span></span><span class="unit-copy"><strong>Rune Archer</strong><small>Bow • rapid ranged attacks</small></span><span class="unit-cost">65</span>
         </button>
         <button class="unit-card" data-unit="mage" type="button">
-          <span class="unit-icon mage-icon">✧</span><span class="unit-copy"><strong>Frost Mage</strong><small>Slows enemy movement</small></span><span class="unit-cost">80</span>
+          <span class="unit-icon mage-icon"><span class="portrait-head"></span><span class="portrait-weapon">✧</span></span><span class="unit-copy"><strong>Frost Mage</strong><small>Staff • slows enemies</small></span><span class="unit-cost">80</span>
         </button>
-        <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then click or tap an empty tile to deploy it. Defenders attack enemies automatically.</p></div>
+        <button class="unit-card" data-unit="guardian" type="button">
+          <span class="unit-icon guardian-icon"><span class="portrait-head"></span><span class="portrait-weapon">⬟</span></span><span class="unit-copy"><strong>Aegis Guardian</strong><small>Shield • blocks a lane</small></span><span class="unit-cost">75</span>
+        </button>
+        <div class="deck-tip"><strong>How to play</strong><p>Choose a hero, then place it on an open tile. Guardians block; other heroes attack automatically.</p></div>
       </aside>
 
       <section class="battle-panel">
@@ -50,11 +53,6 @@
       </section>
     </section>
 
-    <section class="question-strip">
-      <div class="question-icon">?</div>
-      <div class="question-content"><span class="hud-label">GRAMMAR CHALLENGE</span><strong id="question-text">A challenge will appear during battle.</strong></div>
-      <div id="answer-options" class="answer-options"><span class="waiting-label">Stay alert, Defender!</span></div>
-    </section>
     <footer class="page-footer">A classroom strategy game • Development build</footer>
   </main>
   <script type="module" src="src/main.js"></script>
