@@ -5,12 +5,7 @@ const GRID_X = 72;
 const GRID_Y = 86;
 const GRID_W = TILE_W * 7;
 const GRID_H = TILE_H * LANES;
-const QUESTIONS = [
-  { q: "Choose the correct sentence.", a: ["She go to school.", "She goes to school.", "She going school."], correct: 1, effect: "CRITICAL HIT!" },
-  { q: "Which word is an adjective?", a: ["Quickly", "Beautiful", "Run"], correct: 1, effect: "ARMOR BREAK!" },
-  { q: "Choose the correct past tense.", a: ["Buyed", "Bought", "Buying"], correct: 1, effect: "WEAKNESS REVEALED!" },
-  { q: "Which sentence uses 'their' correctly?", a: ["Their books are here.", "There books are here.", "They're books are here."], correct: 0, effect: "POWER SURGE!" }
-];
+import { QUESTIONS } from "../data/questions.js";
 
 export function createGameScene() {
   return class BattleScene extends Phaser.Scene {
