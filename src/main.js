@@ -21,6 +21,10 @@ const config = {
   scene: [createGameScene()]
 };
 const game = new Phaser.Game(config);
+const gameReady = new Promise(resolve => {
+  if (game.isBooted) resolve();
+  else game.events.once("ready", resolve);
+});
 let studentSession = null;
 let studentUid = null;
 let stopSessionWatch = null;
@@ -46,9 +50,9 @@ if (sessionId) {
 
 function startSoloSetup() {
   document.getElementById("start-game")?.addEventListener("click", async () => {
-    const battleScene = game.scene.getScene("BattleScene");
-    battleScene?.enableMusic?.();
-    if (battleScene) battleScene.soundOn = true;
+    const initialScene = game.scene.getScene("BattleScene");
+    initialScene?.enableMusic?.();
+    if (initialScene) initialScene.soundOn = true;
     const soundToggle = document.getElementById("sound-toggle");
     if (soundToggle) soundToggle.textContent = "SFX: On";
     const settings = {
@@ -60,11 +64,22 @@ function startSoloSetup() {
     window.GRAMMAR_DEFENDERS_CONFIG = settings;
     try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
     try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
-    setupScreen?.classList.add("hidden");
-    gameLayout?.classList.remove("hidden");
-    requestAnimationFrame(() => game.scale.refresh());
-    if (battleScene?.sys?.isActive()) battleScene.startBattle(settings);
-    else battleScene.events.once("create", () => battleScene.startBattle(settings));
+    try {
+      await gameReady;
+      const battleScene = game.scene.getScene("BattleScene");
+      if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
+      setupScreen?.classList.add("hidden");
+      gameLayout?.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        game.scale.refresh();
+        if (battleScene.sys.isActive()) battleScene.startBattle(settings);
+        else battleScene.events.once("create", () => battleScene.startBattle(settings));
+      });
+    } catch (error) {
+      const status = document.getElementById("setup-status");
+      if (status) status.textContent = error.message || "The game could not start. Please reload and try again.";
+      console.error("Grammar Defenders failed to start:", error);
+    }
   });
 
 
