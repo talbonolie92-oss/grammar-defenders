@@ -169,6 +169,7 @@ export async function createThreeWorld(container) {
   const actorMeshes = new Map();
   const projectileMeshes = new Map();
   const projectileGeometry = new THREE.SphereGeometry(0.15, 8, 6);
+  const projectileHaloGeometry = new THREE.TorusGeometry(0.19, 0.025, 4, 12);
   const unitPalette = {
     archer: 0x5f9664, mage: 0x8b9ee8, guardian: 0x8ba9c4, knight: 0xa9b9cb,
     ember: 0xe8753e, volt: 0x55b8d2, thorn: 0x57975b, phoenix: 0xf1a04e,
@@ -250,12 +251,17 @@ export async function createThreeWorld(container) {
       if (!mesh) {
         const color = unitPalette[projectile.unitType] || 0xe8d08a;
         const glow = actorMaterial(color);
-        mesh = new THREE.Mesh(projectileGeometry, glow);
+        mesh = new THREE.Group();
+        const core = new THREE.Mesh(projectileGeometry, glow);
+        const halo = new THREE.Mesh(projectileHaloGeometry, glow);
+        halo.rotation.x = Math.PI / 2;
+        mesh.add(core, halo);
         mesh.scale.setScalar(projectile.unitType === "titan" ? 1.35 : 1);
         scene.add(mesh);
         projectileMeshes.set(projectile, mesh);
       }
       mesh.position.set((projectile.x - 480) / 50, 0.24, (projectile.y - 170) / 50);
+      mesh.rotation.z += 0.12;
       mesh.visible = true;
       projectile.setVisible?.(false);
       activeProjectiles.add(projectile);
@@ -312,6 +318,7 @@ export async function createThreeWorld(container) {
         }
       });
       projectileGeometry.dispose();
+      projectileHaloGeometry.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     }
