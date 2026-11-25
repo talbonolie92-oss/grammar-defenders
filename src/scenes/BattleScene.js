@@ -259,10 +259,21 @@ export function createGameScene() {
 
     handleBoardTap(pointer) {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
-      // Convert screen taps through the active camera so scaled landscape canvases select the correct tile.
-      const point = pointer.positionToCamera(this.cameras.main);
-      const boardX = point.x;
-      const boardY = point.y;
+      // Map the actual browser touch/click position to the fixed 960×340 game world.
+      // Phaser pointer coordinates can be offset on mobile when FIT scaling and CSS sizing interact.
+      const canvas = this.game.canvas;
+      const rect = canvas?.getBoundingClientRect();
+      const nativeEvent = pointer.event;
+      let boardX, boardY;
+      if (rect && rect.width > 0 && rect.height > 0 && nativeEvent &&
+          Number.isFinite(nativeEvent.clientX) && Number.isFinite(nativeEvent.clientY)) {
+        boardX = (nativeEvent.clientX - rect.left) * (960 / rect.width);
+        boardY = (nativeEvent.clientY - rect.top) * (340 / rect.height);
+      } else {
+        const point = pointer.positionToCamera(this.cameras.main);
+        boardX = point.x;
+        boardY = point.y;
+      }
       if (boardX < GRID_X || boardX >= GRID_X + GRID_W || boardY < GRID_Y || boardY >= GRID_Y + GRID_H) return;
       const col = Math.floor((boardX - GRID_X) / TILE_W);
       const lane = Math.floor((boardY - GRID_Y) / TILE_H);
@@ -636,7 +647,8 @@ export function createGameScene() {
 
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
-      if (this.enemies.length >= 18) return;
+      const bossWave = this.wave % 5 === 0;
+      if (this.enemies.length >= (bossWave ? 24 : 18)) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
@@ -795,10 +807,16 @@ export function createGameScene() {
         if (this.gameOver) return;
         this.wave++;
         this.enemiesSpawnedThisWave = 0;
-        this.enemiesPerWave = Math.min(16, 8 + Math.floor((this.wave - 1) * 0.8));
+        const bossWave = this.wave % 5 === 0;
+        // Boss waves are full assaults: a larger minion wave followed by the boss.
+        this.enemiesPerWave = bossWave
+          ? Math.min(18, 14 + Math.floor(this.wave / 5))
+          : Math.min(16, 8 + Math.floor((this.wave - 1) * 0.8));
         this.waveActive = true;
         this.waveTransitioning = false;
-        this.spawnTimer.delay = Math.max(900, 3200 - (this.wave - 1) * 170);
+        this.spawnTimer.delay = bossWave
+          ? 1350
+          : Math.max(900, 3200 - (this.wave - 1) * 170);
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -938,6 +956,19 @@ export function createGameScene() {
             this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
             this.tweens.add({ targets: e.group, x: e.x + 2, yoyo: true, duration: 70 });
             e.attackCooldown = 0.85;
+            // A defender struck in melee also retaliates. Ranged defenders keep their
+            // projectile damage; support/tank units gain a small close-range counter.
+            blocker.retaliateCooldown = (blocker.retaliateCooldown || 0) - dt;
+            if (blocker.retaliateCooldown <= 0 && e.group.active) {
+              const counterDamage = blocker.stats.damage > 0
+                ? Math.max(1, Math.ceil(blocker.stats.damage * 0.65))
+                : blocker.unitType === "titan" ? 9
+                : blocker.unitType === "knight" ? 6
+                : blocker.unitType === "guardian" ? 3 : 1;
+              this.damageEnemy(e, counterDamage);
+              blocker.retaliateCooldown = 0.85;
+              if (!e.group.active) continue;
+            }
             if (blocker.hp <= 0) {
               if (blocker.healthBar?.active) blocker.healthBar.destroy();
               this.tweens.add({ targets: blocker.group, alpha: 0, scale: .65, duration: 260, onComplete: () => blocker.group?.destroy() });
