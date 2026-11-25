@@ -29,6 +29,12 @@ export function createGameScene() {
       this.spawnClock = 0;
       this.questionClock = 0;
       this.soundOn = false;
+      this.enemiesSpawnedThisWave = 0;
+      this.enemiesPerWave = 8;
+      this.waveActive = true;
+      this.waveTransitioning = false;
+      this.maxWaves = 10;
+      this.kills = 0;
     }
 
     create() {
@@ -36,7 +42,7 @@ export function createGameScene() {
       this.createHud();
       this.input.on("pointerdown", pointer => this.handleBoardTap(pointer));
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
-      this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
+      this.spawnTimer = this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
       this.time.addEvent({ delay: 17000, loop: true, callback: () => this.showQuestion() });
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
@@ -121,24 +127,57 @@ export function createGameScene() {
     }
 
     spawnEnemy() {
-      if (this.gameOver || this.enemies.length > 14) return;
+      if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
+      if (this.enemies.length >= 14) return;
+
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
-      const type = this.wave % 3;
+      const type = (this.wave - 1) % 3;
       const color = [0xc87973, 0x8c82c7, 0xc69b5b][type];
+      const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
       const group = this.add.container(x, y);
-      const shadow = this.add.ellipse(0, 25, 52, 13, 0x10251d, .3);
-      const body = this.add.circle(0, 0, 23, color).setStrokeStyle(3, 0x4c3949);
-      const horn = this.add.triangle(0, -22, -12, 8, 12, 8, 0, 0xead9ad);
-      const eyes = this.add.text(0, -2, "••", { fontSize: "17px", color: "#fff" }).setOrigin(.5);
+      const shadow = this.add.ellipse(0, 25, isBoss ? 76 : 52, 13, 0x10251d, .3);
+      const body = this.add.circle(0, 0, isBoss ? 31 : 23, isBoss ? 0x9f4264 : color).setStrokeStyle(3, 0x4c3949);
+      const horn = this.add.triangle(0, isBoss ? -29 : -22, -12, 8, 12, 8, 0, 0xead9ad);
+      const eyes = this.add.text(0, -2, isBoss ? "◆" : "••", { fontSize: isBoss ? "20px" : "17px", color: "#fff" }).setOrigin(.5);
       group.add([shadow, body, horn, eyes]);
-      const hp = this.wave > 2 ? 3 : 2;
+
+      const hp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2) * (isBoss ? 5 : 1);
+      const barWidth = isBoss ? 64 : 46;
       const bar = this.add.graphics();
-      bar.fillStyle(0x342d39); bar.fillRoundedRect(-23, -37, 46, 6, 3);
-      bar.fillStyle(0x83e39a); bar.fillRoundedRect(-22, -36, 44, 4, 2);
+      bar.fillStyle(0x342d39); bar.fillRoundedRect(-barWidth / 2, isBoss ? -48 : -37, barWidth, 6, 3);
+      bar.fillStyle(0x83e39a); bar.fillRoundedRect(-barWidth / 2 + 1, isBoss ? -47 : -36, barWidth - 2, 4, 2);
       group.add(bar);
-      this.enemies.push({ lane, x, y, group, hp, maxHp: hp, speed: 17 + this.wave * 1.2, bar });
+      this.enemies.push({ lane, x, y, group, hp, maxHp: hp, speed: (isBoss ? 10 : 17) + this.wave * 1.2, bar, isBoss });
+      this.enemiesSpawnedThisWave++;
+      if (isBoss) this.message.textContent = "BOSS APPROACHING!";
+    }
+
+    checkWaveProgress() {
+      if (this.gameOver || !this.waveActive || this.waveTransitioning) return;
+      if (this.enemiesSpawnedThisWave < this.enemiesPerWave || this.enemies.length > 0) return;
+
+      this.waveActive = false;
+      this.waveTransitioning = true;
+      this.spawnTimer.paused = true;
+      if (this.wave >= this.maxWaves) {
+        this.endGame(true);
+        return;
+      }
+
+      this.message.textContent = "Wave cleared! The next wave approaches...";
+      this.time.delayedCall(5000, () => {
+        if (this.gameOver) return;
+        this.wave++;
+        this.enemiesSpawnedThisWave = 0;
+        this.enemiesPerWave = Math.min(14, 8 + Math.floor((this.wave - 1) / 2));
+        this.waveActive = true;
+        this.waveTransitioning = false;
+        this.spawnTimer.paused = false;
+        this.message.textContent = "Wave " + this.wave + " — defend the keep!";
+        this.updateHud();
+      });
     }
 
     regenerateEnergy() {
@@ -173,6 +212,7 @@ export function createGameScene() {
         e.group.x = e.x;
         if (e.x < 65) this.damageBase(e);
       });
+      this.checkWaveProgress();
     }
 
     fireProjectile(defender, target) {
@@ -191,7 +231,8 @@ export function createGameScene() {
         this.tweens.add({ targets: burst, scale: 2.8, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
         enemy.group.destroy();
         this.enemies = this.enemies.filter(e => e !== enemy);
-        this.energy = Math.min(150, this.energy + 8);
+        this.kills++;
+        this.energy = Math.min(150, this.energy + (enemy.isBoss ? 25 : 8));
         this.updateHud();
       }
     }
@@ -255,6 +296,7 @@ export function createGameScene() {
 
     endGame(won) {
       this.gameOver = true;
+      if (this.spawnTimer) this.spawnTimer.paused = true;
       this.add.rectangle(480, 315, 960, 540, 0x081323, .76);
       this.add.text(480, 260, won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN", { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
       this.add.text(480, 315, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
