@@ -1212,7 +1212,9 @@ export function createGameScene() {
             if (p.unitType === "thorn" && p.level >= 2) {
               const thornRadius = p.level >= 3 ? 165 : 105;
               const thornDamage = Math.max(2, Math.round(p.damage * (p.level >= 3 ? .8 : .45)));
-              for (let i = 0; i < this.enemies.length; i++) {
+              // damageEnemy removes defeated enemies from the array, so traverse
+              // backwards to avoid skipping the next target after a splice.
+              for (let i = this.enemies.length - 1; i >= 0; i--) {
                 const nearby = this.enemies[i];
                 if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < thornRadius) {
                   this.damageEnemy(nearby, thornDamage);
@@ -1337,7 +1339,8 @@ export function createGameScene() {
             if (blocker.hp <= 0) {
               if (blocker.healthBar?.active) blocker.healthBar.destroy();
               this.tweens.add({ targets: blocker.group, alpha: 0, scale: .65, duration: 260, onComplete: () => blocker.group?.destroy() });
-              this.defenders = this.defenders.filter(d => d !== blocker);
+              const fallenIndex = this.defenders.indexOf(blocker);
+              if (fallenIndex !== -1) this.defenders.splice(fallenIndex, 1);
               this.message.textContent = blocker.stats.name + " has fallen! The lane is open.";
               this.playSound("defeat");
             }
