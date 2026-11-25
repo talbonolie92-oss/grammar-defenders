@@ -64,7 +64,9 @@ function startButtonSetup() {
     setupScreen?.classList.add("hidden");
     gameLayout?.classList.remove("hidden");
     requestAnimationFrame(() => game.scale.refresh());
-    game.scene.getScene("BattleScene").startBattle(settings);
+    const battleScene = game.scene.getScene("BattleScene");
+    if (battleScene.message) battleScene.startBattle(settings);
+    else battleScene.events.once("create", () => battleScene.startBattle(settings));
   });
 
   document.getElementById("copy-student-link")?.addEventListener("click", async () => {
