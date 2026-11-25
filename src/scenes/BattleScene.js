@@ -91,7 +91,7 @@ export function createGameScene() {
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
-      this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
+      // Energy now comes from Sunwell Keepers, enemy defeats, and grammar rewards.
       // Spawn the first attacker immediately so the battlefield never starts empty.
       this.spawnEnemySafely();
       this.spawnTimer = this.time.addEvent({
@@ -448,6 +448,7 @@ export function createGameScene() {
       if (!this.soundOn || !this.audioContext) return;
       const presets = {
         deploy: [420, 660, 0.09, "sine"],
+        energy: [720, 1120, 0.16, "sine"],
         shot: [520, 380, 0.045, "triangle"],
         hit: [190, 115, 0.07, "square"],
         defeat: [260, 90, 0.16, "sawtooth"],
@@ -753,10 +754,21 @@ export function createGameScene() {
       });
     }
 
-    regenerateEnergy() {
-      if (this.gameOver || this.questionActive) return;
-      this.energy = Math.min(300, this.energy + 8);
+    showSunwellEnergy(defender, amount) {
       this.updateHud();
+      const orb = this.add.circle(defender.x, defender.y - 34, 7, 0xffe58c, 1)
+        .setStrokeStyle(2, 0xffffff, 0.95).setDepth(45);
+      const glow = this.add.circle(defender.x, defender.y - 34, 13, 0xffe58c, 0.2).setDepth(44);
+      const label = this.add.text(defender.x + 16, defender.y - 46, "+" + amount + " ENERGY", {
+        fontFamily: "Nunito", fontSize: "12px", fontStyle: "900",
+        color: "#fff2a6", stroke: "#26344a", strokeThickness: 3
+      }).setDepth(46);
+      this.tweens.add({
+        targets: [orb, glow, label],
+        y: "-=28", alpha: 0, duration: 720, ease: "Cubic.Out",
+        onComplete: () => { orb.destroy(); glow.destroy(); label.destroy(); }
+      });
+      this.playSound("energy");
     }
 
     update(time, delta) {
@@ -765,10 +777,12 @@ export function createGameScene() {
       this.defenders.forEach(d => {
         if (d.stats.energyRate) {
           d.energyClock = (d.energyClock || 0) + dt;
-          if (d.energyClock >= d.stats.energyInterval) {
+          while (d.energyClock >= d.stats.energyInterval) {
             d.energyClock -= d.stats.energyInterval;
+            const before = this.energy;
             this.energy = Math.min(300, this.energy + d.stats.energyRate);
-            this.updateHud();
+            const gained = this.energy - before;
+            if (gained > 0) this.showSunwellEnergy(d, gained);
           }
         }
         if (d.stats.health || d.stats.energyRate) return;
