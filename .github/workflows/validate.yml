@@ -24,3 +24,5 @@ jobs:
           done
       - name: Validate question bank data
         run: node scripts/validate-data.mjs
+      - name: Validate core game structure and mobile layout
+        run: node scripts/validate-game.mjs
