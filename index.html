@@ -82,6 +82,7 @@
       <div class="top-actions game-controls">
         <button id="music-toggle" class="icon-button" type="button" aria-label="Toggle background music">♫ Music: Off</button>
         <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound effects">SFX: Off</button>
+        <button id="upgrade-mode-button" class="icon-button" type="button" aria-pressed="false">⬆ Upgrade</button>
         <button id="remove-mode-button" class="remove-mode-button" type="button" aria-pressed="false">⌫ Remove</button>
         <button id="restart-button" class="secondary-button" type="button">Restart</button>
       </div>
@@ -97,10 +98,11 @@
           <button class="unit-card" data-unit="thorn" type="button"><span class="unit-icon thorn-icon">♜</span><span class="unit-copy"><strong>Thorn Dragon</strong><small>Heavy damage</small></span><span class="unit-cost">150</span></button>
           <button class="unit-card" data-unit="knight" type="button"><span class="unit-icon knight-icon">⚔</span><span class="unit-copy"><strong>Iron Knight</strong><small>Armored melee</small></span><span class="unit-cost">175</span></button>
           <button class="unit-card" data-unit="phoenix" type="button"><span class="unit-icon phoenix-icon">♨</span><span class="unit-copy"><strong>Solar Phoenix</strong><small>Lane burst</small></span><span class="unit-cost">200</span></button>
-          <button class="unit-card" data-unit="sprout" type="button" aria-pressed="false" aria-label="Verdant Sprout, Balanced, costs 25 energy"><span class="unit-icon sprout-icon">✦</span><span class="unit-copy"><strong>Sprout</strong><small>Balanced</small></span><span class="unit-cost">25</span></button>
           <button class="unit-card" data-unit="titan" type="button"><span class="unit-icon titan-icon">✹</span><span class="unit-copy"><strong>Ancient Titan</strong><small>Global boss breaker</small></span><span class="unit-cost">250</span></button>
+          <button class="unit-card deck-locked" data-unit="stormcaller" type="button" disabled title="Unlock after the first boss"><span class="unit-icon stormcaller-icon">ϟ</span><span class="unit-copy"><strong>Stormcaller</strong><small>Elite chain striker · W6</small></span><span class="unit-cost">220</span></button>
+          <button class="unit-card deck-locked" data-unit="runeblade" type="button" disabled title="Unlock after the first boss"><span class="unit-icon runeblade-icon">⚔</span><span class="unit-copy"><strong>Runeblade</strong><small>Elite fortress · W6</small></span><span class="unit-cost">230</span></button>
         </div>
-        <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then tap an empty tile. To correct a placement, choose <b>Remove</b> and tap that defender. Removed defenders do not refund energy.</p></div>
+        <div class="deck-tip"><strong>How to play</strong><p>Select a defender and tap an empty tile. Use <b>Upgrade</b>, then tap a deployed defender to evolve it up to Tier III. Elite defenders unlock after the first boss.</p></div>
       </aside>
 
       <section class="battle-panel">
