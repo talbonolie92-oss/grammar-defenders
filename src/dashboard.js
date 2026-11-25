@@ -215,7 +215,7 @@ $("detail-actions").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-detail-action]");if(!b||!selectedSession)return;
   const s=selectedSession,action=b.dataset.detailAction;
   if(action==="start"){await dbUpdate("sessions/"+s.id+"/public",{status:"running",startedAt:Date.now(),updatedAt:Date.now()});await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{status:"running"});}
-  if(action==="end"){if(confirm("End this game session? Students will no longer be able to submit results.")){await dbUpdate("sessions/"+s.id+"/public",{status:"ended",endedAt:Date.now(),updatedAt:Date.now()});await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{status:"ended"});}}
+  if(action==="end"){if(confirm("End this game session? Students will be notified, the battle will stop, and their final results will be saved.")){await dbUpdate("sessions/"+s.id+"/public",{status:"ended",endedAt:Date.now(),updatedAt:Date.now()});await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{status:"ended"});}}
   if(action==="copy"){await navigator.clipboard.writeText(studentUrl(s.id));alert("Student link copied.");}
   if(action==="edit")await editSession(s);
 });
