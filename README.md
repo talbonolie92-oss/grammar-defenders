@@ -89,7 +89,8 @@ GitHub Actions also checks JavaScript syntax and question-bank data on pushes to
 
 ## Technology
 
-- Phaser 3
+- Phaser 3 for combat simulation, input, HUD, and effects
+- Three.js for the lightweight 3D battlefield, structures, terrain, and animated Dark Gate
 - JavaScript ES modules
 - Firebase Authentication
 - Firebase Realtime Database
