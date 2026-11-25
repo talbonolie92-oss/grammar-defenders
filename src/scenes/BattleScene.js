@@ -24,6 +24,7 @@ export function createGameScene() {
       this.defendersByLane = Array.from({ length: LANES }, () => []);
       this.enemies = [];
       this.projectiles = [];
+      this.projectilePool = [];
       this.selectedTile = null;
       this.questionIndex = 0;
       this.bossQuestionIndex = 0;
@@ -539,7 +540,7 @@ export function createGameScene() {
       group.setActive(true).setVisible(true).setAlpha(1).setDepth(20);
       this.children.bringToTop(group);
       this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
-      this.tweens.add({ targets: aura, alpha: .035, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
+      // Keep the aura static: one infinite tween per deployed defender adds up on mobile.
       if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
 
       // Every deployed unit is a physical target: attackers can be damaged and destroyed too.
@@ -1086,7 +1087,7 @@ export function createGameScene() {
       this.enemiesSpawnedThisWave++;
 
       this.tweens.add({ targets: group, scale: { from: .72, to: 1 }, duration: isBoss ? 420 : 240, ease: "Back.Out" });
-      this.tweens.add({ targets: aura, alpha: isBoss ? .05 : .02, scale: isBoss ? 1.15 : 1.08, duration: isBoss ? 650 : 1100, yoyo: true, repeat: -1 });
+      // Static aura avoids an additional infinite tween for every active enemy.
       if (isBoss) {
         this.message.textContent = "BOSS APPROACHING!";
         this.cameras.main.flash(180, 110, 35, 70, false);
@@ -1236,7 +1237,7 @@ export function createGameScene() {
         const dx = p.target.x - p.x, dy = p.target.y - p.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 13 || !p.target.group.active) {
-          p.destroy(); p.active = false;
+          this.recycleProjectile(p);
           this.projectiles.splice(projectileIndex, 1);
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
@@ -1510,11 +1511,17 @@ export function createGameScene() {
       }
     }
 
+    recycleProjectile(projectile) {
+      if (!projectile) return;
+      projectile.setActive(false).setVisible(false);
+      projectile.target = null;
+      projectile.damage = 0;
+      if (this.projectilePool.length < 180) this.projectilePool.push(projectile);
+      else projectile.destroy();
+    }
+
     fireProjectile(defender, target) {
       const stats = defender.stats;
-      // One lightweight display object per shot. The old version built a
-      // container plus several child shapes and two tweens for every volley;
-      // simultaneous volleys created a large burst of GameObjects and tweens.
       const projectileStyle = {
         archer: [0xffe4a5, 4], mage: [0xb9f4ff, 7],
         ember: [0xff925d, 8], phoenix: [0xffc16d, 10],
@@ -1522,16 +1529,26 @@ export function createGameScene() {
         stormcaller: [0x8fe7f2, 9], titan: [0xe8d8ff, 11]
       };
       const style = projectileStyle[defender.unitType] || [stats.color, 6];
-      const p = this.add.circle(defender.x + 18, defender.y - 5, style[1], style[0], .95)
-        .setStrokeStyle(1.5, 0xffffff, .75)
-        .setDepth(30);
+      // Reuse display objects instead of allocating and destroying one for every shot.
+      let p = this.projectilePool.pop();
+      if (p && p.scene !== this) p = null;
+      if (!p) {
+        p = this.add.circle(0, 0, style[1], style[0], .95)
+          .setStrokeStyle(1.5, 0xffffff, .75)
+          .setDepth(30);
+      } else {
+        p.setRadius(style[1]);
+        p.setFillStyle(style[0], .95);
+        p.setStrokeStyle(1.5, 0xffffff, .75);
+        p.setDepth(30);
+      }
+      p.setPosition(defender.x + 18, defender.y - 5).setActive(true).setVisible(true);
       p.target = target;
       p.damage = stats.damage;
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       p.level = defender.level || 1;
       this.projectiles.push(p);
-      // A single shared firing sound is enough for a simultaneous volley.
       if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 110) {
         this.lastShotSoundAt = this.time.now;
         this.playSound("shot");
