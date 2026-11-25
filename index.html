@@ -8,6 +8,7 @@
   <title>Grammar Defenders</title>
   <link rel="stylesheet" href="css/game.css">
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -57,25 +58,14 @@
           </label>
         </div>
         <div class="setup-note">Boss encounters trigger a separate, harder grammar challenge. Correct answers activate a special battle boost.</div>
-        <div class="setup-actions"><button id="start-game" class="start-button" type="button">Preview Game</button><button id="copy-student-link" class="link-button" type="button">Copy Student Link</button></div>
+        <div class="setup-actions"><button id="start-game" class="start-button" type="button">Preview Game</button><button id="copy-student-link" class="link-button" type="button">Copy Student Link</button><button id="generate-student-qr" class="link-button" type="button">Generate Student QR</button></div>
         <input id="student-link" class="student-link hidden" type="text" readonly aria-label="Student game link">
+        <div id="student-qr-wrap" class="student-qr-wrap hidden"><div id="student-qr"></div><p>Students scan this QR code to join with the selected settings.</p></div>
         <p id="setup-status" class="setup-status" aria-live="polite">Settings are applied to this game session.</p>
       </div>
     </section>
 
     <section id="game-layout" class="game-layout hidden" aria-label="Game">
-      <section class="battle-panel">
-        <div class="battle-hud">
-          <div class="hud-stat"><span class="hud-label">ENERGY</span><strong id="energy-value">100</strong></div>
-          <div class="energy-track"><div id="energy-fill"></div></div>
-          <div class="hud-stat wave-stat"><span class="hud-label">WAVE</span><strong id="wave-value">1</strong></div>
-          <div class="hud-stat"><span class="hud-label">TIME</span><strong id="battle-time">10:00</strong></div>
-          <div class="hud-stat"><span class="hud-label">BASE</span><strong id="base-value">100%</strong></div>
-        </div>
-        <div id="game-container" aria-label="Five-lane fantasy battlefield"></div>
-        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">ENDLESS SURVIVAL</span></span><span id="battle-message">Prepare your defenses!</span></div>
-      </section>
-
       <aside class="side-panel">
         <div class="panel-heading"><span>DEFENDER DECK</span><span class="small-label">SELECT • DEPLOY</span></div>
         <div class="deck-grid">
@@ -92,6 +82,20 @@
         </div>
         <div class="deck-tip"><strong>How to play</strong><p>Select a defender, then tap an empty tile. Defenders attack automatically. Stronger heroes cost more energy.</p></div>
       </aside>
+
+      <section class="battle-panel">
+        <div class="battle-hud">
+          <div class="hud-stat"><span class="hud-label">ENERGY</span><strong id="energy-value">100</strong></div>
+          <div class="energy-track"><div id="energy-fill"></div></div>
+          <div class="hud-stat wave-stat"><span class="hud-label">WAVE</span><strong id="wave-value">1</strong></div>
+          <div class="hud-stat"><span class="hud-label">TIME</span><strong id="battle-time">10:00</strong></div>
+          <div class="hud-stat"><span class="hud-label">BASE</span><strong id="base-value">100%</strong></div>
+        </div>
+        <div id="game-container" aria-label="Five-lane fantasy battlefield"></div>
+        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">ENDLESS SURVIVAL</span></span><span id="battle-message">Prepare your defenses!</span></div>
+      </section>
+
+
     </section>
 
     <footer class="page-footer">A classroom strategy game • Development build</footer>
