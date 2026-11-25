@@ -1077,6 +1077,7 @@ export function createGameScene() {
         return;
       }
       this.questionActive = true;
+      this.questionAnswered = false;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
       let pool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
@@ -1123,7 +1124,8 @@ export function createGameScene() {
     }
 
     answerQuestion(index, item, button, label) {
-      if (!this.questionActive) return;
+      if (!this.questionActive || this.questionAnswered) return;
+      this.questionAnswered = true;
       const correct = index === item.correct;
       this.questionsAnswered++;
       if (correct) this.correctAnswers++; else this.incorrectAnswers++;
@@ -1157,6 +1159,7 @@ export function createGameScene() {
         if (this.questionOverlay) this.questionOverlay.destroy(true);
         this.questionOverlay = null;
         this.questionActive = false;
+        this.questionAnswered = false;
         this.isBossQuestion = false;
         if (this.pendingBossQuestion && !this.gameOver) {
           this.pendingBossQuestion = false;
