@@ -306,7 +306,7 @@ export function createGameScene() {
         const hood = this.add.triangle(0, -29, -14, 16, 14, 16, 0, 0x6c5038).setStrokeStyle(2, 0x3d342b);
         const hair = this.add.ellipse(-2, -26, 22, 9, 0x513b2c);
         const face = this.add.rectangle(4, -20, 2, 3, 0x24303b);
-        const bow = this.add.arc(18, -5, 25, 250, 110, false, 0xe5bd75).setStrokeStyle(4, 0x704b2d);
+        const bow = this.add.ellipse(18, -5, 8, 46, 0x704b2d);
         const bowString = this.add.rectangle(18, -5, 1.5, 48, 0xffedc3);
         const quiverTie = this.add.rectangle(-15, -17, 2, 13, 0xffe4a5);
         const quiver = this.add.rectangle(-15, -7, 8, 25, 0x704b35).setRotation(-.35);
@@ -350,7 +350,7 @@ export function createGameScene() {
         legs = [this.add.ellipse(-8, 17, 12, 7, 0x773b31), this.add.ellipse(8, 17, 12, 7, 0x773b31)];
         const robe = this.add.triangle(0, 5, -20, -17, 20, -17, 0, 27, 0xb84e36).setStrokeStyle(3, 0x6e302d);
         const face = this.add.circle(0, -20, 10, 0xf0c19a).setStrokeStyle(2, 0x7e493b);
-        const hood = this.add.arc(0, -24, 26, 190, 350, false, 0xffb05b).setStrokeStyle(8, 0xf06b3c);
+        const hood = this.add.ellipse(0, -25, 30, 12, 0xf06b3c).setStrokeStyle(2, 0xffb05b);
         const flame1 = this.add.triangle(-9, -39, -7, 18, 7, 18, 0, 0xffdf77);
         const flame2 = this.add.triangle(7, -43, -6, 17, 6, 17, 0, 0xff8c3e);
         const staff = this.add.rectangle(22, -2, 4, 54, 0x71472f).setRotation(-.12);
@@ -422,7 +422,7 @@ export function createGameScene() {
           const leafL = this.add.ellipse(-14, -22, 17, 28, 0x4baf77).setRotation(-.65);
           const leafR = this.add.ellipse(14, -22, 17, 28, 0x5fc98a).setRotation(.65);
           const eyes = [this.add.circle(-7, -3, 2.5, 0x20343b), this.add.circle(7, -3, 2.5, 0x20343b)];
-          const smile = this.add.arc(0, 4, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
+          const smile = this.add.ellipse(0, 5, 7, 3, 0x28463c);
           parts.push(...legs, leafL, leafR, body, ...eyes, smile);
         } else {
           // Elite heroes use distinct silhouettes, armor, horns, and magical crests.
