@@ -17,7 +17,7 @@
         <div class="brand-mark">GD</div>
         <div><h1>Grammar Defenders</h1><p>Defend. Strategize. Master Grammar.</p></div>
       </div>
-      <div class="top-actions">
+      <div class="top-actions"><a class="secondary-button dashboard-link" href="teacher-dashboard.html">Teacher Dashboard</a>
         <button id="music-toggle" class="icon-button" type="button" aria-label="Toggle background music">♫ Music: Off</button>
         <button id="sound-toggle" class="icon-button" type="button" aria-label="Toggle sound effects">SFX: Off</button>
         <button id="restart-button" class="secondary-button" type="button">Restart</button>
@@ -62,6 +62,21 @@
         <input id="student-link" class="student-link hidden" type="text" readonly aria-label="Student game link">
         <div id="student-qr-wrap" class="student-qr-wrap hidden"><div id="student-qr"></div><p>Students scan this QR code to join with the selected settings.</p></div>
         <p id="setup-status" class="setup-status" aria-live="polite">Settings are applied to this game session.</p>
+      </div>
+    </section>
+
+    <section id="student-join-screen" class="setup-screen hidden" aria-labelledby="student-join-title">
+      <div class="setup-card student-join-card">
+        <p class="setup-kicker">JOIN CLASS SESSION</p>
+        <h2 id="student-join-title">Join your teacher's game</h2>
+        <p id="student-session-name" class="setup-description">Enter your name and class/section to join.</p>
+        <form id="student-join-form" class="student-join-form">
+          <label class="setup-field">Your name<input id="student-name" maxlength="50" autocomplete="name" required placeholder="Enter your full name"></label>
+          <label class="setup-field">Class / section<input id="student-class" maxlength="30" required placeholder="e.g. 10A"></label>
+          <button class="start-button" type="submit">Join game</button>
+          <p id="student-join-status" class="setup-status" role="status"></p>
+        </form>
+        <div id="student-waiting" class="student-waiting hidden"><div class="waiting-pulse"></div><b>You're in!</b><p>Waiting for your teacher to start the game…</p></div>
       </div>
     </section>
 
