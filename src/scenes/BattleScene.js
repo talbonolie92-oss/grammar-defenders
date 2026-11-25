@@ -1077,11 +1077,13 @@ export function createGameScene() {
         fontFamily: "Nunito", fontSize: "12px", color: "#b6c8dc", fontStyle: "700"
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
+      const compactAnswers = item.a.length >= 4;
       item.a.forEach((answer, index) => {
-        const y = 192 + index * 40;
-        const button = this.add.rectangle(480, y, 660, 34, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        // Four-choice banks must fit inside the question panel without covering feedback.
+        const y = (compactAnswers ? 184 : 192) + index * (compactAnswers ? 35 : 40);
+        const button = this.add.rectangle(480, y, 660, compactAnswers ? 30 : 34, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
-          fontFamily: "Nunito", fontSize: "16px", color: "#ffffff", fontStyle: "900",
+          fontFamily: "Nunito", fontSize: compactAnswers ? "14px" : "16px", color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 620 }
         }).setOrigin(.5);
         button.on("pointerover", () => button.setFillStyle(0x376477));
