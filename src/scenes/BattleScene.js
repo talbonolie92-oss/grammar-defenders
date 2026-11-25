@@ -322,6 +322,7 @@ export function createGameScene() {
       const group = this.add.container(x, y);
       const shadow = this.add.ellipse(0, 25, isBoss ? 78 : radius * 2.3, 13, 0x10251d, .38);
       const aura = this.add.circle(0, 0, isBoss ? 42 : radius + 5, isBoss ? 0xe15a91 : palette.light, isBoss ? .13 : .07);
+      const frostRing = this.add.circle(0, 0, radius + 9, 0x9deaff, 0).setStrokeStyle(2, 0xc7f6ff, .9).setVisible(false);
       const body = this.add.circle(0, 0, radius, isBoss ? 0x9f4264 : palette.body)
         .setStrokeStyle(isBoss ? 4 : 3, isBoss ? 0xf0a0c3 : palette.dark);
       const belly = this.add.ellipse(-2, 10, radius * 1.25, radius * .72, palette.dark, .34);
@@ -357,7 +358,7 @@ export function createGameScene() {
         details.push(this.add.triangle(radius - 2, -radius * .55, -11, 7, 4, 13, 0, 0xead9ad));
         details.push(this.add.circle(0, -2, 7, 0xffc4e2).setStrokeStyle(2, 0xffffff));
       }
-      group.add([shadow, aura, feet[0], feet[1], belly, body, ...details, eyes]);
+      group.add([shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes]);
 
       const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
       const hp = (baseHp + [0, -1, 2][type]) * (isBoss ? 5 : 1);
@@ -371,7 +372,7 @@ export function createGameScene() {
       const enemy = {
         lane, x, y, baseY: y, group, hp, maxHp: hp,
         speed: isBoss ? 10 + this.wave * 0.6 : (17 + this.wave * 1.2) * speedFactor,
-        bar, isBoss, enemyType, phase: 1, body, aura, feet,
+        bar, isBoss, enemyType, phase: 1, body, aura, frostRing, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
       };
       this.enemies.push(enemy);
@@ -477,6 +478,12 @@ export function createGameScene() {
         }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
+        const frostActive = Boolean(e.slowUntil && this.time.now < e.slowUntil);
+        if (e.frostRing) {
+          e.frostRing.setVisible(frostActive);
+          e.frostRing.setAlpha(frostActive ? .62 + Math.sin(this.time.now * .012) * .18 : 0);
+          e.frostRing.rotation += dt * 0.7;
+        }
         if (e.feet) {
           e.feet[0].rotation = Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
           e.feet[1].rotation = -Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
