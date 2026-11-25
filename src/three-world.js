@@ -10,7 +10,9 @@ export async function createThreeWorld(container) {
   scene.fog = new THREE.Fog(0x10283a, 16, 34);
 
   const camera = new THREE.OrthographicCamera(-9.6, 9.6, 3.4, -3.4, 0.1, 80);
-  camera.position.set(0, 18, 7);
+  // A lower, more angled view gives the five lane rows enough screen height
+  // while keeping the complete seven-column board inside the landscape frame.
+  camera.position.set(0, 14, 16);
   camera.up.set(0, 1, 0);
   camera.lookAt(0, 0, 0);
 
@@ -239,8 +241,8 @@ export async function createThreeWorld(container) {
       if (!mesh) {
         mesh = makeActor(actor, isEnemy);
         actorMeshes.set(actor, mesh);
-        // Keep Phaser actor sprites visible as a guaranteed fallback layer.
-        // Three.js rigs render behind the Phaser canvas until device testing confirms parity.
+        // Keep Phaser actor sprites visible as a fallback while the 3D rigs
+        // render on the transparent overlay above the Phaser battlefield.
       }
       const px = actor.group.x;
       const py = actor.group.y;
