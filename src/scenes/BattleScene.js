@@ -398,7 +398,16 @@ export function createGameScene() {
         }
       }
 
+      // Reparent every visual into one actor container, then normalize child state.
       group.add(parts);
+      group.iterate(child => {
+        child.setActive(true);
+        child.setVisible(true);
+        child.setAlpha(1);
+        child.setDepth(0);
+      });
+      group.setActive(true).setVisible(true).setAlpha(1).setDepth(20);
+      this.children.bringToTop(group);
       this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
       this.tweens.add({ targets: aura, alpha: .035, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
       if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
@@ -407,6 +416,7 @@ export function createGameScene() {
       if (stats.health) {
         healthBar = this.add.graphics();
         group.add(healthBar);
+        healthBar.setVisible(true).setAlpha(1).setDepth(0);
         this.drawGuardianHealth(healthBar, stats.health, stats.health);
       }
       this.defenders.push({
@@ -645,7 +655,17 @@ export function createGameScene() {
         details.push(this.add.circle(-radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
         details.push(this.add.circle(radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
       }
-      group.add([shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes]);
+      // Keep enemy visuals in a single visible container above the battlefield.
+      const enemyParts = [shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes];
+      group.add(enemyParts);
+      group.iterate(child => {
+        child.setActive(true);
+        child.setVisible(true);
+        child.setAlpha(1);
+        child.setDepth(0);
+      });
+      group.setActive(true).setVisible(true).setAlpha(1).setDepth(20);
+      this.children.bringToTop(group);
 
       const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
       const waveMultiplier = 1 + (this.wave - 1) * 0.22;
