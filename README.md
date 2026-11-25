@@ -2,33 +2,32 @@
 
 **Defend. Strategize. Master Grammar.**
 
-An educational fantasy tower-defense game. Students deploy defenders, protect five battlefield lanes, and activate tactical powers by answering grammar challenges.
+A landscape-first fantasy lane-defense game where students deploy recognizable heroes, protect the keep, and answer grammar challenges to unleash tactical powers.
 
-## Current playable build
+## Current playable milestone
 
-The browser game currently includes:
-- Five-lane battlefield with tile-based defender placement
-- Three selectable defender classes: Grammar Sprout, Rune Archer, and Frost Mage
-- Energy costs, automatic attacks, ranged projectiles, and enemy rewards
-- Three enemy archetypes: Grunt, Runner, and Brute, each with different combat behavior
-- Fixed-wave survival mode with ten escalating waves and boss encounters
-- Endless Survival mode with escalating, repeatable waves and a configurable teacher-set time limit
-- Gatekeeper boss encounters on waves 5 and 10, including multi-phase behavior
-- Keep health, defeat/victory conditions, and restart flow
-- Twenty-four categorized grammar questions across middle- and upper-secondary topics
-- Distinct grammar-triggered tactical powers: freeze, keep restoration, armor-breaking damage, critical strikes, and energy surges
-- Optional synthesized battle sound effects
-- Responsive fantasy-themed interface with layered procedural scenery, rune-marked lanes, a glowing Dark Gate, and animated defender auras
-- Lightweight ambient particles, deployment animations, and keep-damage camera feedback
-- Performance-conscious Phaser rendering with a capped device-pixel ratio, 60 FPS target, and suspended rendering when the tab is hidden
+- Five-lane, 16:9 landscape battlefield
+- Selectable hero defenders with distinct silhouettes and weapons:
+  - Grammar Sprout — balanced starter defender
+  - Rune Archer — bow-wielding rapid ranged attacker
+  - Frost Mage — crystal-staff caster who slows enemies
+  - Aegis Guardian — armored shield hero who blocks and absorbs attacks in a lane
+- Enemies with distinct Grunt, Runner, and Brute roles, illustrated bodies, and walking animation
+- Energy-based deployment, automatic attacks, enemy health bars, and combat effects
+- Ten-wave survival structure with escalating enemy strength
+- Gatekeeper boss encounters on waves 5 and 10 with multiple phases
+- Grammar questions appear periodically as a central battlefield overlay; combat pauses while students answer
+- Twenty-four categorized grammar questions for middle- and upper-secondary learners
+- Correct answers activate tactical powers; incorrect answers do not stop the battle
+- Optional synthesized battle sound effects and responsive layout
 
 ## Controls
 
-1. Select a defender in the Defender Deck.
-2. Click or tap an empty battlefield tile to deploy it.
-3. Defenders automatically attack enemies in their own lane.
-4. Answer grammar challenges to trigger a battlefield power.
-5. In Fixed Waves, protect the keep through the final wave. In Endless Survival, survive until the teacher-set timer expires.
+1. Choose a hero from the Defender Deck.
+2. Click or tap an empty battlefield tile to deploy the hero.
+3. Archers and mages automatically attack enemies in their lane.
+4. Place Aegis Guardians to block enemies and protect a lane.
+5. When a grammar challenge appears, choose an answer to resume the battle.
 
 ## Run locally
 
@@ -40,22 +39,20 @@ python -m http.server 8000
 
 Then visit http://localhost:8000.
 
-## Development roadmap
+## Roadmap
 
-1. Complete and polish the core battle experience
-2. Expand and balance defender/enemy abilities and progression
-3. Add teacher-controlled battle setup: Fixed Waves or Endless Survival, with a configurable time limit for Endless Survival
-4. Add configurable question sets and teacher-controlled topics
-5. Add individual and cooperative classroom sessions
-6. Build teacher dashboard, QR/link joining, class rosters, reports, and progression
-7. Connect Firebase Realtime Database and harden classroom data access
+1. Refine character art, animation, battlefield readability, and combat balance
+2. Expand the question engine and add teacher-controlled topic sets
+3. Add individual and cooperative classroom sessions
+4. Build the teacher dashboard, class rosters, QR/link joining, and reports
+5. Connect Firebase Realtime Database for classroom data and multiplayer
 
 ## Technology
 
 - Phaser 3
 - JavaScript ES modules
 - HTML and CSS
-- GitHub Pages deployment
-- Firebase Realtime Database planned for classroom data and multiplayer
+- GitHub Pages
+- Firebase Realtime Database planned for classroom features
 
-The current build is an active development milestone. Visual polish uses original procedural Phaser graphics rather than downloaded or copyrighted game art. The renderer caps high-density displays at 1.5x resolution and sleeps while the browser tab is hidden to reduce unnecessary GPU and battery use. Endless Survival accepts a session configuration through window.GRAMMAR_DEFENDERS_CONFIG = { mode: "endless", timeLimitMinutes: 15 } before the game module loads, or for testing through ?mode=endless&minutes=15. The teacher dashboard will provide these settings through the session setup screen. Teacher tools, cloud saving, student joining, and multiplayer are not yet implemented.
+Teacher tools, student joining, cloud saving, and multiplayer are not implemented yet.
