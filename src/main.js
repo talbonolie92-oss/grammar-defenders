@@ -23,7 +23,11 @@ const game = new Phaser.Game(config);
 let studentSession = null;
 let studentUid = null;
 let stopSessionWatch = null;
+let stopPlayerWatch = null;
+let stopBlockedWatch = null;
 let resultSaved = false;
+let resultSavePromise = null;
+let studentLaunchStarted = false;
 
 if (sessionId) {
   setupScreen?.classList.add("hidden");
@@ -94,6 +98,26 @@ async function initializeStudentJoin() {
       form.classList.add("hidden");
       document.getElementById("student-waiting").classList.remove("hidden");
       status.textContent = "";
+      stopPlayerWatch = dbWatch("sessions/" + sessionId + "/players/" + studentUid, snap => {
+        if (!snap.exists()) {
+          const scene = game.scene.getScene("BattleScene");
+          if (scene?.battleStarted && !scene.gameOver) scene.endGame(false, "REMOVED FROM CLASS SESSION");
+          else {
+            document.getElementById("student-waiting").innerHTML = "<b>Access removed</b><p>Your teacher removed you from this session.</p>";
+            form.classList.add("hidden");
+          }
+        }
+      }, err => { status.textContent = err.message; });
+      stopBlockedWatch = dbWatch("sessions/" + sessionId + "/blockedPlayers/" + studentUid, snap => {
+        if (snap.exists() && snap.val() === true) {
+          const scene = game.scene.getScene("BattleScene");
+          if (scene?.battleStarted && !scene.gameOver) scene.endGame(false, "REMOVED FROM CLASS SESSION");
+          else {
+            document.getElementById("student-waiting").innerHTML = "<b>Access removed</b><p>Your teacher removed you from this session.</p>";
+            form.classList.add("hidden");
+          }
+        }
+      }, err => { status.textContent = err.message; });
       stopSessionWatch = dbWatch("sessions/" + sessionId + "/public", snap => {
         if (!snap.exists()) { const scene=game.scene.getScene("BattleScene"); if(scene?.battleStarted&&!scene.gameOver)scene.endGame(false,"SESSION REMOVED BY TEACHER"); else status.textContent = "Your teacher removed this session."; return; }
         studentSession = snap.val();
@@ -111,7 +135,8 @@ async function initializeStudentJoin() {
 }
 
 async function launchStudentGame(name, classSection) {
-  if (window.GRAMMAR_DEFENDERS_CONFIG?.studentLaunch) return;
+  if (studentLaunchStarted || window.GRAMMAR_DEFENDERS_CONFIG?.studentLaunch) return;
+  studentLaunchStarted = true;
   const settings = {
     mode: studentSession.mode || "endless",
     timeLimitMinutes: Number(studentSession.timeLimitMinutes) || 10,
@@ -121,7 +146,16 @@ async function launchStudentGame(name, classSection) {
     sessionId, playerId: studentUid, playerName: name, classSection
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
-  await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
+  try {
+    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
+  } catch (error) {
+    studentLaunchStarted = false;
+    delete window.GRAMMAR_DEFENDERS_CONFIG;
+    document.getElementById("student-join-screen")?.classList.remove("hidden");
+    gameLayout?.classList.add("hidden");
+    document.getElementById("student-join-status").textContent = "Could not join the game. Please try again.";
+    throw error;
+  }
   window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
   document.getElementById("student-join-screen")?.classList.add("hidden");
   gameLayout?.classList.remove("hidden");
@@ -140,9 +174,25 @@ async function launchStudentGame(name, classSection) {
   };
   window.GD_SAVE_RESULT = async result => {
     if (!studentUid || resultSaved) return;
-    resultSaved = true;
-    await dbSet("sessions/" + sessionId + "/results/" + studentUid, { ...result, name, classSection, completedAt: Date.now() });
-    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "finished", finishedAt: Date.now(), active: false });
+    if (resultSavePromise) return resultSavePromise;
+    resultSavePromise = (async () => {
+      const completedAt = Date.now();
+      await dbSet("sessions/" + sessionId + "/results/" + studentUid, {
+        ...result, name, classSection, completedAt
+      });
+      await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
+        status: "finished", finishedAt: completedAt, active: false
+      });
+      resultSaved = true;
+    })();
+    try {
+      await resultSavePromise;
+    } catch (error) {
+      resultSavePromise = null;
+      const message = document.getElementById("battle-message");
+      if (message) message.textContent = "Result not synced yet. Keep this page open and reconnect before leaving.";
+      throw error;
+    }
   };
 }
 
@@ -150,4 +200,9 @@ document.addEventListener("visibilitychange", () => {
   if (!game || !game.scene) return;
   if (document.hidden) game.loop.sleep(); else game.loop.wake();
 });
-window.addEventListener("beforeunload", () => { if (stopSessionWatch) stopSessionWatch(); game.destroy(true); }, { once: true });
+window.addEventListener("beforeunload", () => {
+  if (stopSessionWatch) stopSessionWatch();
+  if (stopPlayerWatch) stopPlayerWatch();
+  if (stopBlockedWatch) stopBlockedWatch();
+  game.destroy(true);
+}, { once: true });
