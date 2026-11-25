@@ -1510,9 +1510,18 @@ export function createGameScene() {
       enemy.bar.fillRoundedRect(-barWidth / 2, barY, barWidth, 6, 3);
       enemy.bar.fillStyle(ratio > 0.45 ? 0x83e39a : 0xe58b8b);
       enemy.bar.fillRoundedRect(-barWidth / 2 + 1, barY + 1, Math.max(0, (barWidth - 2) * ratio), 4, 2);
-      this.playSound("hit");
-      enemy.group.setScale(1.12);
-      this.tweens.add({ targets: enemy.group, scale: 1, duration: 120 });
+      // Throttle cosmetic hit feedback so dense waves do not create
+      // overlapping tweens or a burst of identical hit sounds.
+      const hitFeedbackReady = !enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140;
+      if (hitFeedbackReady) {
+        enemy.lastHitFeedbackAt = this.time.now;
+        enemy.group.setScale(1.08);
+        this.tweens.add({ targets: enemy.group, scale: 1, duration: 110 });
+      }
+      if (!this.lastHitSoundAt || this.time.now - this.lastHitSoundAt >= 75) {
+        this.lastHitSoundAt = this.time.now;
+        this.playSound("hit");
+      }
       if (enemy.hp <= 0) {
         if (enemy.laneAlert?.active) enemy.laneAlert.destroy();
         const burst = this.add.circle(enemy.x, enemy.y, 12, 0xffd58c, .8);
