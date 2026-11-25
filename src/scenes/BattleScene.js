@@ -1208,10 +1208,14 @@ export function createGameScene() {
         if (e.isBoss && this.wave >= 10 && !(e.stunnedUntil && this.time.now < e.stunnedUntil)) {
           if (e.specialWindup > 0) {
             e.specialWindup = Math.max(0, e.specialWindup - dt);
+            if (e.specialRing?.active) {
+              const chargeRatio = 1 - e.specialWindup / 1.15;
+              e.specialRing.setScale(1 + chargeRatio * .45).setAlpha(.12 + chargeRatio * .5);
+            }
             if (e.specialWindup === 0) {
               if (e.specialRing?.active) e.specialRing.destroy();
               e.specialRing = null;
-              const pulseDamage = 8 + Math.floor(this.wave / 5) * 2;
+              const pulseDamage = 8 + Math.floor(this.wave / 5) * 2 + (e.phase - 1) * 3;
               let defendersHit = 0;
               for (let i = this.defenders.length - 1; i >= 0; i--) {
                 const defender = this.defenders[i];
@@ -1225,13 +1229,14 @@ export function createGameScene() {
                   this.defenders.splice(i, 1);
                 }
               }
-              const drained = Math.min(this.energy, 8);
+              const energyDrain = 8 + (e.phase - 1) * 4;
+              const drained = Math.min(this.energy, energyDrain);
               this.energy -= drained;
-              this.message.textContent = "RIFT PULSE! Lane " + (e.lane + 1) + " takes " + pulseDamage + " damage" + (defendersHit ? " — " + defendersHit + " defender(s) struck" : "") + "; -" + drained + " energy.";
+              this.message.textContent = "RIFT PULSE — PHASE " + e.phase + "! Lane " + (e.lane + 1) + " takes " + pulseDamage + " damage" + (defendersHit ? " — " + defendersHit + " defender(s) struck" : "") + "; -" + drained + " energy.";
               this.cameras.main.shake(120, .0025);
               this.playSound("boss");
               this.updateHud();
-              e.specialCooldown = 7.5;
+              e.specialCooldown = Math.max(5.2, 7.5 - (e.phase - 1) * 1.1);
             }
           } else {
             e.specialCooldown -= dt;
@@ -1240,13 +1245,7 @@ export function createGameScene() {
               e.specialRing = this.add.circle(0, 0, 48, 0xf06caa, .12)
                 .setStrokeStyle(3, 0xff9bc8, .95);
               e.group.add(e.specialRing);
-              this.tweens.add({
-                targets: e.specialRing,
-                scale: 1.45,
-                alpha: .72,
-                duration: 1150,
-                ease: "Quad.Out"
-              });
+              e.specialRing.setScale(1).setAlpha(.12);
               this.message.textContent = "RIFT PULSE CHARGING — defend lane " + (e.lane + 1) + "!";
             }
           }
@@ -1334,9 +1333,12 @@ export function createGameScene() {
         if (nextPhase > enemy.phase) {
           enemy.phase = nextPhase;
           enemy.speed = Math.min(enemy.speed * (nextPhase === 2 ? 1.2 : 1.3), 42);
-          this.message.textContent = "BOSS PHASE " + nextPhase + "! The gatekeeper grows stronger!";
+          this.message.textContent = nextPhase === 2
+            ? "BOSS PHASE II! The Overlord accelerates its Rift Pulse."
+            : "BOSS PHASE III! The Overlord's Rift Pulse reaches maximum power!";
           this.playSound("boss");
-          this.tweens.add({ targets: enemy.body, alpha: 0.45, yoyo: true, duration: 150, repeat: 2 });
+          this.tweens.add({ targets: [enemy.body, enemy.aura], alpha: 0.45, yoyo: true, duration: 150, repeat: 2 });
+          if (enemy.aura?.active) enemy.aura.setFillStyle(nextPhase === 3 ? 0xff5c9d : 0xd47bff);
         }
       }
       enemy.bar.clear();
