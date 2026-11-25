@@ -51,7 +51,7 @@ export function createGameScene() {
       this.questionsAnswered = 0;
       this.correctAnswers = 0;
       this.incorrectAnswers = 0;
-      this.selectedUnit = "sprout";
+      this.selectedUnit = "sunwell";
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
         sprout: { name: "Grammar Sprout", cost: 25, damage: 1, cooldown: 1.2, range: 460, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
