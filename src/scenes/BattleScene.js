@@ -488,7 +488,7 @@ export function createGameScene() {
       // Every deployed unit is a physical target: attackers can be damaged and destroyed too.
       const unitHealth = {
         sprout: 24, archer: 20, guardian: 38, mage: 22, ember: 26,
-        volt: 28, thorn: 36, knight: 70, phoenix: 44, sunwell: 18, titan: 130
+        volt: 28, thorn: 36, knight: 70, phoenix: 44, sunwell: 18, titan: 360
       };
       const maxHp = unitHealth[unitType] || 24;
       const healthBar = this.add.graphics();
@@ -1292,7 +1292,7 @@ export function createGameScene() {
         color = "#b9d8ff";
       } else if (label.includes("DRAGON FURY")) {
         const enemies = activeEnemies();
-        enemies.forEach(enemy => this.damageEnemy(enemy, enemy.isBoss ? 0 : 8));
+        enemies.forEach(enemy => { if (!enemy.isBoss) this.damageEnemy(enemy, 8); });
         const dealt = bossDamage(.12, 24);
         this.energy = Math.min(300, this.energy + 20);
         feedback = "DRAGON FURY! Battlefield blast" + (dealt ? " + " + dealt + " boss damage!" : " +20 energy!");
