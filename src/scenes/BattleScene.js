@@ -259,18 +259,89 @@ export function createGameScene() {
         const crystal = this.add.triangle(20, -31, -8, 9, 8, 9, 0, 0x9df5ff).setStrokeStyle(2, 0xf2ffff);
         const cape = this.add.triangle(-2, 8, -13, -12, 14, -12, 0, 27, 0x444d8e);
         parts.push(...legs, cape, torso, head, hood, face, staff, crystal);
-      } else if (stats.health) {
-        // Armored lane guardian with a broad shield held forward.
-        legs = [this.add.rectangle(-8, 16, 10, 14, 0x46556b), this.add.rectangle(8, 16, 10, 14, 0x46556b)];
-        const torso = this.add.rectangle(0, 1, 31, 29, 0x718ba8).setStrokeStyle(3, 0x354d6b);
+      } else if (unitType === "guardian") {
+        // Aegis Guardian: broad shield-bearing defender, built for lane blocking.
+        legs = [this.add.rectangle(-9, 17, 12, 15, 0x46556b), this.add.rectangle(9, 17, 12, 15, 0x46556b)];
+        const torso = this.add.rectangle(0, 1, 34, 31, 0x718ba8).setStrokeStyle(3, 0x354d6b);
         const head = this.add.circle(0, -20, 11, 0xd9b49a).setStrokeStyle(2, 0x586c84);
-        const helmet = this.add.rectangle(0, -25, 24, 10, 0xb8c9dc).setStrokeStyle(2, 0x526b87);
-        const crest = this.add.triangle(0, -35, -5, 10, 5, 10, 0, 0xd7e9fa);
-        const visor = this.add.rectangle(0, -19, 16, 4, 0x344960);
-        const shield = this.add.polygon(-21, 1, [-13,-22, 13,-22, 18,-4, 0,24, -18,-4], 0x527ba8).setStrokeStyle(3, 0xd5e8ff);
-        const shieldMark = this.add.text(-21, 0, "✦", { fontSize: "17px", color: "#fff0bf", fontStyle: "bold" }).setOrigin(.5);
-        const sword = this.add.rectangle(20, -8, 4, 29, 0xdce9f5).setRotation(.25);
-        parts.push(...legs, torso, head, helmet, crest, visor, shield, shieldMark, sword);
+        const helmet = this.add.rectangle(0, -25, 26, 11, 0xb8c9dc).setStrokeStyle(2, 0x526b87);
+        const crest = this.add.triangle(0, -37, -7, 12, 7, 12, 0, 0xd7e9fa);
+        const visor = this.add.rectangle(0, -19, 17, 4, 0x344960);
+        const shield = this.add.polygon(-23, 2, [-14,-23, 14,-23, 19,-4, 0,25, -19,-4], 0x527ba8).setStrokeStyle(3, 0xd5e8ff);
+        const shieldMark = this.add.text(-23, 1, "✦", { fontSize: "18px", color: "#fff0bf", fontStyle: "bold" }).setOrigin(.5);
+        parts.push(...legs, torso, head, helmet, crest, visor, shield, shieldMark);
+      } else if (unitType === "knight") {
+        // Iron Knight: tall plate-armored champion with a greatsword, not another shield tank.
+        legs = [this.add.rectangle(-10, 18, 12, 17, 0x39485c), this.add.rectangle(10, 18, 12, 17, 0x39485c)];
+        const cape = this.add.triangle(-3, 7, -19, -17, 18, -17, -8, 36, 0x7e3949).setStrokeStyle(2, 0x4c2938);
+        const torso = this.add.rectangle(0, 0, 35, 35, 0x9aaec5).setStrokeStyle(3, 0x40536c);
+        const chest = this.add.polygon(0, 1, [-12,-12, 12,-12, 10,12, 0,17, -10,12], 0xd9e6f3).setStrokeStyle(2, 0x667f9c);
+        const head = this.add.circle(0, -23, 12, 0x71859d).setStrokeStyle(3, 0xd7e4f1);
+        const visor = this.add.rectangle(0, -22, 17, 5, 0x17283d);
+        const plume = this.add.triangle(0, -39, -7, 13, 7, 13, 0, 0xe6a3a8);
+        const sword = this.add.rectangle(24, -8, 7, 47, 0xdce9f5).setStrokeStyle(2, 0x657e99).setRotation(-.18);
+        const guard = this.add.rectangle(24, 7, 20, 5, 0xc89b59).setRotation(-.18);
+        parts.push(...legs, cape, torso, chest, head, visor, plume, sword, guard);
+      } else if (unitType === "ember") {
+        // Ember Mage: flame-crowned caster with a burning staff and ember robe.
+        legs = [this.add.ellipse(-8, 17, 12, 7, 0x773b31), this.add.ellipse(8, 17, 12, 7, 0x773b31)];
+        const robe = this.add.triangle(0, 5, -20, -17, 20, -17, 0, 27, 0xb84e36).setStrokeStyle(3, 0x6e302d);
+        const face = this.add.circle(0, -20, 10, 0xf0c19a).setStrokeStyle(2, 0x7e493b);
+        const hood = this.add.arc(0, -24, 26, 190, 350, false, 0xffb05b).setStrokeStyle(8, 0xf06b3c);
+        const flame1 = this.add.triangle(-9, -39, -7, 18, 7, 18, 0, 0xffdf77);
+        const flame2 = this.add.triangle(7, -43, -6, 17, 6, 17, 0, 0xff8c3e);
+        const staff = this.add.rectangle(22, -2, 4, 54, 0x71472f).setRotation(-.12);
+        const orb = this.add.star(22, -32, 6, 4, 11, 0xffb84d).setStrokeStyle(2, 0xffefb1);
+        parts.push(...legs, robe, face, hood, flame1, flame2, staff, orb);
+      } else if (unitType === "volt") {
+        // Volt Beast: compact electric creature with lightning antlers and a charged core.
+        legs = [this.add.ellipse(-12, 15, 15, 9, 0x28506b), this.add.ellipse(12, 15, 15, 9, 0x28506b)];
+        const body = this.add.ellipse(0, 0, 43, 39, 0x4d9ab6).setStrokeStyle(3, 0x244e76);
+        const belly = this.add.ellipse(0, 8, 24, 18, 0xc7e8d7);
+        const head = this.add.circle(0, -17, 13, 0x75c6d3).setStrokeStyle(2, 0x285d79);
+        const leftBolt = this.add.star(-15, -34, 4, 3, 13, 0xf8f28d).setRotation(-.3);
+        const rightBolt = this.add.star(15, -34, 4, 3, 13, 0xf8f28d).setRotation(.3);
+        const eyes = [this.add.circle(-5, -18, 3, 0x17334c), this.add.circle(5, -18, 3, 0x17334c)];
+        const core = this.add.star(0, 3, 6, 5, 11, 0xf8f28d).setStrokeStyle(2, 0xffffff);
+        parts.push(...legs, body, belly, head, leftBolt, rightBolt, ...eyes, core);
+      } else if (unitType === "thorn") {
+        // Thorn Dragon: four-legged drake with scales, horns and a long spiked tail.
+        legs = [this.add.rectangle(-13, 14, 9, 18, 0x315b3d), this.add.rectangle(12, 14, 9, 18, 0x315b3d)];
+        const body = this.add.ellipse(0, 2, 47, 32, 0x56885d).setStrokeStyle(3, 0x294d38);
+        const belly = this.add.ellipse(2, 9, 25, 15, 0xb7d28a);
+        const head = this.add.triangle(17, -14, -13, 13, 13, 10, 6, 0x6da86c).setStrokeStyle(2, 0x294d38);
+        const jaw = this.add.triangle(21, -5, -7, 6, 9, 4, 1, 0xc4d99a);
+        const hornA = this.add.triangle(5, -28, -7, 12, 7, 12, 0, 0xd4e9a1);
+        const hornB = this.add.triangle(20, -27, -7, 12, 7, 12, 0, 0xd4e9a1);
+        const eye = this.add.circle(22, -15, 3, 0xffe58c);
+        const tail = this.add.triangle(-27, 0, -4, 10, 4, -10, -18, 0x315d42);
+        const spikes = [-8, 3, 14].map((x, i) => this.add.triangle(x, -17 - (i%2)*3, -6, 12, 6, 12, 0, 0x9ce28c));
+        parts.push(...legs, tail, body, belly, head, jaw, hornA, hornB, eye, ...spikes);
+      } else if (unitType === "phoenix") {
+        // Solar Phoenix: winged firebird with layered feathers and a bright crest.
+        const leftWing = this.add.triangle(-20, -3, -5, -22, 7, 18, -32, 0xffa34e).setStrokeStyle(2, 0x9d4c32);
+        const rightWing = this.add.triangle(20, -3, -7, -22, 5, 18, 32, 0xffc46a).setStrokeStyle(2, 0x9d4c32);
+        const body = this.add.ellipse(0, 2, 29, 39, 0xe77b43).setStrokeStyle(3, 0x8d3d31);
+        const belly = this.add.ellipse(0, 8, 17, 22, 0xffd68a);
+        const head = this.add.circle(0, -23, 10, 0xffc36b).setStrokeStyle(2, 0x8d3d31);
+        const beak = this.add.triangle(0, -17, -5, 8, 5, 8, 0, 0xffefad);
+        const crest = this.add.triangle(-3, -42, -8, 15, 8, 15, 0, 0xffe28a);
+        const tail = this.add.triangle(0, 25, -15, -4, 15, -4, 0, 0xe9573d);
+        const eye = this.add.circle(4, -24, 2.5, 0x382a34);
+        parts.push(leftWing, rightWing, body, belly, head, beak, crest, tail, eye);
+      } else if (unitType === "titan") {
+        // Ancient Titan: towering stone golem with huge shoulders, rune core and fists.
+        legs = [this.add.rectangle(-12, 20, 17, 21, 0x655b82), this.add.rectangle(12, 20, 17, 21, 0x655b82)];
+        const cape = this.add.triangle(0, 8, -24, -20, 24, -20, 0, 40, 0x4c3f70);
+        const torso = this.add.rectangle(0, 0, 43, 43, 0x8978b3).setStrokeStyle(4, 0x40345f);
+        const shoulderL = this.add.rectangle(-25, -9, 20, 27, 0x9e8bc8).setStrokeStyle(3, 0x51416e).setRotation(-.18);
+        const shoulderR = this.add.rectangle(25, -9, 20, 27, 0x9e8bc8).setStrokeStyle(3, 0x51416e).setRotation(.18);
+        const head = this.add.rectangle(0, -28, 27, 23, 0x76669e).setStrokeStyle(3, 0x40345f);
+        const eyes = [this.add.circle(-6, -29, 3, 0xf7e7ff), this.add.circle(6, -29, 3, 0xf7e7ff)];
+        const rune = this.add.star(0, 0, 6, 6, 13, 0xe2c7ff).setStrokeStyle(2, 0xffffff);
+        const fistL = this.add.circle(-29, 11, 11, 0x78689f).setStrokeStyle(2, 0x40345f);
+        const fistR = this.add.circle(29, 11, 11, 0x78689f).setStrokeStyle(2, 0x40345f);
+        parts.push(...legs, cape, torso, shoulderL, shoulderR, head, ...eyes, rune, fistL, fistR);
       } else {
         if (unitType === "sprout") {
           legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
