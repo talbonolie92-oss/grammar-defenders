@@ -237,16 +237,21 @@ export function createGameScene() {
       if (this.defenders.some(d => d.lane === lane && d.col === col)) return;
       const stats = this.unitStats[this.selectedUnit];
       if (this.energy < stats.cost) { this.message.textContent = "Not enough energy for " + stats.name + "."; return; }
-      this.energy -= stats.cost;
-      this.deployDefender(lane, col, this.selectedUnit);
-      this.updateHud();
+      try {
+        this.deployDefender(lane, col, this.selectedUnit);
+        this.energy -= stats.cost;
+        this.updateHud();
+      } catch (error) {
+        console.error("Defender deployment failed:", error);
+        this.message.textContent = "Deployment failed. Energy was not spent. Please reload and try again.";
+      }
     }
 
     deployDefender(lane, col, unitType = "sprout") {
       const stats = this.unitStats[unitType] || this.unitStats.sprout;
       const x = GRID_X + col * TILE_W + TILE_W / 2;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
-      const group = this.add.container(x, y);
+      const group = this.add.container(x, y).setDepth(20).setVisible(true).setAlpha(1);
       const shadow = this.add.ellipse(0, 27, 60, 14, 0x10251d, .38);
       const aura = this.add.circle(0, 0, 31, stats.body, .12).setStrokeStyle(2, stats.color, .45);
       const parts = [shadow, aura];
@@ -573,7 +578,7 @@ export function createGameScene() {
       ];
       const palette = palettes[isBoss ? 9 : enemyIndex];
       const radius = isBoss ? 31 : [23, 19, 27][type];
-      const group = this.add.container(x, y);
+      const group = this.add.container(x, y).setDepth(20).setVisible(true).setAlpha(1);
       const shadow = this.add.ellipse(0, 25, isBoss ? 78 : radius * 2.3, 13, 0x10251d, .38);
       const aura = this.add.circle(0, 0, isBoss ? 42 : radius + 5, isBoss ? 0xe15a91 : palette.light, isBoss ? .13 : .07);
       const frostRing = this.add.circle(0, 0, radius + 9, 0x9deaff, 0).setStrokeStyle(2, 0xc7f6ff, .9).setVisible(false);
@@ -803,7 +808,7 @@ export function createGameScene() {
 
     fireProjectile(defender, target) {
       const stats = defender.stats;
-      const p = this.add.container(defender.x + 18, defender.y - 5);
+      const p = this.add.container(defender.x + 18, defender.y - 5).setDepth(30);
       if (defender.unitType === "ember" || defender.unitType === "phoenix") {
         const glow = this.add.circle(0, 0, defender.unitType === "phoenix" ? 22 : 16, stats.color, .3);
         const core = this.add.star(0, 0, 6, 6, 13, stats.color).setStrokeStyle(2, 0xffefc4);
