@@ -152,6 +152,101 @@ export async function createThreeWorld(container) {
     scene.add(pebble);
   }
 
+
+  // Shared low-poly geometry keeps character rendering lightweight.
+  const shared = {
+    sphere: new THREE.SphereGeometry(1, 8, 6),
+    body: new THREE.CapsuleGeometry(0.34, 0.55, 3, 6),
+    cone: new THREE.ConeGeometry(0.34, 0.8, 6),
+    limb: new THREE.CylinderGeometry(0.09, 0.12, 0.48, 5),
+    blade: new THREE.BoxGeometry(0.09, 0.72, 0.13)
+  };
+  const actorMaterials = new Map();
+  const actorMaterial = color => {
+    if (!actorMaterials.has(color)) actorMaterials.set(color, material(color, 0.68, 0.08));
+    return actorMaterials.get(color);
+  };
+  const actorMeshes = new Map();
+  const unitPalette = {
+    archer: 0x5f9664, mage: 0x8b9ee8, guardian: 0x8ba9c4, knight: 0xa9b9cb,
+    ember: 0xe8753e, volt: 0x55b8d2, thorn: 0x57975b, phoenix: 0xf1a04e,
+    sunwell: 0xe6c66f, titan: 0x8b79b5, runeblade: 0xb9875d, stormcaller: 0x62b9d7
+  };
+  const makeActor = (actor, enemy = false) => {
+    const root = new THREE.Group();
+    const tint = enemy ? (actor.isBoss ? 0x8d426e : ({
+      Runner: 0x9b6e51, Brute: 0x75665c, "Bone Warrior": 0xd2c6a7,
+      "War Crusher": 0x827e91, "Venom Beast": 0x6d9b4d,
+      "Shadow Stalker": 0x55506f, "Dread Beast": 0x76526f,
+      "Dark Caster": 0x7955a3
+    }[actor.enemyType] || 0x9a765d)) : (unitPalette[actor.unitType] || 0x70a879);
+    const coat = actorMaterial(tint);
+    const dark = actorMaterial(enemy ? 0x342a3c : 0x263d3b);
+    const gold = actorMaterial(enemy ? 0xd8a0b5 : 0xe8d08a);
+    const add = (geometry, mat, x, y, z, scale = [1,1,1]) => {
+      const mesh = new THREE.Mesh(geometry, mat);
+      mesh.position.set(x,y,z); mesh.scale.set(...scale); root.add(mesh); return mesh;
+    };
+    add(shared.sphere, dark, 0, 0.15, 0, [0.42,0.13,0.34]);
+    if (enemy && ["Venom Beast","Dread Beast","Grunt","Runner","Brute"].includes(actor.enemyType)) {
+      add(shared.sphere, coat, 0, 0.68, 0, [0.48,0.48,0.62]);
+      add(shared.sphere, gold, 0.27, 0.84, -0.12, [0.12,0.09,0.1]);
+      add(shared.cone, dark, -0.25, 1.02, -0.08, [0.55,0.65,0.55]).rotation.z = Math.PI;
+      add(shared.cone, dark, 0.25, 1.02, -0.08, [0.55,0.65,0.55]).rotation.z = Math.PI;
+    } else {
+      const tall = actor.unitType === "titan" || actor.isBoss || actor.enemyType === "War Crusher";
+      const height = tall ? 1.08 : 0.78;
+      add(shared.body, coat, 0, height, 0, [tall ? 1.25 : 1, tall ? 1.18 : 0.92, 1]);
+      add(shared.sphere, coat, 0, height + 0.57, 0, [0.34,0.34,0.34]);
+      add(shared.cone, gold, 0, height + 0.91, 0, [0.65,0.62,0.65]);
+      add(shared.limb, dark, -0.24, 0.34, 0);
+      add(shared.limb, dark, 0.24, 0.34, 0);
+      if (!enemy && ["archer","knight","runeblade","guardian"].includes(actor.unitType)) {
+        const weapon = add(shared.blade, gold, 0.48, height + 0.05, 0.03);
+        weapon.rotation.z = -0.32;
+      }
+      if (!enemy && actor.unitType === "phoenix") add(shared.cone, gold, 0, height + 1.16, 0, [0.5,0.8,0.5]);
+    }
+    if (actor.isBoss) {
+      add(new THREE.TorusGeometry(0.68,0.075,5,18), gold, 0, 1.55, 0).rotation.x = Math.PI/2;
+      root.scale.setScalar(1.28);
+    } else root.scale.setScalar(enemy ? 0.72 : 0.82);
+    scene.add(root);
+    return root;
+  };
+  let lastActorSync = 0;
+  const syncActors = (defenders = [], enemies = [], now = 0) => {
+    if (now - lastActorSync < 32) return;
+    lastActorSync = now;
+    const seen = new Set();
+    const syncList = (list, isEnemy) => list.forEach(actor => {
+      if (!actor || !actor.group?.active) return;
+      let mesh = actorMeshes.get(actor);
+      if (!mesh) {
+        mesh = makeActor(actor, isEnemy);
+        actorMeshes.set(actor, mesh);
+        actor.group.iterate?.(child => {
+          if (child === actor.bar || child === actor.healthBar || child === actor.levelBadge) return;
+          child.setVisible?.(false);
+        });
+      }
+      const px = actor.x ?? actor.group.x;
+      const py = actor.y ?? actor.group.y;
+      mesh.position.set((px - 480) / 50, 0, (py - 170) / 50);
+      mesh.rotation.y = isEnemy ? Math.PI : 0;
+      mesh.visible = true;
+      seen.add(actor);
+    });
+    syncList(defenders, false);
+    syncList(enemies, true);
+    for (const [actor, mesh] of actorMeshes) {
+      if (!seen.has(actor) || !actor.group?.active) {
+        scene.remove(mesh);
+        actorMeshes.delete(actor);
+      }
+    }
+  };
+
   const resize = () => {
     const bounds = container.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
@@ -181,7 +276,7 @@ export async function createThreeWorld(container) {
       disposed = true;
       cancelAnimationFrame(raf);
       observer?.disconnect();
-      scene.traverse(object => {
+      actorMeshes.clear();\n      actorMaterials.forEach(item => item.dispose());\n      scene.traverse(object => {
         if (object.geometry) object.geometry.dispose();
         if (object.material) {
           const materials = Array.isArray(object.material) ? object.material : [object.material];
