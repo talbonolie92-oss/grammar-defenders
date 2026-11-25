@@ -92,7 +92,11 @@ export function createGameScene() {
       // Use Phaser's camera-transformed pointer coordinates for the whole
       // board. This avoids per-object hit-test gaps on scaled mobile canvases.
       this.input.on("pointerdown", pointer => this.handleBoardPointer(pointer));
-      this.events.on("shutdown", () => this.clearTimers());
+      this.events.on("shutdown", () => {
+        this.clearTimers();
+        this.threeWorld?.dispose();
+        this.threeWorld = null;
+      });
       this.updateHud();
       const launchConfig = window.GRAMMAR_DEFENDERS_CONFIG;
       if (launchConfig && launchConfig.studentLaunch) this.startBattle(launchConfig);
@@ -137,6 +141,7 @@ export function createGameScene() {
 
     drawWorld() {
       const g = this.add.graphics();
+      this.worldGraphics = g;
       // Distant twilight sky and layered mountain silhouettes.
       g.fillGradientStyle(0x142b43, 0x1d4050, 0x426b58, 0x315b4d, 1);
       g.fillRect(0, 0, 960, 340);
@@ -219,6 +224,19 @@ export function createGameScene() {
         const mote = this.add.circle(95 + i * 67, 58 + (i % 4) * 11, 1.8, 0xd9efaa, 0.5);
         this.tweens.add({ targets: mote, y: mote.y - 12, alpha: 0.12, duration: 2400 + i * 90, yoyo: true, repeat: -1, delay: i * 110 });
       }
+      // Load the 3D world progressively; retain the original battlefield if WebGL is unavailable.
+      import("../three-world.js").then(async ({ createThreeWorld }) => {
+        if (!this.sys.isActive()) return;
+        try {
+          const world = await createThreeWorld(document.getElementById("game-container"));
+          if (!this.sys.isActive()) { world.dispose(); return; }
+          this.threeWorld = world;
+          this.worldGraphics?.destroy();
+          this.worldGraphics = null;
+        } catch (error) {
+          console.warn("3D battlefield unavailable; keeping the classic battlefield:", error);
+        }
+      }).catch(error => console.warn("3D renderer could not load; keeping the classic battlefield:", error));
     }
 
     createHud() {
