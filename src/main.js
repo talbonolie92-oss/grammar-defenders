@@ -69,6 +69,8 @@ function startSoloSetup() {
       const battleScene = game.scene.getScene("BattleScene");
       if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
       setupScreen?.classList.add("hidden");
+      landingHero?.classList.add("hidden");
+      document.body.classList.add("playing");
       gameLayout?.classList.remove("hidden");
       requestAnimationFrame(() => {
         game.scale.refresh();
@@ -185,6 +187,8 @@ async function launchStudentGame(name, classSection) {
   }
   window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
   document.getElementById("student-join-screen")?.classList.add("hidden");
+  landingHero?.classList.add("hidden");
+  document.body.classList.add("playing");
   gameLayout?.classList.remove("hidden");
   game.scene.getScene("BattleScene")?.enableMusic?.();
   try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
