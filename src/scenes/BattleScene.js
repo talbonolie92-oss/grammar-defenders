@@ -18,6 +18,8 @@ export function createGameScene() {
       this.laneLifeLabels = [];
       this.wave = 1;
       this.defenders = [];
+      // Reused lane buckets keep enemy collision checks local and allocation-free.
+      this.defendersByLane = Array.from({ length: LANES }, () => []);
       this.enemies = [];
       this.projectiles = [];
       this.selectedTile = null;
@@ -1264,6 +1266,13 @@ export function createGameScene() {
           p.x += dx / dist * p.projectileSpeed * dt; p.y += dy / dist * p.projectileSpeed * dt;
         }
       }
+      // Build the lane lookup once per frame instead of scanning every defender
+      // for every enemy. Buckets are reused to avoid per-frame allocations.
+      for (let lane = 0; lane < LANES; lane++) this.defendersByLane[lane].length = 0;
+      for (let i = 0; i < this.defenders.length; i++) {
+        const defender = this.defenders[i];
+        if (defender.lane >= 0 && defender.lane < LANES) this.defendersByLane[defender.lane].push(defender);
+      }
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
         if (!e.group.active) {
@@ -1272,8 +1281,9 @@ export function createGameScene() {
         }
         // Enemies must collide with and attack ANY defender, not walk through attackers.
         let blocker = null;
-        for (let i = 0; i < this.defenders.length; i++) {
-          const candidate = this.defenders[i];
+        const laneDefenders = this.defendersByLane[e.lane] || [];
+        for (let i = 0; i < laneDefenders.length; i++) {
+          const candidate = laneDefenders[i];
           if (candidate.group.active && candidate.lane === e.lane && candidate.hp > 0 && candidate.x < e.x && e.x - candidate.x < 42) {
             blocker = candidate;
             break;
