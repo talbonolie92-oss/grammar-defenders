@@ -60,3 +60,18 @@ button{font:inherit}
 @media(max-width:900px){body{padding:12px}.game-layout{grid-template-columns:1fr}.battle-panel{order:1}.side-panel{order:2}.side-panel .unit-card{width:calc(33.333% - 8px);display:inline-flex;vertical-align:top}.deck-tip{margin-top:8px}.question-strip{align-items:flex-start;flex-wrap:wrap}.question-content{flex-basis:calc(100% - 60px)}.answer-options{padding-left:57px}}
 @media(max-width:560px){.topbar{align-items:flex-start}.brand-mark{width:42px;height:42px;border-radius:14px}.brand p{font-size:9px;letter-spacing:.6px}.top-actions{flex-direction:column}.icon-button,.secondary-button{padding:7px 10px;font-size:10px}.battle-panel{padding:7px}.battle-hud{gap:6px;flex-wrap:nowrap}.hud-stat{gap:4px}.hud-stat strong{font-size:13px}.hud-label{font-size:8px;letter-spacing:.7px}.side-panel .unit-card{width:100%;display:flex}.question-strip{padding:12px}.question-content strong{font-size:12px}.answer-options{padding-left:0}.battle-footer{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Landscape-first battlefield and illustrated hero portraits */
+.app-shell{max-width:1680px}
+.game-layout{grid-template-columns:230px minmax(0,1fr);align-items:start}
+#game-container{aspect-ratio:16/9;max-height:none}
+.unit-icon{position:relative;overflow:hidden}
+.unit-icon .portrait-head{position:absolute;left:11px;top:6px;width:15px;height:15px;border-radius:50%;background:linear-gradient(145deg,#ffe2bd,#c98e69);border:1px solid #79563f;box-shadow:0 11px 0 4px #536b71}
+.archer-icon .portrait-head:after{content:"";position:absolute;left:-4px;top:-4px;width:22px;height:8px;background:#6e4b2d;border-radius:8px 8px 2px 2px}
+.mage-icon .portrait-head:after{content:"";position:absolute;left:-5px;top:-10px;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:15px solid #7772c7}
+.guardian-icon{background:linear-gradient(145deg,#e6f0ff,#8096b7);color:#314968}
+.guardian-icon .portrait-head:after{content:"";position:absolute;left:-4px;top:-6px;width:22px;height:10px;background:#b6c6d8;border:1px solid #62758d;border-radius:7px 7px 2px 2px}
+.portrait-weapon{position:absolute;right:1px;bottom:0;font-size:16px;font-weight:1000;color:#fff2c7;text-shadow:0 1px 4px #1b2d43}
+@media(min-width:1100px){body{padding:clamp(10px,1.3vw,20px)}.topbar{margin-bottom:12px}.game-layout{grid-template-columns:220px minmax(0,1fr);gap:12px}.side-panel{padding:12px}.battle-panel{padding:10px}.unit-card{min-height:58px;margin-bottom:8px}.deck-tip{margin-top:10px}}
+@media(max-width:900px){.game-layout{grid-template-columns:1fr}.side-panel{order:2}.battle-panel{order:1}.side-panel .unit-card{width:calc(25% - 8px);min-width:150px}}
+@media(max-width:620px){.side-panel .unit-card{width:100%;min-width:0}}
