@@ -1093,6 +1093,10 @@ export function createGameScene() {
 
     showSunwellEnergy(defender, amount) {
       this.updateHud();
+      // Energy is always awarded, but cosmetic feedback is globally paced so
+      // several Sunwells cannot flood the scene with short-lived objects.
+      if (this.lastSunwellVisualAt && this.time.now - this.lastSunwellVisualAt < 180) return;
+      this.lastSunwellVisualAt = this.time.now;
       const orb = this.add.circle(defender.x, defender.y - 34, 7, 0xffe58c, 1)
         .setStrokeStyle(2, 0xffffff, 0.95).setDepth(45);
       const glow = this.add.circle(defender.x, defender.y - 34, 13, 0xffe58c, 0.2).setDepth(44);
@@ -1105,7 +1109,10 @@ export function createGameScene() {
         y: "-=28", alpha: 0, duration: 720, ease: "Cubic.Out",
         onComplete: () => { orb.destroy(); glow.destroy(); label.destroy(); }
       });
-      this.playSound("energy");
+      if (!this.lastEnergySoundAt || this.time.now - this.lastEnergySoundAt >= 220) {
+        this.lastEnergySoundAt = this.time.now;
+        this.playSound("energy");
+      }
     }
 
     update(time, delta) {
@@ -1536,7 +1543,8 @@ export function createGameScene() {
         const burst = this.add.circle(enemy.x, enemy.y, 12, 0xffd58c, .8);
         this.tweens.add({ targets: burst, scale: 2.8, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
         enemy.group.destroy();
-        this.enemies = this.enemies.filter(e => e !== enemy);
+        const defeatedIndex = this.enemies.indexOf(enemy);
+        if (defeatedIndex !== -1) this.enemies.splice(defeatedIndex, 1);
         this.kills++;
         this.playSound("defeat");
         this.energy = Math.min(300, this.energy + (enemy.isBoss ? 25 : 8));
@@ -1547,7 +1555,8 @@ export function createGameScene() {
     damageBase(enemy) {
       if (enemy.laneAlert?.active) enemy.laneAlert.destroy();
       enemy.group.destroy();
-      this.enemies = this.enemies.filter(e => e !== enemy);
+      const breachedIndex = this.enemies.indexOf(enemy);
+      if (breachedIndex !== -1) this.enemies.splice(breachedIndex, 1);
       const lane = enemy.lane;
       if (this.laneLives[lane] > 0) {
         this.laneLives[lane]--;
@@ -1565,7 +1574,7 @@ export function createGameScene() {
         this.baseShield -= shieldAbsorbed;
         this.baseHealth = Math.max(0, this.baseHealth - (10 - shieldAbsorbed));
         this.message.textContent = "LANE " + (lane + 1) + " IS EXPOSED! The keep has taken damage.";
-        this.enemies = this.enemies.filter(active => active !== enemy);
+        // The breached enemy was already removed above.
         enemy.group.destroy();
       }
       this.cameras.main.shake(130, 0.004);
