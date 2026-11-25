@@ -597,7 +597,7 @@ export function createGameScene() {
         // Runner: swept-back horns and a light, aerodynamic silhouette.
         details.push(this.add.triangle(-10, -radius + 2, -7, 12, 8, 7, -2, palette.light));
         details.push(this.add.triangle(9, -radius + 2, -8, 7, 8, 12, 2, palette.light));
-        details.push(this.add.line(-radius + 2, 8, -7, 0, 0, palette.light).setLineWidth(3, 0.8));
+        const speedTrail = this.add.graphics(); speedTrail.lineStyle(3, palette.light, 0.8); speedTrail.beginPath(); speedTrail.moveTo(-radius + 2, 8); speedTrail.lineTo(-radius - 10, 3); speedTrail.strokePath(); details.push(speedTrail);
       } else {
         // Brute: oversized shoulder armor and a heavy brow.
         details.push(this.add.ellipse(-radius * .83, -2, 19, 25, palette.dark).setStrokeStyle(2, palette.light));
