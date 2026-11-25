@@ -154,7 +154,8 @@ async function launchStudentGame(name, classSection) {
     document.getElementById("student-join-screen")?.classList.remove("hidden");
     gameLayout?.classList.add("hidden");
     document.getElementById("student-join-status").textContent = "Could not join the game. Please try again.";
-    throw error;
+    console.warn("Could not start student session:", error);
+    return;
   }
   window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
   document.getElementById("student-join-screen")?.classList.add("hidden");
@@ -177,13 +178,23 @@ async function launchStudentGame(name, classSection) {
     if (resultSavePromise) return resultSavePromise;
     resultSavePromise = (async () => {
       const completedAt = Date.now();
-      await dbSet("sessions/" + sessionId + "/results/" + studentUid, {
-        ...result, name, classSection, completedAt
-      });
-      await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
-        status: "finished", finishedAt: completedAt, active: false
-      });
-      resultSaved = true;
+      let lastError;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await dbSet("sessions/" + sessionId + "/results/" + studentUid, {
+            ...result, name, classSection, completedAt
+          });
+          await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
+            status: "finished", finishedAt: completedAt, active: false
+          });
+          resultSaved = true;
+          return;
+        } catch (error) {
+          lastError = error;
+          if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, attempt * 700));
+        }
+      }
+      throw lastError;
     })();
     try {
       await resultSavePromise;
