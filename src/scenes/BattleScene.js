@@ -1756,6 +1756,8 @@ export function createGameScene() {
 
     finishQuestion(resolutionToken) {
       if (resolutionToken !== this.questionResolutionToken || !this.questionActive) return;
+      // Invalidate the Phaser/browser timer pair before a queued boss question can open.
+      this.questionResolutionToken++;
       if (this.questionOverlay?.active) this.questionOverlay.destroy(true);
       this.questionOverlay = null;
       this.questionActive = false;
