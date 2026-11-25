@@ -163,7 +163,8 @@ export async function createThreeWorld(container) {
     body: new THREE.CapsuleGeometry(0.34, 0.55, 3, 6),
     cone: new THREE.ConeGeometry(0.34, 0.8, 6),
     limb: new THREE.CylinderGeometry(0.09, 0.12, 0.48, 5),
-    blade: new THREE.BoxGeometry(0.09, 0.72, 0.13)
+    blade: new THREE.BoxGeometry(0.09, 0.72, 0.13),
+    bossRing: new THREE.TorusGeometry(0.68, 0.075, 5, 18)
   };
   const actorMaterials = new Map();
   const actorMaterial = color => {
@@ -215,7 +216,7 @@ export async function createThreeWorld(container) {
       if (!enemy && actor.unitType === "phoenix") add(shared.cone, gold, 0, height + 1.16, 0, [0.5,0.8,0.5]);
     }
     if (actor.isBoss) {
-      add(new THREE.TorusGeometry(0.68,0.075,5,18), gold, 0, 1.55, 0).rotation.x = Math.PI/2;
+      add(shared.bossRing, gold, 0, 1.55, 0).rotation.x = Math.PI/2;
       root.scale.setScalar(1.28);
     } else root.scale.setScalar(enemy ? 0.72 : 0.82);
     root.userData.baseScale = root.scale.x;
@@ -225,10 +226,13 @@ export async function createThreeWorld(container) {
     return root;
   };
   let lastActorSync = 0;
+  const seenActors = new Set();
+  const activeProjectiles = new Set();
   const syncActors = (defenders = [], enemies = [], projectiles = [], now = 0) => {
     if (now - lastActorSync < 40) return;
     lastActorSync = now;
-    const seen = new Set();
+    const seen = seenActors;
+    seen.clear();
     const syncList = (list, isEnemy) => list.forEach(actor => {
       if (!actor || !actor.group?.active) return;
       let mesh = actorMeshes.get(actor);
@@ -257,7 +261,7 @@ export async function createThreeWorld(container) {
     });
     syncList(defenders, false);
     syncList(enemies, true);
-    const activeProjectiles = new Set();
+    activeProjectiles.clear();
     projectiles.forEach(projectile => {
       if (!projectile?.active) return;
       let mesh = projectileMeshes.get(projectile);
@@ -308,7 +312,7 @@ export async function createThreeWorld(container) {
   // BattleScene keeps its original Phaser battlefield instead of going blank.
   renderer.render(scene, camera);
   raf = requestAnimationFrame(render);
-    if (now - lastFrame < (isSmallScreen ? 42 : 32)) return;
+    if (document.hidden || now - lastFrame < (isSmallScreen ? 42 : 32)) return;
     lastFrame = now;
     portal.rotation.z = now * 0.00022;
     portalMat.emissiveIntensity = 1.05 + Math.sin(now * 0.0018) * 0.28;
