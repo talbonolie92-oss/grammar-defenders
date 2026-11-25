@@ -442,3 +442,27 @@ body.playing #game-container{
   background:#9b3f46;color:#fff;border-color:#ffd0a8;
   box-shadow:0 0 0 2px #ffb1a044,0 0 14px #ff8b8b55
 }
+
+/* Mobile landscape: never crop the lower battlefield lanes to fit the viewport. */
+@media (orientation: landscape) and (max-width: 900px) {
+  html, body { min-height: 100%; height: auto; overflow-x: hidden; overflow-y: auto; }
+  body { min-height: 100dvh; height: auto; }
+  .app-shell { height: auto; min-height: 100dvh; }
+  .game-layout { flex: none; min-height: 0; }
+  .side-panel { flex: none; min-height: 64px; }
+  .battle-panel { flex: none; min-height: 0; }
+  #game-container {
+    flex: none;
+    width: 100%;
+    height: auto;
+    min-height: clamp(230px, 35.42vw, 340px);
+    aspect-ratio: 48 / 17;
+    overflow: hidden;
+  }
+  #game-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+  }
+}
