@@ -273,6 +273,7 @@ export async function createThreeWorld(container) {
 
   let disposed = false;
   return {
+    syncActors,
     dispose() {
       if (disposed) return;
       disposed = true;
