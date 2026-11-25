@@ -45,7 +45,9 @@ function normalizeBankQuestion(raw, subject, topic){
   while(a.length>2&&!a[a.length-1])a.pop();
   if(a.some(v=>!v))throw new Error("Answer choices cannot contain blank gaps. Fill each choice or remove unused choices at the end.");
   if(new Set(a.map(v=>v.toLowerCase())).size!==a.length)throw new Error("Answer choices must be different from one another.");
-  let correct=raw.correct??raw.correctAnswer??raw.answer??0;
+  const suppliedCorrect=raw.correct??raw.correctAnswer??raw.answer;
+  if(suppliedCorrect===undefined||suppliedCorrect===null||String(suppliedCorrect).trim()==="")throw new Error("Every question must specify its correct answer (A–D or 1–4).");
+  let correct=suppliedCorrect;
   if(typeof correct==="string"){
     const value=correct.trim().toUpperCase();
     correct=/^[A-D]$/.test(value)?value.charCodeAt(0)-65:/^[1-4]$/.test(value)?Number(value)-1:Number(value);
@@ -54,6 +56,7 @@ function normalizeBankQuestion(raw, subject, topic){
   return {topic:String(raw.topic||topic||subject||"General").trim(),grade:String(raw.grade||"Mixed"),q,a,correct:Number(correct),effect:String(raw.effect||"GRAMMAR POWER!").trim()};
 }
 function parseQuestionCsv(source){
+  source=String(source).replace(/^\\uFEFF/,"");
   const rows=[];let row=[],cell="",quoted=false;
   for(let i=0;i<source.length;i++){const c=source[i];if(c==='"'&&quoted&&source[i+1]==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell="";}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&source[i+1]==="\n")i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=c;}
   row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
