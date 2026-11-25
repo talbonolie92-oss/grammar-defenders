@@ -87,6 +87,7 @@ async function initializeStudentJoin() {
   const form = document.getElementById("student-join-form");
   form?.addEventListener("submit", async event => {
     event.preventDefault();
+    game.scene.getScene("BattleScene")?.prepareAudio?.();
     const name = document.getElementById("student-name").value.trim();
     const classSection = document.getElementById("student-class").value.trim();
     const status = document.getElementById("student-join-status");
@@ -136,6 +137,7 @@ async function launchStudentGame(name, classSection) {
   window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
   document.getElementById("student-join-screen")?.classList.add("hidden");
   gameLayout?.classList.remove("hidden");
+  game.scene.getScene("BattleScene")?.enableMusic?.();
   try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
   try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
   requestAnimationFrame(() => {
