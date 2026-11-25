@@ -2,76 +2,92 @@
 
 **Defend. Strategize. Master Grammar.**
 
-A mobile-friendly, landscape-first fantasy lane-defense game where students deploy heroes, defend five lanes, and answer grammar challenges to unleash tactical powers.
+A landscape-first fantasy lane-defense classroom game. Students deploy ten distinct defenders across five lanes, fight ten enemy types, and answer grammar challenges to activate battle powers.
 
-## Current playable milestone
+## Game
 
-- Landscape-first 16:9 battlefield with a compact horizontal defender deck at the bottom on mobile
-- Teacher setup screen for game mode, time limit, question interval, and difficulty
-- Teacher-generated student links that launch directly with the selected settings
-- Endless Survival and Fixed Waves modes
-- Ten defender tiers with increasing energy costs and different roles:
-  - Grammar Sprout — balanced starter defender
-  - Rune Archer — rapid ranged attacks
-  - Aegis Guardian — lane blocker
-  - Frost Mage — slows enemies
-  - Ember Mage — splash damage
-  - Volt Beast — chain shock
-  - Thorn Dragon — heavy single-target damage
-  - Iron Knight — heavy lane blocker
-  - Solar Phoenix — area damage
-  - Ancient Titan — ultimate fortress
-- Ten enemy tiers with increasingly dangerous silhouettes and combat profiles:
-  - Grunt, Runner, Brute, Shadow Stalker, Bone Warrior
-  - Venom Beast, Dark Caster, War Crusher, Dread Beast, Dark Overlord
-- Enemy roster cycles during Endless Survival, with increasing health and speed
-- Boss encounters trigger a separate advanced grammar question
-- Correct boss answers activate stronger powers such as freeze, critical strike, guardian shield, energy surge, and dragon fury
-- Regular grammar challenges default to every 45 seconds; teachers can choose 30, 45, 60, or 90 seconds
-- Twenty-four regular questions and ten advanced boss questions
-- Original synthesized looping fantasy background music plus separately controlled sound effects
-- Energy-based deployment, automatic attacks, enemy health bars, and combat effects
+- Landscape-first five-lane battlefield.
+- Compact, horizontally scrolling defender deck above the battlefield.
+- Ten defender characters with distinct battlefield silhouettes, palettes, costs, and roles.
+- Ten enemy types with different colors, shapes, health, and combat behaviors.
+- Endless Survival and Fixed Waves modes.
+- Teacher-selected duration, difficulty, and grammar-question interval.
+- Regular grammar questions and harder boss challenges.
+- Original synthesized background music and separate sound effects controls.
 
-## Teacher setup and student links
+## Teacher dashboard
 
-1. Open the game.
-2. Choose Endless Survival or Fixed Waves.
-3. Select the time limit, grammar interval, and difficulty.
-4. Select **Copy Student Link** and share the generated link with students.
-5. Students opening that link go straight into the game with the teacher's selected settings.
+Open **[Teacher Dashboard](./teacher-dashboard.html)**.
 
-The student link locks the selected game settings in its URL. The current build does not yet authenticate teachers, record student identities, save results to Firebase, or provide a QR-code dashboard. Those classroom-management features remain future work.
+The dashboard is designed for authenticated teachers and includes:
 
-## Controls
+- Email/password teacher sign-in.
+- Create, list, search, rename, edit, start, end, and delete your own sessions.
+- Session settings: title, grade, class/section, topic, game mode, time limit, question interval, and difficulty.
+- Session-specific student QR code and shareable joining link.
+- Live student roster.
+- Fix a student's name or class/section; remove a student from a session.
+- Basic and detailed performance reports, topic accuracy, commonly missed questions, and CSV export.
+- Ended sessions remain in session history until the teacher deletes them.
 
-1. Choose a hero from the Defender Deck.
-2. Tap an empty battlefield tile to deploy the hero.
-3. Defenders attack automatically; special heroes have different combat abilities.
-4. When a grammar challenge appears, choose an answer to resume the battle.
-5. Correct boss answers provide stronger battle boosts.
+## Student joining
 
-## Run locally
+1. Teacher creates a session in the dashboard.
+2. Students scan the session QR code or open its link.
+3. Students enter their name and class/section. They do not need an email or password.
+4. Students wait in the lobby until the teacher starts the session.
+5. Game settings are loaded from the session. Late joining follows the teacher's setting.
+6. The game saves question attempts and each student's final performance to the session report.
 
-This project uses Phaser 3 from a CDN and native JavaScript modules. Because ES modules require a local web server, open the project with VS Code Live Server or run:
+## Firebase setup required
+
+The teacher dashboard, student lobby, live roster, and saved reports use Firebase Authentication and Realtime Database. The UI and integration code are in the repository, but a Firebase project has not yet been connected.
+
+1. Create a Firebase project for Grammar Defenders.
+2. In **Authentication → Sign-in method**, enable **Email/Password** and **Anonymous**.
+3. In **Authentication → Users**, add the teacher account email and password. Do not put the teacher password in this repository.
+4. Create a **Realtime Database**.
+5. Register a Firebase **Web app** in Project settings and copy its web configuration into `src/firebase-config.js`.
+6. Use the exact `databaseURL` shown for your Realtime Database (it may include a regional hostname).
+7. In Realtime Database → Rules, paste and publish the rules from `database.rules.json`.
+8. Open `teacher-dashboard.html` and sign in with the teacher account.
+
+The Firebase web configuration is intended to be included in a browser app. Never put a Firebase service-account private key or Admin SDK credentials in this repository.
+
+## Database layout
+
+```
+teacherSessions/{teacherUid}/{sessionId}
+sessions/{sessionId}/public
+sessions/{sessionId}/players/{studentUid}
+sessions/{sessionId}/attempts/{attemptId}
+sessions/{sessionId}/results/{studentUid}
+```
+
+Rules keep teacher session indexes and private rosters/results scoped to the authenticated teacher. Students use anonymous authentication and can write only their own player/result records. Session settings are readable by the joining game so it can load the teacher's configuration.
+
+## Local development
+
+Run a local web server because the project uses native JavaScript modules:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then visit http://localhost:8000.
+Then open `http://localhost:8000`.
 
-## Validate question data
-
-Run:
+## Validation
 
 ```bash
 node scripts/validate-data.mjs
 ```
 
+GitHub Actions also checks JavaScript syntax and question-bank data on pushes to `main`.
+
 ## Technology
 
 - Phaser 3
 - JavaScript ES modules
-- HTML and CSS
+- Firebase Authentication
+- Firebase Realtime Database
 - GitHub Pages
-- Firebase Realtime Database planned for future teacher accounts, classroom sessions, and reports
