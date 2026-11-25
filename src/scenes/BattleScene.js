@@ -357,7 +357,7 @@ export function createGameScene() {
           if (index === item.correct) {
             this.message.textContent = item.effect + " Grammar power activated!";
             this.playSound("correct");
-            this.applyGrammarPower();
+            this.applyGrammarPower(item.effect);
             button.style.borderColor = "#76e0b2";
           } else {
             this.message.textContent = "Not quite! Your defenders keep fighting.";
@@ -372,13 +372,58 @@ export function createGameScene() {
       });
     }
 
-    applyGrammarPower() {
-      const targets = this.enemies.slice().sort((a,b) => a.x - b.x).slice(0, 3);
-      targets.forEach(e => this.damageEnemy(e, 1));
-      this.energy = Math.min(150, this.energy + 12);
+    applyGrammarPower(effect = "POWER SURGE!") {
+      const label = String(effect).toUpperCase();
+      let feedback = effect;
+      let color = "#ffe58c";
+
+      if (label.includes("FREEZE")) {
+        this.enemies.forEach(enemy => {
+          enemy.slowUntil = this.time.now + 3800;
+          this.tweens.add({ targets: enemy.body, tint: 0x8feaff, duration: 180, yoyo: true, repeat: 2 });
+        });
+        feedback = "FREEZE BLAST! All enemies slowed.";
+        color = "#9deaff";
+      } else if (label.includes("REGENERATION") || label.includes("DEFENSE UP")) {
+        const restored = Math.min(20, 100 - this.baseHealth);
+        this.baseHealth += restored;
+        this.energy = Math.min(150, this.energy + 12);
+        feedback = restored > 0 ? "KEEP RESTORED +" + restored + "%!" : "DEFENSE SURGE! +12 ENERGY";
+        color = "#8de1a4";
+      } else if (label.includes("ARMOR BREAK") || label.includes("SHIELD PIERCE") || label.includes("WEAKNESS")) {
+        const targets = this.enemies.slice().sort((a, b) => a.x - b.x).slice(0, 3);
+        targets.forEach(enemy => this.damageEnemy(enemy, 3));
+        feedback = "ARMOR SHATTER! Heavy damage to up to 3 enemies.";
+        color = "#ffd27a";
+      } else if (label.includes("CRITICAL") || label.includes("PRECISION") || label.includes("RAPID STRIKE") || label.includes("ECHO STRIKE")) {
+        const target = this.enemies.slice().sort((a, b) => a.x - b.x)[0];
+        if (target) this.damageEnemy(target, 5);
+        this.energy = Math.min(150, this.energy + 8);
+        feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
+        color = "#ffb3a8";
+      } else if (label.includes("SUPPLY") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
+        this.energy = Math.min(150, this.energy + 30);
+        feedback = "ENERGY SURGE! +30 ENERGY";
+        color = "#ffe58c";
+      } else {
+        const targets = this.enemies.slice().sort((a, b) => a.x - b.x).slice(0, 3);
+        targets.forEach(enemy => this.damageEnemy(enemy, 1));
+        this.energy = Math.min(150, this.energy + 12);
+        feedback = "GRAMMAR POWER! Damage dealt and +12 energy.";
+      }
+
       this.updateHud();
       const flash = this.add.rectangle(480, 315, 720, 440, 0xffe58c, .12);
       this.tweens.add({ targets: flash, alpha: 0, duration: 420, onComplete: () => flash.destroy() });
+      const toast = this.add.text(480, 66, feedback, {
+        fontFamily: "Nunito", fontSize: "17px", color, fontStyle: "900",
+        stroke: "#17233a", strokeThickness: 4, align: "center",
+        wordWrap: { width: 680 }
+      }).setOrigin(.5);
+      this.tweens.add({
+        targets: toast, y: 48, alpha: 0, duration: 1800, delay: 350,
+        onComplete: () => toast.destroy()
+      });
     }
 
     updateHud() {
