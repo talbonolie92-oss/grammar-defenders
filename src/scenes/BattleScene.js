@@ -46,6 +46,9 @@ export function createGameScene() {
       this.remainingSeconds = this.timeLimitMinutes * 60;
       this.elapsedSeconds = 0;
       this.kills = 0;
+      this.questionsAnswered = 0;
+      this.correctAnswers = 0;
+      this.incorrectAnswers = 0;
       this.selectedUnit = "sprout";
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
@@ -887,6 +890,14 @@ export function createGameScene() {
     answerQuestion(index, item, button, label) {
       if (!this.questionActive) return;
       const correct = index === item.correct;
+      this.questionsAnswered++;
+      if (correct) this.correctAnswers++; else this.incorrectAnswers++;
+      if (typeof window.GD_SAVE_ATTEMPT === "function") {
+        Promise.resolve(window.GD_SAVE_ATTEMPT({
+          topic: item.topic, question: item.q, selectedAnswer: item.a[index],
+          correctAnswer: item.a[item.correct], correct, isBoss: Boolean(this.isBossQuestion)
+        })).catch(error => console.warn("Could not save question attempt:", error));
+      }
       if (correct) {
         button.setFillStyle(0x286c58);
         button.setStrokeStyle(2, 0x8ff0bd);
@@ -1003,6 +1014,7 @@ export function createGameScene() {
     tickBattleClock() {
       if (!this.battleStarted || this.gameOver || this.questionActive) return;
       {
+        this.elapsedSeconds++;
         this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
         if (this.remainingSeconds === 0) {
           this.endGame(this.endlessMode, this.endlessMode ? "TIME LIMIT REACHED!" : "TIME IS UP! DEFENSE INCOMPLETE");
@@ -1014,6 +1026,19 @@ export function createGameScene() {
 
     endGame(won, customTitle = "") {
       this.gameOver = true;
+      if (typeof window.GD_SAVE_RESULT === "function") {
+        const result = {
+          questionsAnswered: this.questionsAnswered,
+          correctAnswers: this.correctAnswers,
+          incorrectAnswers: this.incorrectAnswers,
+          accuracy: this.questionsAnswered ? Math.round(this.correctAnswers / this.questionsAnswered * 100) : 0,
+          kills: this.kills, wave: this.wave, won: Boolean(won),
+          mode: this.endlessMode ? "endless" : "fixed",
+          elapsedSeconds: this.elapsedSeconds, remainingSeconds: this.remainingSeconds,
+          baseHealth: this.baseHealth
+        };
+        Promise.resolve(window.GD_SAVE_RESULT(result)).catch(error => console.warn("Could not save game result:", error));
+      }
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer) this.questionTimer.paused = true;
       this.stopMusic();
