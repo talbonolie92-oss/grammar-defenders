@@ -167,6 +167,8 @@ export async function createThreeWorld(container) {
     return actorMaterials.get(color);
   };
   const actorMeshes = new Map();
+  const projectileMeshes = new Map();
+  const projectileGeometry = new THREE.SphereGeometry(0.15, 8, 6);
   const unitPalette = {
     archer: 0x5f9664, mage: 0x8b9ee8, guardian: 0x8ba9c4, knight: 0xa9b9cb,
     ember: 0xe8753e, volt: 0x55b8d2, thorn: 0x57975b, phoenix: 0xf1a04e,
@@ -215,7 +217,7 @@ export async function createThreeWorld(container) {
     return root;
   };
   let lastActorSync = 0;
-  const syncActors = (defenders = [], enemies = [], now = 0) => {
+  const syncActors = (defenders = [], enemies = [], projectiles = [], now = 0) => {
     if (now - lastActorSync < 32) return;
     lastActorSync = now;
     const seen = new Set();
@@ -241,6 +243,29 @@ export async function createThreeWorld(container) {
     });
     syncList(defenders, false);
     syncList(enemies, true);
+    const activeProjectiles = new Set();
+    projectiles.forEach(projectile => {
+      if (!projectile?.active) return;
+      let mesh = projectileMeshes.get(projectile);
+      if (!mesh) {
+        const color = unitPalette[projectile.unitType] || 0xe8d08a;
+        const glow = actorMaterial(color);
+        mesh = new THREE.Mesh(projectileGeometry, glow);
+        mesh.scale.setScalar(projectile.unitType === "titan" ? 1.35 : 1);
+        scene.add(mesh);
+        projectileMeshes.set(projectile, mesh);
+      }
+      mesh.position.set((projectile.x - 480) / 50, 0.24, (projectile.y - 170) / 50);
+      mesh.visible = true;
+      projectile.setVisible?.(false);
+      activeProjectiles.add(projectile);
+    });
+    for (const [projectile, mesh] of projectileMeshes) {
+      if (!activeProjectiles.has(projectile) || !projectile.active) {
+        scene.remove(mesh);
+        projectileMeshes.delete(projectile);
+      }
+    }
     for (const [actor, mesh] of actorMeshes) {
       if (!seen.has(actor) || !actor.group?.active) {
         scene.remove(mesh);
@@ -280,12 +305,13 @@ export async function createThreeWorld(container) {
       cancelAnimationFrame(raf);
       observer?.disconnect();
       actorMeshes.clear();\n      actorMaterials.forEach(item => item.dispose());\n      scene.traverse(object => {
-        if (object.geometry) object.geometry.dispose();
+        if (object.geometry && object.geometry !== projectileGeometry && !Object.values(shared).includes(object.geometry)) object.geometry.dispose();
         if (object.material) {
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach(item => item.dispose());
         }
       });
+      projectileGeometry.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     }
