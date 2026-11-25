@@ -66,7 +66,7 @@ export function createGameScene() {
         knight: { name: "Iron Knight", cost: 175, damage: 0, cooldown: 0, range: 0, color: 0xcbdcf0, projectileSpeed: 0, radius: 0, symbol: "⚔", body: 0x718aa8, role: "Heavy blocker", health: 70 },
         phoenix: { name: "Solar Phoenix", cost: 200, damage: 5, cooldown: 2.8, range: 540, color: 0xffc16d, projectileSpeed: 320, radius: 14, symbol: "♨", body: 0xe58b55, role: "Lane burst" },
         sunwell: { name: "Sunwell Keeper", cost: 65, damage: 0, cooldown: 0, range: 0, color: 0xffe58c, projectileSpeed: 0, radius: 0, symbol: "☼", body: 0xe6c96f, role: "Energy producer", energyRate: 7, energyInterval: 3.5 },
-        titan: { name: "Ancient Titan", cost: 250, damage: 0, cooldown: 0, range: 0, color: 0xd8c1ff, projectileSpeed: 0, radius: 0, symbol: "✹", body: 0x9a83c7, role: "Ultimate fortress", health: 130 }
+        titan: { name: "Ancient Titan", cost: 250, damage: 18, cooldown: 2.0, range: 1000, color: 0xd8c1ff, projectileSpeed: 520, radius: 15, symbol: "✹", body: 0x9a83c7, role: "Global boss breaker", health: 360 }
       };
     }
 
@@ -690,9 +690,14 @@ export function createGameScene() {
         .setStrokeStyle(isBoss ? 4 : 3, isBoss ? 0xf0a0c3 : palette.dark);
       const belly = this.add.ellipse(-2, 10, radius * 1.25, radius * .72, palette.dark, .34);
       const eyeY = -4;
-      const eyes = this.add.text(0, eyeY, isBoss ? "◆◆" : type === 0 ? "××" : type === 1 ? "◥◤" : "▰", {
-        fontFamily: "Arial", fontSize: isBoss ? "21px" : "17px", color: "#fff"
-      }).setOrigin(.5);
+      const eyeParts = [];
+      for (const side of [-1, 1]) {
+        const eyeX = side * radius * 0.34;
+        eyeParts.push(this.add.ellipse(eyeX, eyeY, isBoss ? 11 : 9, isBoss ? 13 : 11, 0xfff5e8).setStrokeStyle(1.5, palette.dark));
+        eyeParts.push(this.add.circle(eyeX + (isBoss ? 1 : 1.5), eyeY + 1, isBoss ? 4.2 : 3.4, isBoss ? 0xb51f53 : 0x263044));
+        eyeParts.push(this.add.circle(eyeX + (isBoss ? 2 : 2.5), eyeY - 1, 1.4, 0xffffff));
+      }
+      eyeParts.push(this.add.rectangle(0, eyeY - 9, radius * 1.1, 3, palette.dark).setRotation(isBoss ? 0 : -.06));
       const feet = [
         this.add.ellipse(-radius * .48, radius * .83, 14, 9, palette.dark),
         this.add.ellipse(radius * .48, radius * .83, 14, 9, palette.dark)
@@ -751,7 +756,7 @@ export function createGameScene() {
         details.push(this.add.circle(radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
       }
       // Keep enemy visuals in a single visible container above the battlefield.
-      const enemyParts = [shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, eyes];
+      const enemyParts = [shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, ...eyeParts];
       group.add(enemyParts);
       group.iterate(child => {
         child.setActive(true);
@@ -886,14 +891,14 @@ export function createGameScene() {
           let nearestDistance = d.stats.range;
           for (let i = 0; i < this.enemies.length; i++) {
             const candidate = this.enemies[i];
-            if (!candidate.group.active || candidate.lane !== d.lane || candidate.x <= d.x) continue;
+            if (!candidate.group.active || (d.unitType !== "titan" && candidate.lane !== d.lane) || candidate.x <= d.x) continue;
             const distance = candidate.x - d.x;
             if (distance < nearestDistance) {
               nearestDistance = distance;
               target = candidate;
             }
           }
-          if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown; }
+          if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown * (this.teamSurgeUntil && this.time.now < this.teamSurgeUntil ? 0.72 : 1); }
         }
       });
       for (let projectileIndex = this.projectiles.length - 1; projectileIndex >= 0; projectileIndex--) {
@@ -971,7 +976,7 @@ export function createGameScene() {
             if (blocker.retaliateCooldown <= 0 && e.group.active) {
               const counterDamage = blocker.stats.damage > 0
                 ? Math.max(1, Math.ceil(blocker.stats.damage * 0.65))
-                : blocker.unitType === "titan" ? 9
+                : blocker.unitType === "titan" ? 14
                 : blocker.unitType === "knight" ? 6
                 : blocker.unitType === "guardian" ? 3 : 1;
               this.damageEnemy(e, counterDamage);
@@ -987,10 +992,11 @@ export function createGameScene() {
             }
           }
         } else {
+          const stunned = e.stunnedUntil && this.time.now < e.stunnedUntil;
           const slowed = e.slowUntil && this.time.now < e.slowUntil;
           const pressured = this.time.now < this.enemyPressureUntil;
           const pressureFactor = pressured ? (e.isBoss ? 1.1 : 1.18) : 1;
-          e.x -= e.speed * (slowed ? 0.48 : 1) * pressureFactor * dt;
+          e.x -= stunned ? 0 : e.speed * (slowed ? 0.38 : 1) * pressureFactor * dt;
         }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
@@ -1035,8 +1041,10 @@ export function createGameScene() {
         const core = this.add.star(0, 0, 6, 5, 10, 0xb9f4ff).setStrokeStyle(2, 0xffffff);
         p.add([glow, core]);
       } else {
-        const glow = this.add.circle(0, 0, 14, stats.color, .22);
-        const core = this.add.circle(0, 0, 7, stats.color).setStrokeStyle(2, 0xfff8d8);
+        const glow = this.add.circle(0, 0, defender.unitType === "titan" ? 23 : 14, stats.color, .28);
+        const core = defender.unitType === "titan"
+          ? this.add.star(0, 0, 8, 8, 18, 0xe8d8ff).setStrokeStyle(3, 0xffffff)
+          : this.add.circle(0, 0, 7, stats.color).setStrokeStyle(2, 0xfff8d8);
         p.add([glow, core]);
       }
       p.target = target;
@@ -1057,10 +1065,10 @@ export function createGameScene() {
       }
     }
 
-    damageEnemy(enemy, amount) {
+    damageEnemy(enemy, amount, bypassArmor = false) {
       if (!enemy.group.active) return;
       const typeAdjustedDamage = ["Brute", "Bone Warrior", "War Crusher"].includes(enemy.enemyType) && !enemy.isBoss ? Math.max(0.75, amount * (enemy.enemyType === "Bone Warrior" ? 0.65 : 0.75)) : amount;
-      const appliedDamage = Math.max(0.5, typeAdjustedDamage * (1 - Math.min(0.4, (enemy.armorLevel || 0) * 0.08)));
+      const appliedDamage = Math.max(0.5, typeAdjustedDamage * (bypassArmor ? 1 : 1 - Math.min(0.4, (enemy.armorLevel || 0) * 0.08)));
       enemy.hp -= appliedDamage;
       if (enemy.isBoss) {
         const healthRatio = enemy.hp / enemy.maxHp;
@@ -1229,71 +1237,77 @@ export function createGameScene() {
       let feedback = effect;
       let color = "#ffe58c";
       const activeEnemies = () => this.enemies.filter(enemy => enemy.group.active);
+      const activeBosses = () => activeEnemies().filter(enemy => enemy.isBoss);
+      const boss = activeBosses().sort((a, b) => a.x - b.x)[0] || null;
       const damageFrontEnemies = (amount, limit = 3) => {
-        const targets = [];
-        for (let i = 0; i < this.enemies.length; i++) {
-          const enemy = this.enemies[i];
-          if (!enemy.group.active) continue;
-          let insertAt = targets.length;
-          while (insertAt > 0 && targets[insertAt - 1].x > enemy.x) insertAt--;
-          if (insertAt < limit) {
-            targets.splice(insertAt, 0, enemy);
-            if (targets.length > limit) targets.pop();
-          }
-        }
+        const targets = activeEnemies().sort((a, b) => a.x - b.x).slice(0, limit);
         targets.forEach(enemy => this.damageEnemy(enemy, amount));
         return targets.length;
+      };
+      const bossDamage = (fraction, minimum) => {
+        if (!boss || !boss.group.active) return 0;
+        const amount = Math.max(minimum, Math.ceil(boss.maxHp * fraction));
+        this.damageEnemy(boss, amount, true);
+        return amount;
       };
 
       if (label.includes("FREEZE")) {
         const enemies = activeEnemies();
         enemies.forEach(enemy => {
-          enemy.slowUntil = this.time.now + 3800;
+          if (enemy.isBoss) {
+            enemy.stunnedUntil = this.time.now + 4800;
+            enemy.slowUntil = enemy.stunnedUntil;
+          } else {
+            enemy.slowUntil = this.time.now + 5200;
+          }
           this.tweens.add({ targets: enemy.body, tint: 0x8feaff, duration: 180, yoyo: true, repeat: 2 });
         });
-        feedback = "FREEZE BLAST! All enemies slowed.";
+        feedback = boss ? "BOSS FROZEN! The boss is stopped for 4.8 seconds." : "FREEZE BLAST! All attackers slowed.";
         color = "#9deaff";
       } else if (label.includes("REGENERATION") || label.includes("DEFENSE UP")) {
-        const restored = Math.min(20, 100 - this.baseHealth);
+        const restored = Math.min(25, 100 - this.baseHealth);
         this.baseHealth += restored;
-        this.energy = Math.min(300, this.energy + 12);
-        feedback = restored > 0 ? "KEEP RESTORED +" + restored + "%!" : "DEFENSE SURGE! +12 ENERGY";
+        this.baseShield = Math.min(60, this.baseShield + 12);
+        this.energy = Math.min(300, this.energy + 25);
+        feedback = "FORTIFY! +" + restored + "% keep health, +12 shield, +25 energy.";
         color = "#8de1a4";
       } else if (label.includes("ARMOR BREAK") || label.includes("SHIELD PIERCE") || label.includes("WEAKNESS")) {
-        const count = damageFrontEnemies(3, 3);
-        feedback = "ARMOR SHATTER! Heavy damage to " + (count ? "up to " + count : "no") + " enemies.";
+        const count = damageFrontEnemies(5, 4);
+        const dealt = bossDamage(.10, 18);
+        feedback = "ARMOR SHATTER! " + count + " attackers hit" + (dealt ? "; boss takes " + dealt + " piercing damage." : ".");
         color = "#ffd27a";
-      } else if (label.includes("CRITICAL") || label.includes("PRECISION") || label.includes("RAPID STRIKE") || label.includes("ECHO STRIKE")) {
-        let target = null;
-        for (let i = 0; i < this.enemies.length; i++) {
-          const enemy = this.enemies[i];
-          if (enemy.group.active && (!target || enemy.x < target.x)) target = enemy;
-        }
-        if (target) this.damageEnemy(target, 5);
-        this.energy = Math.min(300, this.energy + 8);
-        feedback = target ? "CRITICAL STRIKE! 5 damage." : "CRITICAL STRIKE! +8 ENERGY";
-        color = "#ffb3a8";
-      } else if (label.includes("GUARDIAN SHIELD")) {
-        this.baseShield = Math.min(40, this.baseShield + 20);
-        this.energy = Math.min(300, this.energy + 20);
-        feedback = "GUARDIAN SHIELD! +20% shield and +20 energy.";
-        color = "#b9d8ff";
-      } else if (label.includes("DRAGON FURY")) {
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-          const enemy = this.enemies[i];
-          if (enemy.group.active) this.damageEnemy(enemy, 6);
+      } else if (label.includes("CRITICAL") || label.includes("PRECISION") || label.includes("RAPID STRIKE") || label.includes("ECHO STRIKE") || label.includes("TARGET LOCK") || label.includes("FUTURE SIGHT") || label.includes("SPELL BREAK") || label.includes("TIME BREAK")) {
+        let target = boss || activeEnemies().sort((a, b) => a.x - b.x)[0] || null;
+        let dealt = 0;
+        if (target) {
+          dealt = target.isBoss ? bossDamage(.18, 30) : (this.damageEnemy(target, 12), 12);
         }
         this.energy = Math.min(300, this.energy + 15);
-        feedback = "DRAGON FURY! Heavy damage across the battlefield.";
+        feedback = target ? (target.isBoss ? "BOSS CRITICAL! " + dealt + " armor-piercing damage!" : "CRITICAL STRIKE! 12 damage!") : "CRITICAL STRIKE! +15 ENERGY";
+        color = "#ffb3a8";
+      } else if (label.includes("GUARDIAN SHIELD")) {
+        this.baseShield = Math.min(60, this.baseShield + 30);
+        this.energy = Math.min(300, this.energy + 25);
+        feedback = "GUARDIAN SHIELD! +30 shield and +25 energy.";
+        color = "#b9d8ff";
+      } else if (label.includes("DRAGON FURY")) {
+        const enemies = activeEnemies();
+        enemies.forEach(enemy => this.damageEnemy(enemy, enemy.isBoss ? 0 : 8));
+        const dealt = bossDamage(.12, 24);
+        this.energy = Math.min(300, this.energy + 20);
+        feedback = "DRAGON FURY! Battlefield blast" + (dealt ? " + " + dealt + " boss damage!" : " +20 energy!");
         color = "#ffb27c";
       } else if (label.includes("SUPPLY") || label.includes("ENERGY SURGE") || label.includes("POWER SURGE") || label.includes("TEAM SURGE") || label.includes("TIME SURGE") || label.includes("FOCUS BONUS") || label.includes("DEADLINE DASH")) {
-        this.energy = Math.min(300, this.energy + 30);
-        feedback = "ENERGY SURGE! +30 ENERGY";
+        this.energy = Math.min(300, this.energy + 45);
+        // Correct answers also briefly empower every deployed attacker.
+        this.teamSurgeUntil = this.time.now + 9000;
+        feedback = "TEAM SURGE! +45 energy and 9 seconds of faster attacks.";
         color = "#ffe58c";
       } else {
-        const count = damageFrontEnemies(1, 3);
-        this.energy = Math.min(300, this.energy + 12);
-        feedback = "GRAMMAR POWER! Damage dealt to " + count + " enemies and +12 energy.";
+        const count = damageFrontEnemies(3, 4);
+        const dealt = bossDamage(.08, 15);
+        this.energy = Math.min(300, this.energy + 20);
+        feedback = "GRAMMAR POWER! " + count + " enemies hit" + (dealt ? "; boss takes " + dealt + " damage." : "; +20 energy.");
       }
 
       this.updateHud();
@@ -1305,7 +1319,7 @@ export function createGameScene() {
         wordWrap: { width: 680 }
       }).setOrigin(.5);
       this.tweens.add({
-        targets: toast, y: 48, alpha: 0, duration: 1800, delay: 350,
+        targets: toast, y: 48, alpha: 0, duration: 2200, delay: 350,
         onComplete: () => toast.destroy()
       });
     }
