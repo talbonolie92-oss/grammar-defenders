@@ -234,3 +234,15 @@ button{font:inherit}
 .deck-grid .unit-card[data-unit="knight"] .unit-icon{background:linear-gradient(145deg,#e4edf8,#718aa8);color:#283d58}
 .deck-grid .unit-card[data-unit="phoenix"] .unit-icon{background:linear-gradient(145deg,#ffe1a0,#e58b55);color:#783c24}
 .deck-grid .unit-card[data-unit="titan"] .unit-icon{background:linear-gradient(145deg,#e9d5ff,#a38bd9);color:#3c2b68}
+
+
+.student-join-card{max-width:560px}
+.student-join-form{display:grid;gap:12px;margin-top:16px}
+.student-join-form input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #456782;border-radius:10px;background:#091b30;color:#f4f8ff;font:inherit}
+.student-waiting{margin-top:18px;padding:20px;text-align:center;border:1px solid #4a806f;background:#0c2d2b;border-radius:14px}
+.student-waiting b{font-size:19px;color:#9cf0c4}
+.student-waiting p{margin:5px 0 0;color:#c0d9d2;font-size:12px}
+.waiting-pulse{width:13px;height:13px;border-radius:50%;margin:0 auto 12px;background:#79e9b3;box-shadow:0 0 0 7px #79e9b322,0 0 20px #79e9b3;animation:waitPulse 1.5s infinite}
+@keyframes waitPulse{50%{box-shadow:0 0 0 13px #79e9b311,0 0 25px #79e9b3}}
+.dashboard-link{text-decoration:none;font-size:11px;padding:9px 12px}
+@media(max-width:560px){.dashboard-link{font-size:9px;padding:7px 8px}.top-actions{gap:5px}.brand{gap:7px}}
