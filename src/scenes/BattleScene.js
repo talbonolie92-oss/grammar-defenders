@@ -962,7 +962,8 @@ export function createGameScene() {
       if (this.enemies.length >= (bossWave ? 46 : (this.wave > 5 ? 40 : 20))) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
-      const x = GRID_X + GRID_W + 25;
+      // Spawn attackers inside the final tile so they enter the visible lane grid.
+      const x = GRID_X + GRID_W - 38;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const enemyRoster = ["Grunt", "Runner", "Brute", "Shadow Stalker", "Bone Warrior", "Venom Beast", "Dark Caster", "War Crusher", "Dread Beast", "Dark Overlord"];
       // Dark Overlord is reserved for the scripted boss slot on boss waves.
