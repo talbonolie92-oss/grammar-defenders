@@ -54,9 +54,10 @@ export function createGameScene() {
       this.correctAnswers = 0;
       this.incorrectAnswers = 0;
       this.selectedUnit = "sunwell";
+      this.upgradeMode = false;
+      this.advancedDeckUnlocked = false;
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
-        sprout: { name: "Grammar Sprout", cost: 25, damage: 1, cooldown: 1.2, range: 460, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
         archer: { name: "Rune Archer", cost: 50, damage: 1, cooldown: 0.62, range: 560, color: 0xffd27a, projectileSpeed: 470, radius: 5, symbol: "➶", body: 0xe8b96f, role: "Rapid fire" },
         guardian: { name: "Aegis Guardian", cost: 75, damage: 0, cooldown: 0, range: 0, color: 0x9fc8f4, projectileSpeed: 0, radius: 0, symbol: "⬟", body: 0x8da8c5, role: "Lane blocker", health: 38 },
         mage: { name: "Frost Mage", cost: 90, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "❄", body: 0xb9a8f5, role: "Frost slow" },
@@ -66,7 +67,9 @@ export function createGameScene() {
         knight: { name: "Iron Knight", cost: 175, damage: 0, cooldown: 0, range: 0, color: 0xcbdcf0, projectileSpeed: 0, radius: 0, symbol: "⚔", body: 0x718aa8, role: "Heavy blocker", health: 70 },
         phoenix: { name: "Solar Phoenix", cost: 200, damage: 5, cooldown: 2.8, range: 540, color: 0xffc16d, projectileSpeed: 320, radius: 14, symbol: "♨", body: 0xe58b55, role: "Lane burst" },
         sunwell: { name: "Sunwell Keeper", cost: 65, damage: 0, cooldown: 0, range: 0, color: 0xffe58c, projectileSpeed: 0, radius: 0, symbol: "☼", body: 0xe6c96f, role: "Energy producer", energyRate: 7, energyInterval: 3.5 },
-        titan: { name: "Ancient Titan", cost: 250, damage: 18, cooldown: 2.0, range: 1000, color: 0xd8c1ff, projectileSpeed: 520, radius: 15, symbol: "✹", body: 0x9a83c7, role: "Global boss breaker", health: 360 }
+        titan: { name: "Ancient Titan", cost: 250, damage: 18, cooldown: 2.0, range: 1000, color: 0xd8c1ff, projectileSpeed: 520, radius: 15, symbol: "✹", body: 0x9a83c7, role: "Global boss breaker", health: 360 },
+        stormcaller: { name: "Stormcaller", cost: 220, damage: 7, cooldown: 1.9, range: 620, color: 0x8fe7f2, projectileSpeed: 440, radius: 13, symbol: "ϟ", body: 0x4b91b4, role: "Elite chain striker" },
+        runeblade: { name: "Runeblade", cost: 230, damage: 0, cooldown: 0, range: 0, color: 0xf0c68a, projectileSpeed: 0, radius: 0, symbol: "⚔", body: 0xb17b55, role: "Elite fortress", health: 115 }
       };
     }
 
@@ -212,6 +215,18 @@ export function createGameScene() {
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.removeModeButton = document.getElementById("remove-mode-button");
       this.removeMode = false;
+      this.upgradeModeButton = document.getElementById("upgrade-mode-button");
+      this.upgradeModeButton?.addEventListener("click", () => {
+        this.upgradeMode = !this.upgradeMode;
+        this.removeMode = false;
+        this.removeModeButton?.classList.remove("active");
+        this.removeModeButton?.setAttribute("aria-pressed", "false");
+        this.upgradeModeButton.classList.toggle("active", this.upgradeMode);
+        this.upgradeModeButton.setAttribute("aria-pressed", String(this.upgradeMode));
+        this.message.textContent = this.upgradeMode
+          ? "Upgrade mode: tap a deployed defender to evolve it."
+          : "Upgrade mode cancelled.";
+      });
       this.removeModeButton?.addEventListener("click", () => {
         this.removeMode = !this.removeMode;
         this.removeModeButton.classList.toggle("active", this.removeMode);
@@ -224,6 +239,9 @@ export function createGameScene() {
         card.addEventListener("click", () => {
           if (card.disabled) return;
           this.removeMode = false;
+          this.upgradeMode = false;
+          this.upgradeModeButton?.classList.remove("active");
+          this.upgradeModeButton?.setAttribute("aria-pressed", "false");
           this.removeModeButton?.classList.remove("active");
           this.removeModeButton?.setAttribute("aria-pressed", "false");
           this.selectedUnit = card.dataset.unit;
@@ -279,6 +297,11 @@ export function createGameScene() {
       if (!Number.isInteger(lane) || !Number.isInteger(col) ||
           lane < 0 || lane >= LANES || col < 0 || col >= 7) return;
       const existing = this.defenders.find(d => d.lane === lane && d.col === col);
+      if (this.upgradeMode) {
+        if (existing) this.upgradeDefender(existing);
+        else this.message.textContent = "Choose a tile with a defender to upgrade.";
+        return;
+      }
       if (this.removeMode) {
         if (existing) this.removeDefender(existing);
         else this.message.textContent = "No defender on that tile. Tap a deployed defender to remove it.";
@@ -319,8 +342,8 @@ export function createGameScene() {
       this.updateHud();
     }
 
-    deployDefender(lane, col, unitType = "sprout") {
-      const stats = this.unitStats[unitType] || this.unitStats.sprout;
+    deployDefender(lane, col, unitType = "archer") {
+      const stats = { ...(this.unitStats[unitType] || this.unitStats.archer) };
       const x = GRID_X + col * TILE_W + TILE_W / 2;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const group = this.add.container(x, y).setDepth(20).setVisible(true).setAlpha(1);
@@ -487,21 +510,92 @@ export function createGameScene() {
 
       // Every deployed unit is a physical target: attackers can be damaged and destroyed too.
       const unitHealth = {
-        sprout: 24, archer: 20, guardian: 38, mage: 22, ember: 26,
-        volt: 28, thorn: 36, knight: 70, phoenix: 44, sunwell: 18, titan: 360
+        archer: 20, guardian: 38, mage: 22, ember: 26,
+        volt: 28, thorn: 36, knight: 70, phoenix: 44, sunwell: 18,
+        titan: 360, stormcaller: 32, runeblade: 115
       };
       const maxHp = unitHealth[unitType] || 24;
+      const levelBadge = this.add.text(0, -52, "I", {
+        fontFamily: "Nunito", fontSize: "12px", fontStyle: "1000",
+        color: "#fff4bd", stroke: "#18283a", strokeThickness: 3
+      }).setOrigin(.5);
+      group.add(levelBadge);
+      let evolutionMark = null;
       const healthBar = this.add.graphics();
       group.add(healthBar);
       healthBar.setVisible(true).setAlpha(1).setDepth(0);
       this.drawGuardianHealth(healthBar, maxHp, maxHp);
       this.defenders.push({
         lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35),
-        unitType, stats, hp: maxHp, maxHp,
+        unitType, stats, hp: maxHp, maxHp, level: 1, levelBadge, evolutionMark,
         healthBar, attackCooldown: 0, legs
       });
-      this.message.textContent = stats.name + " deployed!";
+      this.message.textContent = stats.name + " deployed! Upgrade it later to unlock stronger abilities.";
       this.playSound("deploy");
+    }
+
+
+    upgradeDefender(defender) {
+      if (!defender || !this.defenders.includes(defender)) return;
+      if (defender.level >= 3) {
+        this.message.textContent = defender.stats.name + " has reached MAX evolution.";
+        return;
+      }
+      const nextLevel = defender.level + 1;
+      const cost = Math.round(defender.stats.cost * (nextLevel === 2 ? 0.65 : 0.9));
+      if (this.energy < cost) {
+        this.message.textContent = "Need " + cost + " energy to evolve " + defender.stats.name + ".";
+        return;
+      }
+      this.energy -= cost;
+      defender.level = nextLevel;
+      const multiplier = nextLevel === 2 ? 1.5 : 2;
+      const base = this.unitStats[defender.unitType];
+      if (base.damage > 0) defender.stats.damage = Math.round(base.damage * multiplier);
+      if (base.cooldown > 0) defender.stats.cooldown = Math.max(.45, base.cooldown * (nextLevel === 2 ? .88 : .76));
+      defender.maxHp = Math.round((defender.maxHp / (nextLevel === 2 ? 1 : 1)) * 1.35);
+      defender.hp = Math.min(defender.maxHp, Math.round(defender.hp + defender.maxHp * .25));
+      if (defender.unitType === "sunwell") defender.stats.energyRate = base.energyRate * nextLevel;
+      defender.levelBadge?.setText(nextLevel === 2 ? "II" : "III");
+      defender.levelBadge?.setColor(nextLevel === 3 ? "#ffe18b" : "#d9f4ff");
+      if (defender.evolutionMark?.active) defender.evolutionMark.destroy();
+      const mark = this.add.star(0, -57, nextLevel + 3, 5, 10 + nextLevel * 2, nextLevel === 3 ? 0xffdf78 : 0x9ce8ff)
+        .setStrokeStyle(2, 0xffffff);
+      defender.group.add(mark);
+      defender.evolutionMark = mark;
+      defender.group.setScale(1 + (nextLevel - 1) * .06);
+      if (defender.unitType === "sunwell") {
+        // Each evolution adds a visible energy crystal; tier III forms a three-crystal crown.
+        const crystalCount = nextLevel;
+        for (let i = 0; i < crystalCount; i++) {
+          const crystal = this.add.star((i - (crystalCount - 1) / 2) * 13, -42 - (i % 2) * 5, 5, 4, 8, 0xffe58c)
+            .setStrokeStyle(1.5, 0xffffff);
+          defender.group.add(crystal);
+        }
+      } else {
+        const ring = this.add.circle(0, 0, 39 + nextLevel * 3, 0xffffff, .035)
+          .setStrokeStyle(2, nextLevel === 3 ? 0xffdf78 : defender.stats.color, .8);
+        defender.group.add(ring);
+        defender.group.sendToBack(ring);
+      }
+      this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
+      this.updateHud();
+      this.message.textContent = defender.stats.name + " evolved to Tier " + nextLevel + "! Cost: " + cost + " energy.";
+      this.playSound("deploy");
+    }
+
+    unlockAdvancedDeck() {
+      this.advancedDeckUnlocked = true;
+      ["stormcaller", "runeblade"].forEach(id => {
+        const card = document.querySelector('[data-unit="' + id + '"]');
+        if (card) {
+          card.disabled = false;
+          card.classList.remove("deck-locked");
+          card.title = "Unlocked after the first boss.";
+        }
+      });
+      this.message.textContent = "FIRST BOSS DEFEATED — ELITE DEFENDERS UNLOCKED!";
+      this.playSound("wave");
     }
 
     drawGuardianHealth(graphics, hp, maxHp) {
@@ -655,7 +749,7 @@ export function createGameScene() {
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
       const bossWave = this.wave % 5 === 0;
-      if (this.enemies.length >= (bossWave ? 24 : 18)) return;
+      if (this.enemies.length >= (bossWave ? 26 : (this.wave > 5 ? 22 : 18))) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       const x = GRID_X + GRID_W + 25;
@@ -824,13 +918,14 @@ export function createGameScene() {
         const bossWave = this.wave % 5 === 0;
         // Boss waves are full assaults: a larger minion wave followed by the boss.
         this.enemiesPerWave = bossWave
-          ? Math.min(18, 14 + Math.floor(this.wave / 5))
-          : Math.min(16, 8 + Math.floor((this.wave - 1) * 0.8));
+          ? Math.min(20, 14 + Math.floor(this.wave / 5) + (this.wave > 5 ? 3 : 0))
+          : Math.min(19, 8 + Math.floor((this.wave - 1) * 0.8) + (this.wave > 5 ? 3 : 0));
+        if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
         this.waveActive = true;
         this.waveTransitioning = false;
         this.spawnTimer.delay = bossWave
           ? 1350
-          : Math.max(900, 3200 - (this.wave - 1) * 170);
+          : Math.max(this.wave > 5 ? 720 : 900, 3200 - (this.wave - 1) * 170 - (this.wave > 5 ? 250 : 0));
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -1036,6 +1131,10 @@ export function createGameScene() {
         const tip = this.add.triangle(13, 0, -5, -5, -5, 5, 5, 0xfff4d0);
         const tail = this.add.triangle(-11, 0, 4, -5, 4, 5, -4, 0xd9e7f5);
         p.add([shaft, tip, tail]);
+      } else if (defender.unitType === "stormcaller") {
+        const glow = this.add.circle(0, 0, 20, 0x8fe7f2, .3);
+        const bolt = this.add.star(0, 0, 6, 5, 16, 0xe3ffff).setStrokeStyle(2, 0xffffff);
+        p.add([glow, bolt]);
       } else if (defender.unitType === "mage") {
         const glow = this.add.circle(0, 0, 18, 0x9deaff, .2);
         const core = this.add.star(0, 0, 6, 5, 10, 0xb9f4ff).setStrokeStyle(2, 0xffffff);
