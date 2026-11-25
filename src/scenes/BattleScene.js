@@ -67,6 +67,8 @@ export function createGameScene() {
       this.input.on("pointerdown", pointer => this.handleBoardTap(pointer));
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
+      const launchConfig = window.GRAMMAR_DEFENDERS_CONFIG;
+      if (launchConfig && launchConfig.studentLaunch) this.startBattle(launchConfig);
     }
 
     startBattle(config = {}) {
