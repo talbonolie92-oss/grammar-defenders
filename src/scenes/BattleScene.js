@@ -358,39 +358,65 @@ export function createGameScene() {
       oscillator.stop(now + duration + 0.02);
     }
 
+    enableMusic() {
+      if (!this.audioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) this.audioContext = new AudioContextClass();
+      }
+      if (!this.audioContext) return;
+      if (this.audioContext.state === "suspended") this.audioContext.resume().catch(() => {});
+      this.musicOn = true;
+      const toggle = document.getElementById("music-toggle");
+      if (toggle) toggle.textContent = "♫ Music: On";
+      this.startMusic();
+    }
+
     startMusic() {
       if (!this.audioContext || this.musicGain) return;
       const ctx = this.audioContext;
       const master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
-      master.gain.exponentialRampToValueAtTime(0.055, ctx.currentTime + 1.2);
+      master.gain.exponentialRampToValueAtTime(0.19, ctx.currentTime + 0.8);
       master.connect(ctx.destination);
       this.musicGain = master;
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 1100;
-      filter.connect(master);
-      const notes = [110, 164.81, 220];
-      this.musicNodes = notes.map((hz, index) => {
+      const melody = [523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,659.25,783.99,1046.5,880,783.99,659.25,587.33];
+      const bass = [130.81,146.83,164.81,110];
+      let step = 0;
+      const playTone = (frequency, duration, volume, type = "triangle") => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = index === 0 ? "sine" : "triangle";
-        osc.frequency.value = hz;
-        gain.gain.value = index === 0 ? 0.34 : 0.12;
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
         osc.connect(gain);
-        gain.connect(filter);
+        gain.connect(master);
         osc.start();
-        return osc;
-      });
-      const chords = [
-        [110, 164.81, 220], [98, 146.83, 196],
-        [130.81, 196, 261.63], [87.31, 130.81, 174.61]
-      ];
+        osc.stop(ctx.currentTime + duration + 0.03);
+        this.musicNodes.push(osc);
+        osc.onended = () => { this.musicNodes = this.musicNodes.filter(node => node !== osc); };
+      };
       this.musicEvent = this.time.addEvent({
-        delay: 5200, loop: true, callback: () => {
-          this.musicChordIndex = (this.musicChordIndex + 1) % chords.length;
-          const chord = chords[this.musicChordIndex];
-          this.musicNodes.forEach((osc, i) => osc.frequency.setTargetAtTime(chord[i], ctx.currentTime, 1.1));
+        delay: 230, loop: true, callback: () => {
+          if (!this.musicOn || !this.audioContext || this.audioContext.state !== "running") return;
+          const index = step % melody.length;
+          playTone(melody[index], 0.19, 0.12, "triangle");
+          if (step % 4 === 0) playTone(bass[Math.floor(step / 4) % bass.length], 0.68, 0.10, "sine");
+          if (step % 8 === 0) {
+            const kick = ctx.createOscillator();
+            const kickGain = ctx.createGain();
+            kick.type = "sine";
+            kick.frequency.setValueAtTime(115, ctx.currentTime);
+            kick.frequency.exponentialRampToValueAtTime(48, ctx.currentTime + 0.14);
+            kickGain.gain.setValueAtTime(0.12, ctx.currentTime);
+            kickGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
+            kick.connect(kickGain); kickGain.connect(master);
+            kick.start(); kick.stop(ctx.currentTime + 0.18);
+            this.musicNodes.push(kick);
+            kick.onended = () => { this.musicNodes = this.musicNodes.filter(node => node !== kick); };
+          }
+          step++;
         }
       });
     }
