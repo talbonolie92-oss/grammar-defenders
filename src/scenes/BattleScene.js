@@ -753,6 +753,7 @@ export function createGameScene() {
         }
       });
       this.enemies.slice().forEach(e => {
+        if (!e.group.active) return;
         const blocker = this.defenders.find(d => d.stats.health && d.lane === e.lane && d.hp > 0 && d.x < e.x && e.x - d.x < 42);
         if (blocker) {
           e.x = Math.max(e.x, blocker.x + 34);
