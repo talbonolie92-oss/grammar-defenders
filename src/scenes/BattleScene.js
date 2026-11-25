@@ -1237,7 +1237,6 @@ export function createGameScene() {
         const dx = p.target.x - p.x, dy = p.target.y - p.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 13 || !p.target.group.active) {
-          this.recycleProjectile(p);
           this.projectiles.splice(projectileIndex, 1);
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
@@ -1312,6 +1311,7 @@ export function createGameScene() {
               }
             }
           }
+          this.recycleProjectile(p);
         } else {
           p.x += dx / dist * p.projectileSpeed * dt; p.y += dy / dist * p.projectileSpeed * dt;
         }
