@@ -29,6 +29,14 @@ export function createGameScene() {
       this.waveActive = true;
       this.waveTransitioning = false;
       this.maxWaves = 10;
+      const params = new URLSearchParams(window.location.search);
+      const suppliedConfig = window.GRAMMAR_DEFENDERS_CONFIG || {};
+      this.battleMode = suppliedConfig.mode || params.get("mode") || "fixed";
+      this.endlessMode = this.battleMode === "endless";
+      const requestedMinutes = Number(suppliedConfig.timeLimitMinutes || params.get("minutes") || 10);
+      this.timeLimitMinutes = Phaser.Math.Clamp(Number.isFinite(requestedMinutes) ? requestedMinutes : 10, 1, 180);
+      this.remainingSeconds = this.timeLimitMinutes * 60;
+      this.elapsedSeconds = 0;
       this.kills = 0;
       this.selectedUnit = "sprout";
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
@@ -46,6 +54,7 @@ export function createGameScene() {
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
       this.spawnTimer = this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
       this.time.addEvent({ delay: 17000, loop: true, callback: () => this.showQuestion() });
+      this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
     }
@@ -87,7 +96,10 @@ export function createGameScene() {
       this.energyFill = document.getElementById("energy-fill");
       this.waveText = document.getElementById("wave-value");
       this.baseText = document.getElementById("base-value");
+      this.timerText = document.getElementById("battle-time");
+      this.modeText = document.getElementById("battle-mode");
       this.message = document.getElementById("battle-message");
+      if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.unitCards.forEach(card => {
         card.addEventListener("click", () => {
           if (card.disabled) return;
@@ -214,7 +226,7 @@ export function createGameScene() {
       this.waveActive = false;
       this.waveTransitioning = true;
       this.spawnTimer.paused = true;
-      if (this.wave >= this.maxWaves) {
+      if (!this.endlessMode && this.wave >= this.maxWaves) {
         this.endGame(true);
         return;
       }
@@ -228,6 +240,7 @@ export function createGameScene() {
         this.enemiesPerWave = Math.min(14, 8 + Math.floor((this.wave - 1) / 2));
         this.waveActive = true;
         this.waveTransitioning = false;
+        this.spawnTimer.delay = Math.max(1100, 3200 - (this.wave - 1) * 120);
         this.spawnTimer.paused = false;
         this.message.textContent = "Wave " + this.wave + " — defend the keep!";
         this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
@@ -435,13 +448,33 @@ export function createGameScene() {
       });
       this.waveText.textContent = this.wave;
       this.baseText.textContent = this.baseHealth + "%";
+      if (this.timerText) {
+        const seconds = this.endlessMode ? this.remainingSeconds : this.elapsedSeconds;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        this.timerText.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+      }
     }
 
-    endGame(won) {
+    tickBattleClock() {
+      if (this.gameOver) return;
+      if (this.endlessMode) {
+        this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
+        if (this.remainingSeconds === 0) {
+          this.endGame(true, "TIME LIMIT REACHED!");
+          return;
+        }
+      } else {
+        this.elapsedSeconds++;
+      }
+      this.updateHud();
+    }
+
+    endGame(won, customTitle = "") {
       this.gameOver = true;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       this.add.rectangle(480, 315, 960, 540, 0x081323, .76);
-      this.add.text(480, 260, won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN", { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
+      this.add.text(480, 260, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
       this.add.text(480, 315, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
       this.message.textContent = won ? "Victory!" : "Defeat!";
       this.playSound(won ? "victory" : "defeat");
