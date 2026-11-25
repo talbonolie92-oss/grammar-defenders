@@ -277,11 +277,10 @@ export function createGameScene() {
         const hair = this.add.ellipse(-2, -26, 22, 9, 0x513b2c);
         const face = this.add.rectangle(4, -20, 2, 3, 0x24303b);
         const bow = this.add.arc(18, -5, 25, 250, 110, false, 0xe5bd75).setStrokeStyle(4, 0x704b2d);
-        const bowString = this.add.graphics();
-        bowString.lineStyle(1.5, 0xffedc3, 1); bowString.beginPath(); bowString.moveTo(18, -29); bowString.lineTo(18, 19); bowString.strokePath();
-        bowString.lineStyle(2, 0xffe4a5, 1); bowString.beginPath(); bowString.moveTo(-15, -24); bowString.lineTo(-15, -11); bowString.strokePath();
+        const bowString = this.add.rectangle(18, -5, 1.5, 48, 0xffedc3);
+        const quiverTie = this.add.rectangle(-15, -17, 2, 13, 0xffe4a5);
         const quiver = this.add.rectangle(-15, -7, 8, 25, 0x704b35).setRotation(-.35);
-        parts.push(...legs, torso, head, hood, hair, face, quiver, bow, bowString);
+        parts.push(...legs, torso, head, hood, hair, face, quiver, bow, bowString, quiverTie);
       } else if (unitType === "mage") {
         // Robed ice mage with a tall hood and a crystal-tipped staff.
         legs = [this.add.ellipse(-8, 17, 12, 7, 0x313b63), this.add.ellipse(8, 17, 12, 7, 0x313b63)];
@@ -381,9 +380,11 @@ export function createGameScene() {
         const stem = this.add.rectangle(0, -1, 8, 30, 0x8cbd72).setStrokeStyle(2, 0x416b4a);
         const crystal = this.add.star(0, -24, 8, 12, 23, 0xffe58c).setStrokeStyle(3, 0xfff5c2);
         const orb = this.add.circle(0, -24, 8, 0xffffff, .9);
-        const rays = this.add.graphics(); rays.lineStyle(2, 0xffe58c, .85);
-        for (let a = 0; a < 8; a++) { const angle = a * Math.PI / 4; rays.lineBetween(Math.cos(angle) * 28, -24 + Math.sin(angle) * 28, Math.cos(angle) * 35, -24 + Math.sin(angle) * 35); }
-        parts.push(base, stem, crystal, orb, rays);
+        const rays = Array.from({ length: 8 }, (_, i) =>
+          this.add.rectangle(Math.cos(i * Math.PI / 4) * 32, -24 + Math.sin(i * Math.PI / 4) * 32, 8, 2, 0xffe58c)
+            .setRotation(i * Math.PI / 4)
+        );
+        parts.push(base, stem, crystal, orb, ...rays);
       } else {
         if (unitType === "sprout") {
           legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
@@ -585,6 +586,8 @@ export function createGameScene() {
       const type = enemyIndex % 3;
       const isBoss = this.enemiesSpawnedThisWave === this.enemiesPerWave - 1 && this.wave % 5 === 0;
       const enemyType = isBoss ? "Dark Overlord" : enemyRoster[enemyIndex];
+      // Compute wave scaling before building armor visuals.
+      const armorLevel = Math.min(5, Math.floor((this.wave - 1) / 2));
       const palettes = [
         { body: 0xb94f54, dark: 0x542b3b, light: 0xf18a83, eye: 0xffd6bd },
         { body: 0x6555a8, dark: 0x302b62, light: 0xb9a8ff, eye: 0xf5eaff },
@@ -624,7 +627,8 @@ export function createGameScene() {
         // Runner: swept-back horns and a light, aerodynamic silhouette.
         details.push(this.add.triangle(-10, -radius + 2, -7, 12, 8, 7, -2, palette.light));
         details.push(this.add.triangle(9, -radius + 2, -8, 7, 8, 12, 2, palette.light));
-        const speedTrail = this.add.graphics(); speedTrail.lineStyle(3, palette.light, 0.8); speedTrail.beginPath(); speedTrail.moveTo(-radius + 2, 8); speedTrail.lineTo(-radius - 10, 3); speedTrail.strokePath(); details.push(speedTrail);
+        const speedTrail = this.add.rectangle(-radius - 4, 6, 10, 3, palette.light, .8).setRotation(-.2);
+        details.push(speedTrail);
       } else {
         // Brute: oversized shoulder armor and a heavy brow.
         details.push(this.add.ellipse(-radius * .83, -2, 19, 25, palette.dark).setStrokeStyle(2, palette.light));
@@ -680,7 +684,6 @@ export function createGameScene() {
 
       const baseHp = (this.wave > 2 ? 3 + Math.floor((this.wave - 1) / 3) : 2);
       const waveMultiplier = 1 + (this.wave - 1) * 0.22;
-      const armorLevel = Math.min(5, Math.floor((this.wave - 1) / 2));
       const enemyLevel = enemyRoster.indexOf(enemyType);
       const hpScale = [1, .8, 1.5, 1.2, 1.35, 1.25, 1.15, 1.8, 2.1, 3.2][Math.max(0, enemyLevel)];
       const hp = Math.max(1, Math.round((baseHp + [0, -1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
