@@ -1496,63 +1496,37 @@ export function createGameScene() {
       // Projectiles are removed during the reverse traversal, avoiding a
       // second full-array scan and a temporary filtered array.
       this.checkWaveProgress();
+      if (this.hudDirty) {
+        this.hudDirty = false;
+        this.updateHud();
+      }
     }
 
     fireProjectile(defender, target) {
       const stats = defender.stats;
-      const p = this.add.container(defender.x + 18, defender.y - 5).setDepth(30);
-      if (defender.unitType === "ember" || defender.unitType === "phoenix") {
-        const glow = this.add.circle(0, 0, defender.unitType === "phoenix" ? 22 : 16, stats.color, .3);
-        const core = this.add.star(0, 0, 6, 6, 13, stats.color).setStrokeStyle(2, 0xffefc4);
-        p.add([glow, core]);
-      } else if (defender.unitType === "volt") {
-        const glow = this.add.circle(0, 0, 18, 0xf4ed8b, .25);
-        const bolt = this.add.star(0, 0, 4, 4, 14, 0xf9f6bd).setStrokeStyle(2, 0xffffff);
-        p.add([glow, bolt]);
-      } else if (defender.unitType === "thorn") {
-        const spike = this.add.triangle(0, 0, -12, 8, 12, 8, 0, -12, 0x9ce28c).setStrokeStyle(2, 0xe6ffd9);
-        p.add([spike]);
-      } else if (defender.unitType === "archer") {
-        const shaft = this.add.rectangle(0, 0, 23, 3, 0xffe4a5);
-        const tip = this.add.triangle(13, 0, -5, -5, -5, 5, 5, 0xfff4d0);
-        const tail = this.add.triangle(-11, 0, 4, -5, 4, 5, -4, 0xd9e7f5);
-        p.add([shaft, tip, tail]);
-      } else if (defender.unitType === "stormcaller") {
-        const glow = this.add.circle(0, 0, 20, 0x8fe7f2, .3);
-        const bolt = this.add.star(0, 0, 6, 5, 16, 0xe3ffff).setStrokeStyle(2, 0xffffff);
-        p.add([glow, bolt]);
-      } else if (defender.unitType === "mage") {
-        const glow = this.add.circle(0, 0, 18, 0x9deaff, .2);
-        const core = this.add.star(0, 0, 6, 5, 10, 0xb9f4ff).setStrokeStyle(2, 0xffffff);
-        p.add([glow, core]);
-      } else {
-        const glow = this.add.circle(0, 0, defender.unitType === "titan" ? 23 : 14, stats.color, .28);
-        const core = defender.unitType === "titan"
-          ? this.add.star(0, 0, 8, 8, 18, 0xe8d8ff).setStrokeStyle(3, 0xffffff)
-          : this.add.circle(0, 0, 7, stats.color).setStrokeStyle(2, 0xfff8d8);
-        p.add([glow, core]);
-      }
+      // One lightweight display object per shot. The old version built a
+      // container plus several child shapes and two tweens for every volley;
+      // simultaneous volleys created a large burst of GameObjects and tweens.
+      const projectileStyle = {
+        archer: [0xffe4a5, 4], mage: [0xb9f4ff, 7],
+        ember: [0xff925d, 8], phoenix: [0xffc16d, 10],
+        volt: [0xf4ed8b, 7], thorn: [0x9ce28c, 8],
+        stormcaller: [0x8fe7f2, 9], titan: [0xe8d8ff, 11]
+      };
+      const style = projectileStyle[defender.unitType] || [stats.color, 6];
+      const p = this.add.circle(defender.x + 18, defender.y - 5, style[1], style[0], .95)
+        .setStrokeStyle(1.5, 0xffffff, .75)
+        .setDepth(30);
       p.target = target;
       p.damage = stats.damage;
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       p.level = defender.level || 1;
       this.projectiles.push(p);
-      // Keep firing audible without stacking identical sounds when many
-      // defenders release projectiles on the same frame.
-      if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 85) {
+      // A single shared firing sound is enough for a simultaneous volley.
+      if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 110) {
         this.lastShotSoundAt = this.time.now;
         this.playSound("shot");
-      }
-      this.tweens.add({
-        targets: defender.group,
-        scaleY: .94,
-        angle: defender.unitType === "archer" ? 4 : -3,
-        yoyo: true,
-        duration: defender.unitType === "mage" ? 180 : 95
-      });
-      if (defender.legs && defender.legs.length) {
-        this.tweens.add({ targets: defender.legs, y: "+=3", yoyo: true, duration: 90 });
       }
     }
 
@@ -1610,7 +1584,9 @@ export function createGameScene() {
         this.kills++;
         this.playSound("defeat");
         this.energy = Math.min(this.maxEnergy, this.energy + (enemy.isBoss ? 25 : 8));
-        this.updateHud();
+        // Many enemies can die in the same frame; refresh DOM HUD once at the
+        // end of the frame instead of once per defeated enemy.
+        this.hudDirty = true;
       }
     }
 
