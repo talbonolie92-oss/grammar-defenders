@@ -43,7 +43,8 @@ export function createGameScene() {
       this.unitStats = {
         sprout: { name: "Grammar Sprout", cost: 50, damage: 1, cooldown: 1.15, range: 490, color: 0xffe58c, projectileSpeed: 330, radius: 7, symbol: "✦", body: 0x8de1a4, role: "Balanced" },
         archer: { name: "Rune Archer", cost: 65, damage: 1, cooldown: 0.62, range: 560, color: 0xffd27a, projectileSpeed: 470, radius: 5, symbol: "➶", body: 0xe8b96f, role: "Rapid fire" },
-        mage: { name: "Frost Mage", cost: 80, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "✧", body: 0xb9a8f5, role: "Frost slow" }
+        mage: { name: "Frost Mage", cost: 80, damage: 2, cooldown: 1.8, range: 440, color: 0x9deaff, projectileSpeed: 270, radius: 9, symbol: "✧", body: 0xb9a8f5, role: "Frost slow" },
+        guardian: { name: "Aegis Guardian", cost: 75, damage: 0, cooldown: 0, range: 0, color: 0x9fc8f4, projectileSpeed: 0, radius: 0, symbol: "⬟", body: 0x8da8c5, role: "Lane blocker", health: 24 }
       };
     }
 
@@ -53,7 +54,7 @@ export function createGameScene() {
       this.input.on("pointerdown", pointer => this.handleBoardTap(pointer));
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regenerateEnergy() });
       this.spawnTimer = this.time.addEvent({ delay: 3200, loop: true, callback: () => this.spawnEnemy() });
-      this.time.addEvent({ delay: 17000, loop: true, callback: () => this.showQuestion() });
+      this.time.addEvent({ delay: 24000, loop: true, callback: () => this.showQuestion() });
       this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
       this.events.on("shutdown", () => this.clearTimers());
       this.updateHud();
@@ -172,7 +173,7 @@ export function createGameScene() {
     }
 
     handleBoardTap(pointer) {
-      if (this.gameOver || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
+      if (this.gameOver || this.questionActive || pointer.x < GRID_X || pointer.x >= GRID_X + GRID_W || pointer.y < GRID_Y || pointer.y >= GRID_Y + GRID_H) return;
       const col = Math.floor((pointer.x - GRID_X) / TILE_W);
       const lane = Math.floor((pointer.y - GRID_Y) / TILE_H);
       if (this.defenders.some(d => d.lane === lane && d.col === col)) return;
@@ -188,28 +189,85 @@ export function createGameScene() {
       const x = GRID_X + col * TILE_W + TILE_W / 2;
       const y = GRID_Y + lane * TILE_H + TILE_H / 2;
       const group = this.add.container(x, y);
-      const shadow = this.add.ellipse(0, 25, 58, 14, 0x10251d, .34);
-      const aura = this.add.circle(0, 0, 29, stats.body, .13).setStrokeStyle(2, stats.color, .5);
-      const body = this.add.circle(0, 0, unitType === "mage" ? 22 : 21, stats.body).setStrokeStyle(3, unitType === "archer" ? 0x8a5d28 : 0x2b7957);
-      const feet = this.add.ellipse(0, 15, 25, 10, 0x25443b, .5);
-      const eyeL = this.add.circle(-7, -3, 2.5, 0x20343b);
-      const eyeR = this.add.circle(7, -3, 2.5, 0x20343b);
-      const smile = this.add.arc(0, 3, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
-      const ornament = unitType === "sprout"
-        ? [this.add.ellipse(-13, -21, 17, 28, 0x4baf77).setRotation(-.65), this.add.ellipse(13, -21, 17, 28, 0x5fc98a).setRotation(.65)]
-        : unitType === "archer"
-          ? [this.add.arc(0, -8, 24, 205, 335, false, 0x855a2d).setStrokeStyle(4, 0x855a2d), this.add.line(0, -28, 0, -2, 0, 19, 0xffe3a1).setLineWidth(2)]
-          : [this.add.circle(0, -24, 9, 0x83eaff).setStrokeStyle(2, 0xf2ffff), this.add.triangle(0, -34, -7, 8, 7, 8, 0, 0xd7f6ff)];
-      const emblem = this.add.text(0, 1, unitType === "sprout" ? "✦" : unitType === "archer" ? "➶" : "✧", {
-        fontFamily: "Arial", fontSize: "17px", color: "#fff8d7", fontStyle: "bold"
-      }).setOrigin(.5);
-      group.add([shadow, aura, feet, ...ornament, body, eyeL, eyeR, smile, emblem]);
-      this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 300, ease: "Back.Out" });
-      this.tweens.add({ targets: aura, alpha: .04, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
-      this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
-      this.defenders.push({ lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35), unitType, stats });
+      const shadow = this.add.ellipse(0, 27, 60, 14, 0x10251d, .38);
+      const aura = this.add.circle(0, 0, 31, stats.body, .12).setStrokeStyle(2, stats.color, .45);
+      const parts = [shadow, aura];
+      let legs = [];
+
+      if (unitType === "archer") {
+        // Hooded woodland ranger with a visible bow, quiver and leather armor.
+        legs = [this.add.rectangle(-8, 14, 8, 15, 0x493d35), this.add.rectangle(8, 14, 8, 15, 0x493d35)];
+        const torso = this.add.triangle(0, 2, -17, -17, 17, -17, 0, 23, 0x547d54).setStrokeStyle(2, 0x304c3b);
+        const head = this.add.circle(0, -21, 11, 0xe8b58d).setStrokeStyle(2, 0x76513e);
+        const hood = this.add.triangle(0, -29, -14, 16, 14, 16, 0, 0x6c5038).setStrokeStyle(2, 0x3d342b);
+        const hair = this.add.ellipse(-2, -26, 22, 9, 0x513b2c);
+        const face = this.add.rectangle(4, -20, 2, 3, 0x24303b);
+        const bow = this.add.arc(18, -5, 25, 250, 110, false, 0xe5bd75).setStrokeStyle(4, 0x704b2d);
+        const string = this.add.line(18, -29, 0, 0, 0, 0, 0xffedc3).setLineWidth(1.5);
+        const quiver = this.add.rectangle(-15, -7, 8, 25, 0x704b35).setRotation(-.35);
+        const arrow = this.add.line(-15, -24, 0, 0, 0, 13, 0xffe4a5).setLineWidth(2);
+        parts.push(...legs, torso, head, hood, hair, face, quiver, arrow, bow, string);
+      } else if (unitType === "mage") {
+        // Robed ice mage with a tall hood and a crystal-tipped staff.
+        legs = [this.add.ellipse(-8, 17, 12, 7, 0x313b63), this.add.ellipse(8, 17, 12, 7, 0x313b63)];
+        const torso = this.add.triangle(0, 2, -17, -15, 17, -15, 0, 24, 0x6d6eae).setStrokeStyle(2, 0x3e477c);
+        const head = this.add.circle(0, -20, 10, 0xe9c4ae).setStrokeStyle(2, 0x66557e);
+        const hood = this.add.triangle(0, -30, -15, 19, 15, 19, 0, 0x4e568d).setStrokeStyle(2, 0xc7c9ff);
+        const face = this.add.rectangle(4, -20, 2, 3, 0x25324b);
+        const staff = this.add.rectangle(20, -2, 4, 52, 0x765b48).setRotation(-.12);
+        const crystal = this.add.triangle(20, -31, -8, 9, 8, 9, 0, 0x9df5ff).setStrokeStyle(2, 0xf2ffff);
+        const cape = this.add.triangle(-2, 8, -13, -12, 14, -12, 0, 27, 0x444d8e);
+        parts.push(...legs, cape, torso, head, hood, face, staff, crystal);
+      } else if (unitType === "guardian") {
+        // Armored lane guardian with a broad shield held forward.
+        legs = [this.add.rectangle(-8, 16, 10, 14, 0x46556b), this.add.rectangle(8, 16, 10, 14, 0x46556b)];
+        const torso = this.add.rectangle(0, 1, 31, 29, 0x718ba8).setStrokeStyle(3, 0x354d6b);
+        const head = this.add.circle(0, -20, 11, 0xd9b49a).setStrokeStyle(2, 0x586c84);
+        const helmet = this.add.rectangle(0, -25, 24, 10, 0xb8c9dc).setStrokeStyle(2, 0x526b87);
+        const crest = this.add.triangle(0, -35, -5, 10, 5, 10, 0, 0xd7e9fa);
+        const visor = this.add.rectangle(0, -19, 16, 4, 0x344960);
+        const shield = this.add.polygon(-21, 1, [-13,-22, 13,-22, 18,-4, 0,24, -18,-4], 0x527ba8).setStrokeStyle(3, 0xd5e8ff);
+        const shieldMark = this.add.text(-21, 0, "✦", { fontSize: "17px", color: "#fff0bf", fontStyle: "bold" }).setOrigin(.5);
+        const sword = this.add.rectangle(20, -8, 4, 29, 0xdce9f5).setRotation(.25);
+        parts.push(...legs, torso, head, helmet, crest, visor, shield, shieldMark, sword);
+      } else {
+        // Friendly seedling hero with leaf ears.
+        legs = [this.add.ellipse(-8, 16, 12, 7, 0x315d45), this.add.ellipse(8, 16, 12, 7, 0x315d45)];
+        const body = this.add.circle(0, 0, 21, stats.body).setStrokeStyle(3, 0x2b7957);
+        const leafL = this.add.ellipse(-14, -22, 17, 28, 0x4baf77).setRotation(-.65);
+        const leafR = this.add.ellipse(14, -22, 17, 28, 0x5fc98a).setRotation(.65);
+        const eyes = [this.add.circle(-7, -3, 2.5, 0x20343b), this.add.circle(7, -3, 2.5, 0x20343b)];
+        const smile = this.add.arc(0, 4, 7, 15, 165, false, 0x28463c, 0).setStrokeStyle(1.5, 0x28463c);
+        parts.push(...legs, leafL, leafR, body, ...eyes, smile);
+      }
+
+      group.add(parts);
+      this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
+      this.tweens.add({ targets: aura, alpha: .035, scale: 1.12, duration: 1450, yoyo: true, repeat: -1 });
+      if (unitType !== "guardian") this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+
+      let healthBar = null;
+      if (unitType === "guardian") {
+        healthBar = this.add.graphics();
+        group.add(healthBar);
+        this.drawGuardianHealth(healthBar, stats.health, stats.health);
+      }
+      this.defenders.push({
+        lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35),
+        unitType, stats, hp: stats.health || 0, maxHp: stats.health || 0,
+        healthBar, attackCooldown: 0, legs
+      });
       this.message.textContent = stats.name + " deployed!";
       this.playSound("deploy");
+    }
+
+    drawGuardianHealth(graphics, hp, maxHp) {
+      graphics.clear();
+      const ratio = Phaser.Math.Clamp(hp / maxHp, 0, 1);
+      graphics.fillStyle(0x26344a, .95);
+      graphics.fillRoundedRect(-22, -39, 44, 6, 3);
+      graphics.fillStyle(ratio > .4 ? 0x83e39a : 0xe58b8b, 1);
+      graphics.fillRoundedRect(-21, -38, 42 * ratio, 4, 2);
     }
 
     playSound(kind) {
@@ -361,15 +419,16 @@ export function createGameScene() {
     }
 
     regenerateEnergy() {
-      if (this.gameOver) return;
+      if (this.gameOver || this.questionActive) return;
       this.energy = Math.min(150, this.energy + 8);
       this.updateHud();
     }
 
     update(time, delta) {
-      if (this.gameOver) return;
+      if (this.gameOver || this.questionActive) return;
       const dt = Math.min(delta / 1000, 0.05);
       this.defenders.forEach(d => {
+        if (d.unitType === "guardian") return;
         d.cooldown -= dt;
         if (d.cooldown <= 0) {
           const target = this.enemies
@@ -396,8 +455,26 @@ export function createGameScene() {
         }
       });
       this.enemies.slice().forEach(e => {
-        const slowed = e.slowUntil && this.time.now < e.slowUntil;
-        e.x -= e.speed * (slowed ? 0.48 : 1) * dt;
+        const blocker = this.defenders.find(d => d.unitType === "guardian" && d.lane === e.lane && d.hp > 0 && d.x < e.x && e.x - d.x < 42);
+        if (blocker) {
+          e.x = Math.max(e.x, blocker.x + 34);
+          e.attackCooldown = (e.attackCooldown || 0) - dt;
+          if (e.attackCooldown <= 0) {
+            const hit = e.enemyType === "Brute" ? 5 : e.enemyType === "Runner" ? 2 : 3;
+            blocker.hp -= hit;
+            blocker.healthBar && this.drawGuardianHealth(blocker.healthBar, blocker.hp, blocker.maxHp);
+            this.tweens.add({ targets: blocker.group, x: blocker.x - 3, yoyo: true, duration: 70 });
+            e.attackCooldown = 0.85;
+            if (blocker.hp <= 0) {
+              this.tweens.add({ targets: blocker.group, alpha: 0, scale: .65, duration: 260, onComplete: () => blocker.group.destroy() });
+              this.defenders = this.defenders.filter(d => d !== blocker);
+              this.message.textContent = "Aegis Guardian has fallen! The lane is open.";
+            }
+          }
+        } else {
+          const slowed = e.slowUntil && this.time.now < e.slowUntil;
+          e.x -= e.speed * (slowed ? 0.48 : 1) * dt;
+        }
         e.group.x = e.x;
         e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
         if (e.x < 65) this.damageBase(e);
@@ -471,34 +548,69 @@ export function createGameScene() {
     showQuestion() {
       if (this.gameOver || this.questionActive) return;
       this.questionActive = true;
+      if (this.spawnTimer) this.spawnTimer.paused = true;
       const item = QUESTIONS[this.questionIndex % QUESTIONS.length];
       this.questionIndex++;
-      document.getElementById("question-text").textContent = item.topic + " · " + item.q;
-      const options = document.getElementById("answer-options");
-      options.innerHTML = "";
+      const overlay = this.add.container(0, 0).setDepth(1000);
+      this.questionOverlay = overlay;
+      const shade = this.add.rectangle(480, 270, 960, 540, 0x071321, .82).setInteractive();
+      const panel = this.add.rectangle(480, 270, 770, 410, 0x172d49, .99).setStrokeStyle(3, 0x91d8c2);
+      const topGlow = this.add.rectangle(480, 82, 760, 5, 0x91e5c2, .9);
+      const eyebrow = this.add.text(480, 111, "✦  GRAMMAR CHALLENGE  ✦", {
+        fontFamily: "Nunito", fontSize: "15px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
+      }).setOrigin(.5);
+      const topic = this.add.text(480, 145, item.topic.toUpperCase(), {
+        fontFamily: "Nunito", fontSize: "12px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
+      }).setOrigin(.5);
+      const question = this.add.text(480, 198, item.q, {
+        fontFamily: "Nunito", fontSize: "22px", color: "#ffffff", fontStyle: "900",
+        align: "center", wordWrap: { width: 680 }, lineSpacing: 7
+      }).setOrigin(.5);
+      const instruction = this.add.text(480, 256, "Choose the correct answer to unleash a battle power", {
+        fontFamily: "Nunito", fontSize: "12px", color: "#b6c8dc", fontStyle: "700"
+      }).setOrigin(.5);
+      overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       item.a.forEach((answer, index) => {
-        const button = document.createElement("button");
-        button.className = "answer-button";
-        button.textContent = answer;
-        button.addEventListener("click", () => {
-          if (!this.questionActive) return;
-          this.questionActive = false;
-          [...options.children].forEach(b => b.disabled = true);
-          if (index === item.correct) {
-            this.message.textContent = item.effect + " Grammar power activated!";
-            this.playSound("correct");
-            this.applyGrammarPower(item.effect);
-            button.style.borderColor = "#76e0b2";
-          } else {
-            this.message.textContent = "Not quite! Your defenders keep fighting.";
-            button.style.borderColor = "#e58b8b";
-          }
-          this.time.delayedCall(2400, () => {
-            document.getElementById("question-text").textContent = "A challenge will appear during battle.";
-            options.innerHTML = '<span class="waiting-label">Stay alert, Defender!</span>';
-          });
-        });
-        options.appendChild(button);
+        const y = 312 + index * 58;
+        const button = this.add.rectangle(480, y, 660, 48, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
+          fontFamily: "Nunito", fontSize: "16px", color: "#ffffff", fontStyle: "900",
+          align: "center", wordWrap: { width: 620 }
+        }).setOrigin(.5);
+        button.on("pointerover", () => button.setFillStyle(0x376477));
+        button.on("pointerout", () => button.setFillStyle(0x294969));
+        button.on("pointerdown", () => this.answerQuestion(index, item, button, label));
+        overlay.add([button, label]);
+      });
+      this.tweens.add({ targets: overlay, alpha: { from: 0, to: 1 }, duration: 180, ease: "Quad.Out" });
+      this.cameras.main.shake(100, .0015);
+    }
+
+    answerQuestion(index, item, button, label) {
+      if (!this.questionActive) return;
+      const correct = index === item.correct;
+      this.questionActive = false;
+      if (correct) {
+        button.setFillStyle(0x286c58);
+        button.setStrokeStyle(2, 0x8ff0bd);
+        label.setColor("#d8ffe9");
+        this.message.textContent = item.effect + " Grammar power activated!";
+        this.playSound("correct");
+        this.applyGrammarPower(item.effect);
+      } else {
+        button.setFillStyle(0x713f50);
+        button.setStrokeStyle(2, 0xf0a2a2);
+        label.setColor("#ffe1e1");
+        this.message.textContent = "Not quite! Your defenders keep fighting.";
+      }
+      const feedback = this.add.text(480, 492, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
+        fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
+      }).setOrigin(.5);
+      this.questionOverlay.add(feedback);
+      this.time.delayedCall(1150, () => {
+        if (this.questionOverlay) this.questionOverlay.destroy(true);
+        this.questionOverlay = null;
+        if (!this.gameOver && this.spawnTimer) this.spawnTimer.paused = false;
       });
     }
 
@@ -574,7 +686,7 @@ export function createGameScene() {
     }
 
     tickBattleClock() {
-      if (this.gameOver) return;
+      if (this.gameOver || this.questionActive) return;
       if (this.endlessMode) {
         this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
         if (this.remainingSeconds === 0) {
