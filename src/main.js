@@ -48,6 +48,9 @@ function startSoloSetup() {
   document.getElementById("start-game")?.addEventListener("click", async () => {
     const battleScene = game.scene.getScene("BattleScene");
     battleScene?.enableMusic?.();
+    if (battleScene) battleScene.soundOn = true;
+    const soundToggle = document.getElementById("sound-toggle");
+    if (soundToggle) soundToggle.textContent = "SFX: On";
     const settings = {
       mode: document.getElementById("setup-mode")?.value || "endless",
       timeLimitMinutes: Number(document.getElementById("setup-time")?.value || 10),
@@ -72,7 +75,11 @@ async function initializeStudentJoin() {
   const form = document.getElementById("student-join-form");
   form?.addEventListener("submit", async event => {
     event.preventDefault();
-    game.scene.getScene("BattleScene")?.prepareAudio?.();
+    const audioScene = game.scene.getScene("BattleScene");
+    audioScene?.prepareAudio?.();
+    if (audioScene) audioScene.soundOn = true;
+    const soundToggle = document.getElementById("sound-toggle");
+    if (soundToggle) soundToggle.textContent = "SFX: On";
     let name = document.getElementById("student-name").value.trim();
     let classSection = document.getElementById("student-class").value.trim();
     const status = document.getElementById("student-join-status");
