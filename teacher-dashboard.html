@@ -38,7 +38,7 @@
             <label class="wide">Session name<input id="session-title" maxlength="70" placeholder="e.g. Grade 10 Challenge" required></label>
             <label>Grade level<select id="session-grade"><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option></select></label>
             <label>Class / section<input id="session-section" placeholder="e.g. 10A"></label>
-            <label class="wide">Topic / question set<select id="session-bank"><option value="">Built-in Grammar Questions</option></select></label>
+            <label class="wide session-topic-picker">Choose the topic / question set for this game<select id="session-bank"><option value="">Built-in questions (default)</option></select><small id="session-bank-status" class="field-help">Saved question sets for the selected grade will appear here. Choose one to load its questions into gameplay.</small></label>
             <label>Game mode<select id="session-mode"><option value="endless">Endless Survival</option><option value="fixed">Fixed Waves</option></select></label>
             <label>Time limit<select id="session-minutes"><option>5</option><option selected>10</option><option>15</option><option>20</option><option>30</option><option>45</option><option>60</option><option>90</option></select></label>
             <label>Question interval<select id="session-interval"><option>30</option><option selected>45</option><option>60</option><option>90</option></select></label>
@@ -84,7 +84,7 @@
           </div>
           <div class="bank-manual-actions"><label>Correct answer<select id="bank-correct"><option value="">Choose answer</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></label><button class="button ghost" type="submit">Add to draft</button></div>
         </form>
-        <div id="bank-list" class="bank-list"><div class="empty">Your saved question sets will appear here.</div></div>
+        <section class="saved-bank-section"><div class="saved-bank-heading"><div><h3>Saved question sets</h3><p>Every saved quiz appears here, organized by grade. These sets are also available in the game topic selector above.</p></div><span class="step">SAVED</span></div><div id="bank-list" class="bank-list"><div class="empty">Your saved question sets will appear here.</div></div></section>
         <input id="bank-edit-id" type="hidden" value="">
       </section>
       <section id="session-detail" class="panel detail-panel hidden">
