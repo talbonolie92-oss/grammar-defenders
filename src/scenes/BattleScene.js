@@ -1,8 +1,8 @@
 const LANES = 5;
 const TILE_W = 108;
-const TILE_H = 54;
+const TILE_H = 68;
 const GRID_X = 72;
-const GRID_Y = 38;
+const GRID_Y = 48;
 const GRID_W = TILE_W * 7;
 const GRID_H = TILE_H * LANES;
 
@@ -159,7 +159,7 @@ export function createGameScene() {
       // Spawn the first attacker immediately so the battlefield never starts empty.
       this.spawnEnemySafely();
       this.spawnTimer = this.time.addEvent({
-        delay: 815,
+        delay: this.mobilePerformanceMode ? 1050 : 815,
         loop: true,
         callback: () => this.spawnEnemySafely()
       });
@@ -179,7 +179,7 @@ export function createGameScene() {
       this.worldGraphics = g;
       // Distant twilight sky and layered mountain silhouettes.
       g.fillGradientStyle(0x142b43, 0x1d4050, 0x426b58, 0x315b4d, 1);
-      g.fillRect(0, 0, 960, 340);
+      g.fillRect(0, 0, 960, 420);
       g.fillStyle(0x9ac9a0, 0.12);
       g.fillCircle(770, 48, 58);
       g.fillStyle(0xd9efbb, 0.13);
@@ -217,9 +217,9 @@ export function createGameScene() {
           if ((lane + col) % 3 === 0) {
             g.fillStyle(0xc6e69a, 0.25);
             g.fillCircle(x + 21, y + 22, 2.5);
-            g.fillCircle(x + 83, y + 61, 2);
+            g.fillCircle(x + 83, y + 49, 2);
             g.fillStyle(0x244d3e, 0.25);
-            g.fillEllipse(x + 54, y + 70, 26, 5);
+            g.fillEllipse(x + 54, y + 53, 26, 5);
           }
           // Tiny rune stones give each tile a readable fantasy identity.
           if ((lane * 7 + col) % 5 === 0) {
@@ -1039,7 +1039,7 @@ export function createGameScene() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
       const bossWave = this.wave % 5 === 0;
       const activeEnemyCap = this.mobilePerformanceMode
-        ? (bossWave ? 30 : (this.wave > 5 ? 24 : 20))
+        ? (bossWave ? 12 : (this.wave > 5 ? 10 : 8))
         : (bossWave ? 46 : (this.wave > 5 ? 40 : 20));
       if (this.enemies.length >= activeEnemyCap) return;
 
