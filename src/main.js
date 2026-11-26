@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=tablet-stability-9";
+import { createGameScene } from "./scenes/BattleScene.js?v=tablet-stability-10";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
