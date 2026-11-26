@@ -607,6 +607,13 @@ export function createGameScene() {
       }
       this.energy -= cost;
       defender.level = nextLevel;
+      const evolutionNames = {
+        archer: "Gatling Ranger", guardian: "Aegis Bastion", mage: "Glacial Archmage",
+        ember: "Inferno Sage", volt: "Tempest Conductor", thorn: "Worldroot Dragon",
+        knight: "Iron Juggernaut", phoenix: "Solar Ascendant", sunwell: "Grand Sunwell",
+        titan: "Colossus Breaker", stormcaller: "Storm Sovereign", runeblade: "Rune Warden"
+      };
+      defender.evolutionName = nextLevel === 3 ? evolutionNames[defender.unitType] : null;
       const multiplier = nextLevel === 2 ? 1.5 : 2;
       const base = this.unitStats[defender.unitType];
       const vanguardChoices = (defender.upgradePaths || []).filter(path => path === "vanguard").length;
@@ -658,7 +665,7 @@ export function createGameScene() {
       }
       this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
       this.updateHud();
-      this.message.textContent = defender.stats.name + " reached Tier " + nextLevel + "! Choose a specialization.";
+      this.message.textContent = (defender.evolutionName || defender.stats.name) + " reached Tier " + nextLevel + "! Choose a specialization.";
       this.playSound("deploy");
       this.showUpgradeChoices(defender, nextLevel);
     }
@@ -675,7 +682,7 @@ export function createGameScene() {
       const heading = this.add.text(480, 27, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
         fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
       }).setOrigin(.5);
-      const sub = this.add.text(480, 50, defender.stats.name + " — choose one permanent upgrade", {
+      const sub = this.add.text(480, 50, (defender.evolutionName || defender.stats.name) + " — choose one permanent upgrade", {
         fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
       }).setOrigin(.5);
       overlay.add([shade, panel, heading, sub]);
@@ -1078,7 +1085,8 @@ export function createGameScene() {
       // The opening Grunt now survives five basic Archer hits. Elite classes
       // receive a meaningful durability jump, then scale with later waves.
       const baseHp = 5 + Math.floor((this.wave - 1) / 3);
-      const waveMultiplier = 1 + (this.wave - 1) * 0.18 + Math.max(0, this.wave - 5) * 0.14;
+      // Ease late-game durability growth slightly so upgraded teams can still clear dense final waves.
+      const waveMultiplier = 1 + (this.wave - 1) * 0.18 + Math.max(0, this.wave - 5) * 0.10;
       const enemyLevel = enemyRoster.indexOf(enemyType);
       const hpScale = [1, 1.2, 2, 1.6, 1.8, 1.7, 1.9, 2.4, 2.8, 4.2][Math.max(0, enemyLevel)];
       const hp = Math.max(5, Math.round((baseHp + [0, 1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
@@ -1251,7 +1259,15 @@ export function createGameScene() {
               target = candidate;
             }
           }
-          if (target) { this.fireProjectile(d, target); d.cooldown = d.stats.cooldown * (this.teamSurgeUntil && this.time.now < this.teamSurgeUntil ? 0.72 : 1); }
+          if (target) {
+            this.fireProjectile(d, target);
+            // Tier III Archer evolves into a Gatling Ranger: two rapid side-bolts add focused burst damage.
+            if (d.unitType === "archer" && d.level >= 3) {
+              this.fireProjectile(d, target, 0.55, true, -5);
+              this.fireProjectile(d, target, 0.55, true, 5);
+            }
+            d.cooldown = d.stats.cooldown * (this.teamSurgeUntil && this.time.now < this.teamSurgeUntil ? 0.72 : 1);
+          }
         }
       });
       // Remove poisoned defenders after iteration so no neighboring unit is skipped.
@@ -1271,11 +1287,23 @@ export function createGameScene() {
           if (p.target.group.active) {
             this.damageEnemy(p.target, p.damage);
             if (p.unitType === "mage" && p.target.group.active) {
-              if (p.level >= 3) p.target.stunnedUntil = this.time.now + 1500;
-              else p.target.slowUntil = this.time.now + (p.level === 2 ? 4500 : 3000);
-              this.message.textContent = "Frost magic slows an enemy!";
+              if (p.level >= 3) {
+                p.target.stunnedUntil = this.time.now + 1500;
+                // Glacial Archmage sends a short frost pulse through nearby enemies in the same lane.
+                for (let i = 0; i < this.enemies.length; i++) {
+                  const nearby = this.enemies[i];
+                  if (nearby !== p.target && nearby.group.active && nearby.lane === p.target.lane && Math.abs(nearby.x - p.target.x) < 145) {
+                    nearby.slowUntil = Math.max(nearby.slowUntil || 0, this.time.now + 2800);
+                    if (nearby.isBoss) nearby.stunnedUntil = Math.max(nearby.stunnedUntil || 0, this.time.now + 650);
+                  }
+                }
+                this.message.textContent = "GLACIAL BURST! Nearby attackers frozen in place.";
+              } else {
+                p.target.slowUntil = this.time.now + (p.level === 2 ? 4500 : 3000);
+                this.message.textContent = "Frost magic slows an enemy!";
+              }
             }
-            if (p.unitType === "archer" && p.level >= 2) {
+            if (p.unitType === "archer" && p.level >= 2 && !p.bonusShot) {
               let pierced = 0;
               const maxPierce = p.level >= 3 ? 2 : 1;
               for (let i = 0; i < this.enemies.length && pierced < maxPierce; i++) {
@@ -1548,11 +1576,12 @@ export function createGameScene() {
       projectile.setActive(false).setVisible(false);
       projectile.target = null;
       projectile.damage = 0;
+      projectile.bonusShot = false;
       if (this.projectilePool.length < 180) this.projectilePool.push(projectile);
       else projectile.destroy();
     }
 
-    fireProjectile(defender, target) {
+    fireProjectile(defender, target, damageMultiplier = 1, bonusShot = false, yOffset = 0) {
       const stats = defender.stats;
       const projectileStyle = {
         archer: [0xffe4a5, 4], mage: [0xb9f4ff, 7],
@@ -1574,12 +1603,13 @@ export function createGameScene() {
         p.setStrokeStyle(1.5, 0xffffff, .75);
         p.setDepth(30);
       }
-      p.setPosition(defender.x + 18, defender.y - 5).setActive(true).setVisible(true);
+      p.setPosition(defender.x + 18, defender.y - 5 + yOffset).setActive(true).setVisible(true);
       p.target = target;
-      p.damage = stats.damage;
+      p.damage = stats.damage * damageMultiplier;
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       p.level = defender.level || 1;
+      p.bonusShot = bonusShot;
       this.projectiles.push(p);
       if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 110) {
         this.lastShotSoundAt = this.time.now;
@@ -1960,10 +1990,28 @@ export function createGameScene() {
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer) this.questionTimer.paused = true;
       this.stopMusic();
-      this.add.rectangle(480, 170, 960, 340, 0x081323, .78);
-      this.add.text(480, 145, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), { fontFamily: "Nunito", fontSize: "34px", color: "#fff1c5", fontStyle: "900" }).setOrigin(.5);
-      this.add.text(480, 190, "Press Restart to defend the frontier again.", { fontFamily: "Nunito", fontSize: "18px", color: "#ffffff" }).setOrigin(.5);
-      this.message.textContent = won ? "Victory!" : "Defeat!";
+      const overlay = this.add.container(0, 0).setDepth(2000);
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x06101e, .88).setInteractive();
+      const panel = this.add.rectangle(480, 170, 720, 270, 0x142b43, .98).setStrokeStyle(3, won ? 0x9af0c2 : 0xffa1a1);
+      const title = this.add.text(480, 83, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), {
+        fontFamily: "Nunito", fontSize: "30px", color: won ? "#c8ffda" : "#ffd1d1", fontStyle: "1000",
+        align: "center", wordWrap: { width: 650 }
+      }).setOrigin(.5);
+      const accuracy = this.questionsAnswered ? Math.round(this.correctAnswers / this.questionsAnswered * 100) : 0;
+      const summary = this.add.text(480, 143,
+        "WAVE " + this.wave + "     •     " + this.kills + " KILLS     •     " + accuracy + "% ACCURACY\\n" +
+        this.questionsAnswered + " QUESTIONS ANSWERED     •     KEEP " + this.baseHealth + "%",
+        { fontFamily: "Nunito", fontSize: "13px", color: "#d9e9f5", fontStyle: "900", align: "center", lineSpacing: 9 }
+      ).setOrigin(.5);
+      const restartButton = this.add.rectangle(480, 225, 270, 48, 0x8be6b6, 1).setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
+      const restartLabel = this.add.text(480, 225, "PLAY AGAIN  •  BACK TO SETUP", {
+        fontFamily: "Nunito", fontSize: "13px", color: "#123b35", fontStyle: "1000", letterSpacing: .5
+      }).setOrigin(.5);
+      restartButton.on("pointerover", () => restartButton.setFillStyle(0xb4f5cc));
+      restartButton.on("pointerout", () => restartButton.setFillStyle(0x8be6b6));
+      restartButton.on("pointerdown", () => window.location.reload());
+      overlay.add([shade, panel, title, summary, restartButton, restartLabel]);
+      this.message.textContent = won ? "Victory! Session complete — result saved." : "Session complete — result saved.";
       this.playSound(won ? "victory" : "defeat");
     }
 
