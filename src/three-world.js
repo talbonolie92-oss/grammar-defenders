@@ -230,10 +230,17 @@ export async function createThreeWorld(container) {
     return root;
   };
   let lastActorSync = 0;
+  let performanceMode = false;
   const seenActors = new Set();
   const activeProjectiles = new Set();
   const syncActors = (defenders = [], enemies = [], projectiles = [], now = 0) => {
-    if (now - lastActorSync < 40) return;
+    const crowded = enemies.length > 22 || projectiles.length > 48;
+    // Enter reduced 3D actor detail quickly under load; leave only after the
+    // battlefield has calmed down to avoid repeatedly rebuilding actor rigs.
+    if (crowded) performanceMode = true;
+    else if (enemies.length < 14 && projectiles.length < 24) performanceMode = false;
+    const syncInterval = performanceMode ? 85 : 40;
+    if (now - lastActorSync < syncInterval) return;
     lastActorSync = now;
     const seen = seenActors;
     seen.clear();
@@ -265,9 +272,11 @@ export async function createThreeWorld(container) {
       seen.add(actor);
     });
     syncList(defenders, false);
-    syncList(enemies, true);
+    // Phaser's lightweight 2D attackers remain visible and fully interactive.
+    // Under heavy waves, skip their multi-mesh 3D models to protect frame rate.
+    if (!performanceMode) syncList(enemies, true);
     activeProjectiles.clear();
-    projectiles.forEach(projectile => {
+    if (!performanceMode) projectiles.forEach(projectile => {
       if (!projectile?.active) return;
       let mesh = projectileMeshes.get(projectile);
       if (!mesh) {
@@ -312,8 +321,9 @@ export async function createThreeWorld(container) {
 
   let raf = 0;
   let lastFrame = 0;
-  const frameInterval = isSmallScreen ? 42 : 32;
+  const normalFrameInterval = isSmallScreen ? 42 : 32;
   const render = now => {
+    const frameInterval = performanceMode ? (isSmallScreen ? 100 : 66) : normalFrameInterval;
     if (!document.hidden && now - lastFrame >= frameInterval) {
       lastFrame = now;
       portal.rotation.z = now * 0.00022;
