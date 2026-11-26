@@ -176,3 +176,10 @@ assert.match(battle, /details,\s*reducedVisuals: denseSpawn/, "Enemy visual mode
 assert.match(battle, /if \(e\.feet && !reducedCombatEffects\)/, "Dense combat must skip per-enemy decorative foot animation.");
 assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/, "Enemy active-count limits must remain enforced during stress waves.");
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
+
+
+// Mobile rendering and question readability regression checks.
+assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
+assert.ok(battle.includes("const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32"), "Question text must use larger readable sizes with a long-question fallback.");
+assert.ok(battle.includes('fontSize: compactAnswers ? "19px" : "20px"'), "Answer choices must be enlarged for classroom phone readability.");
+assert.ok(main.includes("fps: { target: isSmallScreen ? 50 : 60"), "Mobile gameplay must use a lighter frame target while desktop retains 60 FPS.");
