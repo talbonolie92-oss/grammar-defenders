@@ -25,7 +25,7 @@
         "attempts": {
           ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$attemptId": {
-            ".write": "auth != null && !data.exists() && root.child('sessions').child($sessionId).child('players').child(auth.uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child(auth.uid).val() !== true",
+            ".write": "auth != null && root.child('sessions').child($sessionId).child('players').child(auth.uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child(auth.uid).val() !== true && (!data.exists() || data.child('playerId').val() === auth.uid)",
             ".validate": "newData.hasChildren(['playerId', 'question', 'selectedAnswer', 'correctAnswer', 'correct', 'createdAt']) && newData.child('playerId').val() === auth.uid && newData.child('correct').isBoolean()"
           }
         },
