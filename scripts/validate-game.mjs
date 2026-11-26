@@ -8,6 +8,7 @@ const main = read("../src/main.js");
 const world = read("../src/three-world.js");
 const html = read("../index.html");
 const css = read("../css/game.css");
+const databaseRules = JSON.parse(read("../database.rules.json"));
 
 assert.match(battle, /const LANES = 5;/, "Battlefield must contain exactly five lanes.");
 assert.match(battle, /const TILE_W = 108;/, "Seven-column tile width must remain defined.");
@@ -205,3 +206,9 @@ assert.ok(main.includes('dbWatch(".info/connected"'), "Firebase connectivity mus
 assert.ok(main.includes("if (navigator.onLine === false) throw new Error"), "Offline final results must remain pending instead of being reported as synced.");
 assert.ok(battle.includes("Number(saved.energy ?? 150)"), "A zero-energy checkpoint must restore as zero, not reset to the starting energy.");
 assert.ok(battle.includes("Number(saved.baseHealth ?? 100)"), "A zero-health checkpoint must restore as zero, not reset to full health.");
+
+
+// Firebase rules must allow idempotent retries only for the authenticated player's own attempt.
+const attemptWriteRule = databaseRules.rules.sessions.$sessionId.attempts.$attemptId[".write"];
+assert.match(attemptWriteRule, /data\\.child\\('playerId'\\)\\.val\\(\\) === auth\\.uid/, "A student may retry only their own existing question-attempt record.");
+assert.match(attemptWriteRule, /blockedPlayers/, "Blocked students must not be able to submit or retry attempts.");
