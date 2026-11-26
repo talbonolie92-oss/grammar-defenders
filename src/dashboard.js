@@ -184,6 +184,7 @@ $("docx-extract").addEventListener("click",async()=>{
   if(!/\.docx$/i.test(file.name)){setStatus("docx-status","Please upload a .DOCX Word document.");return;}
   if(file.size>10*1024*1024){setStatus("docx-status","The document must be 10 MB or smaller.");return;}
   setStatus("docx-status","Reading Word document…");
+  $("docx-debug")?.classList.add("hidden");
   const loadMammoth=()=>new Promise((resolve,reject)=>{
     if(window.mammoth?.extractRawText)return resolve(window.mammoth);
     const urls=["https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js","https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js","https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"];let index=0;
@@ -196,8 +197,11 @@ $("docx-extract").addEventListener("click",async()=>{
     if(source.length<20)throw new Error("No readable question text was found. Scanned/image-only Word documents are not supported.");
     if(source.length>60000)throw new Error("The extracted document exceeds 60,000 characters. Split it into smaller files.");
     if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
+    const preview=$("docx-debug"),previewText=$("docx-extracted-preview");
+    if(previewText)previewText.textContent=source;
+    if(preview)preview.classList.remove("hidden");
     const parsed=parseDocxQuestions(source);
-    if(!parsed.questions.length)throw new Error("No question blocks with at least two labeled choices (A–D) were detected. Check that each choice starts with A., B., C., or D.");
+    if(!parsed.questions.length)throw new Error("The Word text was read, but the question layout was not recognized. Open “View text extracted from Word” below and send me a screenshot or attach the DOCX so I can match its exact format.");
     if(bankDraft.length+parsed.questions.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
     bankDraft.push(...parsed.questions);updateBankDraftCount();
     let message="Organized "+parsed.questions.length+" questions. Review each item, mark its correct answer, then save.";
