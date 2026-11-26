@@ -19,7 +19,7 @@ assert.match(battle, /defeatedByPoison = true[\s\S]*?for \(let i = this\.defende
 assert.doesNotMatch(battle, /removeModeButton\?\.setAttribute\("aria-pressed", "false"\);\s*this\.upgradeMode = false;/, "Unit selection must not repeat the mode-reset block.");
 assert.match(battle, /this\.enemies\.push\(enemy\)/, "Enemy spawning must register attackers.");
 assert.match(battle, /const dt = Math\.min\(delta \/ 1000, 0\.35\);/, "Combat delta time must be declared as executable code.");
-assert.doesNotMatch(battle, /spikes\\\\n\\s+const dt/, "Combat delta declaration must not be swallowed by a line comment.");
+assert.doesNotMatch(battle, /spikesthis\\.enemies\\.length > 6 \\|\\| this\\.projectiles\\.length > 18\\n\\s+const dt/, "Combat delta declaration must not be swallowed by a line comment.");
 
 const units = ["sunwell","archer","guardian","mage","ember","volt","thorn","knight","phoenix","titan","stormcaller","runeblade"];
 for (const unit of units) {
@@ -170,7 +170,7 @@ assert.match(battle, /window\.clearInterval\(this\.battleClockInterval\)/, "Sess
 assert.match(battle, /this\.questionOverlay\?\.destroy\(true\)/, "Ending a session must clean up any active question overlay.");
 assert.match(battle, /const reducedCombatEffects = this\.mobilePerformanceMode[\s\S]*?this\.enemies\.length > 24 \|\| this\.projectiles\.length > 64/, "Phones must activate lightweight combat visuals at a lower load.");
 assert.match(battle, /hitFeedbackReady && !reducedCombatEffects/, "Dense combat must suppress nonessential per-hit tweens.");
-assert.match(battle, /const denseSpawn = this\.enemies\.length >= \(this\.mobilePerformanceMode \? 12 : 22\) && !isBoss/, "Phone minion spawns must enter lightweight visual mode earlier.");
+assert.match(battle, /const denseSpawn = this\.enemies\.length >= \(this\.mobilePerformanceMode \? 6 : 22\) && !isBoss/, "Phone minion spawns must enter lightweight visual mode earlier.");
 assert.match(battle, /e\.details\?\.forEach\(part => part\.setVisible\(!simplifyEnemy\)\)/, "Existing enemies must shed decorative parts under load and restore them afterward.");
 assert.match(battle, /else if \(!denseSpawn\)/, "Dense minion spawns must skip portal particles and repeated scale tweens.");
 assert.match(battle, /details,\s*reducedVisuals: denseSpawn/, "Enemy visual mode state must be tracked for safe transitions.");
@@ -185,13 +185,16 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=phone-fullscreen-field-8"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=tablet-stability-9"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
-assert.ok(main.includes("height: 420,"), "The phone battlefield must use the taller 960:420 logical canvas.");
+assert.ok(main.includes("height: 420,"), "The battlefield must use the expanded 960:420 logical canvas.");
+assert.ok(main.includes('matchMedia?.("(pointer: coarse)")') && main.includes("navigator.maxTouchPoints > 0"), "iPads and touch tablets must use the touch-device performance profile.");
+assert.ok(battle.includes("this.cameras.main.setZoom(1.12)"), "Touch devices must enlarge the five-lane battlefield without clipping it.");
+assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=phone-fullscreen-field-7"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=tablet-stability-9"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
@@ -199,7 +202,7 @@ assert.ok(battle.includes("const questionFontSize = phoneQuestionLayout") && bat
 assert.ok(battle.includes("handleQuestionPointer(pointer)") && battle.includes("questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + 4 })"), "Question taps must map by Phaser camera coordinates rather than scaled object hit tests.");
 assert.ok(battle.includes("g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72)"), "Five battlefield lanes must have high-contrast row boundaries.");
 assert.ok(battle.includes("phoneQuestionLayout ? 198") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
-assert.ok(main.includes("fps: { target: isSmallScreen ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
+assert.ok(main.includes("fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
 
 
 // Refresh recovery regression checks.
@@ -238,13 +241,13 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
-assert.ok(html.includes("src/main.js?v=phone-fullscreen-field-7"), "The entry module cache token must refresh after phone touch accuracy changes.");
+assert.ok(html.includes("src/main.js?v=tablet-stability-10"), "The entry module cache token must refresh after tablet stability changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=phone-readability-6"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=tablet-stability-10"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=phone-readability-6"), "The BattleScene cache token must refresh after phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=tablet-stability-10"), "The BattleScene cache token must refresh after phone question layout changes.");
