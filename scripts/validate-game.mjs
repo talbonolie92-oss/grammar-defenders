@@ -283,7 +283,7 @@ assert.ok(battle.includes('this.add.rectangle(480, 210, 960, 420, 0x071321, .92)
 assert.ok(battle.includes('this.add.rectangle(480, 210, 960, 420, 0x06101e, .88)'), "The end-game overlay must cover the full 960x420 battlefield.");
 assert.ok(battle.includes('const phoneQuestionLayout = this.phoneLandscape;') && battle.includes('phoneQuestionLayout ? 410 : 360'), "Phone question panels must use the taller screen without changing desktop sizing.");
 assert.ok(battle.includes('const continueY = this.phoneLandscape ? 394 : 365;'), "Continue controls must not overlap the fourth phone answer.");
-assert.ok(battle.includes('this.add.text(480, this.phoneLandscape ? 370 : 335'), "Question feedback must be placed below the answer rows.");
+assert.ok(battle.includes('this.add.text(480, this.phoneLandscape ? 364 : 335'), "Question feedback must be placed below the answer rows.");
 
 
 // Lifecycle and offline-retry regression checks.
