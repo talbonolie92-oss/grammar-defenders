@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=phone-readability-6";
+import { createGameScene } from "./scenes/BattleScene.js?v=phone-fullscreen-field-8";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
