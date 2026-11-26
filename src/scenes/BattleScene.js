@@ -34,6 +34,9 @@ export function createGameScene() {
       this.enemies = [];
       this.projectiles = [];
       this.projectilePool = [];
+      // Phones get a lower simultaneous-enemy budget to protect frame time and touch input.
+      this.mobilePerformanceMode = Boolean(window.matchMedia?.("(max-width: 900px)").matches ||
+        (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4));
       this.selectedTile = null;
       this.questionIndex = 0;
       this.bossQuestionIndex = 0;
@@ -1015,7 +1018,10 @@ export function createGameScene() {
     spawnEnemy() {
       if (this.gameOver || !this.waveActive || this.enemiesSpawnedThisWave >= this.enemiesPerWave) return;
       const bossWave = this.wave % 5 === 0;
-      if (this.enemies.length >= (bossWave ? 46 : (this.wave > 5 ? 40 : 20))) return;
+      const activeEnemyCap = this.mobilePerformanceMode
+        ? (bossWave ? 30 : (this.wave > 5 ? 24 : 20))
+        : (bossWave ? 46 : (this.wave > 5 ? 40 : 20));
+      if (this.enemies.length >= activeEnemyCap) return;
 
       const lane = Phaser.Math.Between(0, LANES - 1);
       // Spawn attackers inside the final tile so they enter the visible lane grid.
