@@ -93,7 +93,7 @@ $("manual-question-form").addEventListener("submit",e=>{
   if(bankDraft.length>=300){setStatus("bank-status","A question set can contain up to 300 questions. Save this set or clear the draft before adding more.");return;}
   try{
     if($("bank-correct").value==="")throw new Error("Choose the correct answer before adding this question.");
-    const item=normalizeBankQuestion({q:$("bank-q").value,a:[$("bank-a1").value,$("bank-a2").value,$("bank-a3").value],correct:Number($("bank-correct").value),grade:selectedBankGrade()},$("bank-subject").value,$("bank-topic").value);
+    const item=normalizeBankQuestion({q:$("bank-q").value,a:[$("bank-a1").value,$("bank-a2").value,$("bank-a3").value,$("bank-a4").value],correct:Number($("bank-correct").value),grade:selectedBankGrade()},$("bank-subject").value,$("bank-topic").value);
     bankDraft.push(item);updateBankDraftCount();$("manual-question-form").reset();setStatus("bank-status","Question added to draft.");
   }catch(error){setStatus("bank-status",error.message);}
 });
