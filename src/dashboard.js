@@ -200,7 +200,7 @@ $("docx-extract").addEventListener("click",async()=>{
     if(bankDraft.length+parsed.questions.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
     bankDraft.push(...parsed.questions);updateBankDraftCount();
     let message="Organized "+parsed.questions.length+" questions. Review each item, mark its correct answer, then save.";
-    if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" line(s) could not be organized; check the document formatting.";
+    if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" line(s) need checking: "+parsed.unparsed.slice(0,3).join(" | ")+(parsed.unparsed.length>3?" …":"");
     setStatus("docx-status",message);setStatus("bank-status",message);
     if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
     $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
