@@ -15,7 +15,9 @@ for (const value of [0, 1, 2, 3]) {
   assert.ok(html.includes('<option value="' + value + '">' + "ABCD"[value] + "</option>"), "Missing correct-answer option " + "ABCD"[value]);
 }
 assert.match(dashboard, /a:\[\$\("bank-a1"\)\.value,\$\("bank-a2"\)\.value,\$\("bank-a3"\)\.value,\$\("bank-a4"\)\.value\]/, "Manual submission must pass all four choices.");
-assert.match(dashboard, /bankDraft\.push\(\.\.\.parsed\.questions\)/, "DOCX questions should flow directly into the shared draft.");
+assert.match(dashboard, /const importedQuestions=parsed\.questions\.map/, "DOCX parser output must be normalized into the draft question shape.");
+assert.match(dashboard, /bankDraft\.push\(\.\.\.importedQuestions\)/, "DOCX questions should flow directly into the shared draft.");
+assert.match(dashboard, /bank-draft-preview"\)\.children\.length!==bankDraft\.length/, "DOCX import must verify that every draft question was rendered.");
 assert.ok(html.indexOf('id="bank-draft-area"') < html.indexOf('id="manual-question-form"'), "Imported question review must appear before the optional manual-entry form.");
 assert.match(dashboard, /preview\.innerHTML=bankDraft\.length\?/, "Draft review must render an explicit empty state and imported question cards.");
 assert.match(dashboard, /\$\("bank-draft-area"\)\.scrollIntoView/, "After DOCX import, scroll directly to the imported question review area.");
