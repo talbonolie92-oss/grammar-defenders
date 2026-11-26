@@ -79,12 +79,13 @@ function updateBankDraftCount(){
 }
 function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
-  const eligible=bankCache.filter(b=>grade==="Mixed"||getBankGrade(b)===grade);
+  const visibleBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12"].includes(getBankGrade(b)));
+  const eligible=visibleBanks.filter(b=>getBankGrade(b)===grade);
   select.innerHTML='<option value="">Built-in Grammar Questions</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
   if(eligible.some(b=>b.id===current))select.value=current;
   const groups={};
-  bankCache.forEach(b=>{const g=getBankGrade(b);(groups[g]??=[]).push(b);});
-  const order=["Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12","Mixed"];
+  visibleBanks.forEach(b=>{const g=getBankGrade(b);(groups[g]??=[]).push(b);});
+  const order=["Grade 10","Grade 11","Grade 12"];
   $("bank-list").innerHTML=bankCache.length?order.filter(g=>groups[g]?.length).map(g=>'<section class="bank-grade-group"><h3>'+escapeHtml(g)+'</h3>'+groups[g].map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+escapeHtml(b.subject||"English")+' • '+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join("")+'</section>').join(""):'<div class="empty">No saved topics yet. Add a topic and questions above.</div>';
 }
 $("manual-question-form").addEventListener("submit",e=>{
