@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=offline-queue-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=reconnect-sync-2";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
