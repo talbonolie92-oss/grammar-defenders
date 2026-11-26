@@ -40,7 +40,9 @@ function watchQuestionBanks(){
 }
 function selectedBankGrade(){return $("bank-grade").value||"Mixed";}
 function getBankGrade(bank){
-  if(bank.grade)return bank.grade;
+  const saved=String(bank.grade||"").trim();
+  if(/^Grade\s*(7|8|9|10|11|12)$/i.test(saved))return saved.replace(/\s+/g," ");
+  if(saved==="Mixed")return "Mixed";
   const grades=[...new Set((bank.questions||[]).map(q=>String(q.grade||"").trim()).filter(Boolean))];
   if(grades.length===1&&/^Grade\s*(7|8|9|10|11|12)$/i.test(grades[0]))return grades[0].replace(/\s+/g," ");
   return "Mixed";
