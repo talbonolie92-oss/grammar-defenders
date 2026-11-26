@@ -262,6 +262,7 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
+assert.ok(main.includes("firebase.js?v=free-seat-capacity-1"), "Firebase client module cache must refresh with the new transaction helper.");
 assert.ok(main.includes("reserveClassroomSeat") && main.includes("dbTransaction"), "New classroom students must reserve a seat through an atomic Realtime Database transaction.");
 assert.equal(Object.keys(databaseRules.rules.sessions.$sessionId.seats).includes("$seatId"), true, "The free seat ledger must expose individual protected seat records.");
 assert.ok(databaseRules.rules.sessions.$sessionId.seats[".read"] === true, "Students must be able to inspect anonymous seat occupancy without reading other students' personal records.");
