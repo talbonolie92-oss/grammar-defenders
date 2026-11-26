@@ -204,8 +204,8 @@ async function initializeStudentJoin() {
       const blocked = await dbGet("sessions/" + sessionId + "/blockedPlayers/" + studentUid);
       if (blocked.exists() && blocked.val() === true) throw new Error("Your teacher removed you from this session. Please speak with your teacher.");
       // Do not read the entire players collection here: database rules intentionally
-      // keep other students' names and class details private. The Firebase rule on
-      // this student's own player record enforces the 30-player session limit.
+      // keep other students' names and class details private. Verify only this
+      // student's record and blocked status before allowing a join.
       const existingPlayer = await dbGet("sessions/" + sessionId + "/players/" + studentUid);
       const hasPendingSaves = pendingAttempts.length > 0 || Boolean(pendingResult);
       if (studentSession.status === "ended" && !hasPendingSaves) throw new Error("This classroom session has already ended.");
