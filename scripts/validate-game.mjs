@@ -185,7 +185,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=phone-fullscreen-field-7"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=phone-fullscreen-field-8"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
