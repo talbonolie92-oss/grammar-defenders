@@ -273,10 +273,10 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats[".read"] === true, "Stud
 assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includes("!data.exists()"), "A seat may only be claimed while it is empty.");
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 
-assert.ok(html.includes("src/main.js?v=visual-consistency-1"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(html.includes("src/main.js?v=visual-consistency-2"), "The entry module cache token must refresh after tablet stability changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=visual-consistency-1"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=visual-consistency-2"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
