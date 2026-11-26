@@ -155,8 +155,27 @@ $("docx-extract").addEventListener("click",async()=>{
     const parsed=parseDocxQuestions(source,{grade:selectedBankGrade(),topic:$("bank-topic").value.trim()});
     if(!parsed.questions.length){const sample=parsed.unparsed.slice(0,4).join(" | ");throw new Error("Word text was extracted, but no complete question was recognized. Check the extracted text below. "+sample);}
     if(bankDraft.length+parsed.questions.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
-    bankDraft.push(...parsed.questions);updateBankDraftCount();
-    let message="Organized "+parsed.questions.length+" questions. Review each item, mark its correct answer, then save.";
+    const importedQuestions=parsed.questions.map((raw,index)=>{
+      const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.choices)?raw.choices:[]);
+      const item={
+        q:String(raw.q??raw.question??"").trim(),
+        a:answers.map(choice=>String(choice?.text??choice??"").trim()),
+        correct:null,
+        grade:String(raw.grade||selectedBankGrade()),
+        topic:String(raw.topic||$("bank-topic").value.trim()||"General"),
+        effect:String(raw.effect||"GRAMMAR POWER!")
+      };
+      if(!item.q||item.a.length<2||item.a.length>4||item.a.some(answer=>!answer)){
+        throw new Error("Question "+(index+1)+" could not be prepared for draft review. Check its extracted question and choices.");
+      }
+      return item;
+    });
+    bankDraft.push(...importedQuestions);
+    updateBankDraftCount();
+    if($("bank-draft-preview").children.length!==bankDraft.length){
+      throw new Error("Questions were extracted but the draft review could not display them. Please refresh and try again.");
+    }
+    let message="Organized "+importedQuestions.length+" questions. "+bankDraft.length+" total questions are now visible in Draft Review. Review each item, mark its correct answer, then save.";
     if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" incomplete or unrecognized block(s) were skipped; check the extracted text and source document before saving.";
     setStatus("docx-status",message);setStatus("bank-status",message);
     if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
