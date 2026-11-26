@@ -1153,7 +1153,7 @@ export function createGameScene() {
       this.waveActive = false;
       this.waveTransitioning = true;
       this.spawnTimer.paused = true;
-      if (!this.endlessMode && this.wave >= this.maxWaves) {
+      if (!this.endlessMode && this.wave >= this.maxWaves && this.wave % 5 !== 0) {
         this.endGame(true);
         return;
       }
@@ -1169,6 +1169,7 @@ export function createGameScene() {
 
     showBossAscension() {
       this.bossAscensionActive = true;
+      this.bossAscensionFinal = !this.endlessMode && this.wave >= this.maxWaves;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer) this.questionTimer.paused = true;
       this.bossAscensionOverlay = this.add.container(0, 0).setDepth(980);
@@ -1260,7 +1261,14 @@ export function createGameScene() {
         ? defender.ascensionName + " ascended! The next assault begins soon."
         : "Ascension skipped. The next assault begins soon.";
       this.updateHud();
-      this.time.delayedCall(1800, () => this.startNextWave());
+      this.time.delayedCall(1800, () => {
+        if (this.bossAscensionFinal) {
+          this.bossAscensionFinal = false;
+          this.endGame(true);
+        } else {
+          this.startNextWave();
+        }
+      });
     }
 
     startNextWave() {
