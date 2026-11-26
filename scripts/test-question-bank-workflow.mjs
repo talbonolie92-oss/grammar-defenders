@@ -54,7 +54,7 @@ assert.ok(main.includes('questions: Array.isArray(studentSession.questions) ? st
 assert.ok(battle.includes('this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS'), "Boss challenges must use selected lesson questions when a custom bank is active.");
 assert.ok(battle.includes('fontSize: questionFontSize + "px"') && battle.includes('item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32'), "Gameplay questions must use larger adaptive text for readability.");
 assert.ok(battle.includes('fontSize: phoneQuestionLayout ? "15px" : (compactAnswers ? "19px" : "20px")'), "Gameplay answer choices must use responsive readable text on phones and larger screens.");
-assert.ok(battle.includes('this.add.rectangle(480, 210, 850, 360'), "The question panel must use the expanded battlefield space.");
+assert.ok(battle.includes('this.add.rectangle(480, 210, 850, phoneQuestionLayout ? 410 : 360'), "The question panel must adapt to the expanded phone battlefield while preserving desktop sizing.");
 assert.ok((await readFile(new URL("../css/game.css", import.meta.url), "utf8")).includes("READABILITY PASS: larger challenge typography"), "The defender deck should be more compact to leave room for the battlefield.");
 assert.ok(css.includes(".session-topic-picker{") && css.includes(".saved-bank-section{"), "Topic selector and saved question list must be visually prominent.");
 
