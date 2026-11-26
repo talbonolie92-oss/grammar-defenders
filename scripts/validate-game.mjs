@@ -56,10 +56,10 @@ assert.match(world, /const z = \(38 \+ lane \* 54 \+ 27\) \/ 50 - 3\.4;/, "3D ti
 
 // Gameplay progression, question-bank, and combat regression checks.
 const expectedWaveCount = wave => wave === 1 ? 8
-  : wave <= 5 ? Math.min(20, 8 + Math.floor((wave - 1) * 1.2))
   : wave % 5 === 0
     ? Math.min(55, wave === 5 ? 21 : 32 + Math.floor(wave / 5) * 3 + Math.max(0, wave - 10) * 2)
-    : Math.min(55, 22 + (wave - 6) * 4);
+    : wave <= 5 ? Math.min(20, 8 + Math.floor((wave - 1) * 1.2))
+      : Math.min(55, 22 + (wave - 6) * 4);
 const checkedWaves = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,50];
 const expectedCounts = checkedWaves.map(expectedWaveCount);
 assert.deepEqual(expectedCounts.slice(0, 15), [8,9,10,11,21,22,26,30,34,38,42,46,50,54,51],
