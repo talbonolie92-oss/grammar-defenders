@@ -130,7 +130,7 @@ assert.match(battle, /window\.clearTimeout\(this\.questionResolutionTimer\)/, "Q
 assert.match(battle, /this\.wave % 5 === 0 && this\.lastAscensionWave !== this\.wave/, "Every cleared boss wave must offer one Ascension reward.");
 assert.match(battle, /showBossAscension\(\)/, "Boss reward selection overlay must exist.");
 assert.match(battle, /applyBossAscension\(existing\)/, "Players must be able to select a deployed defender for Ascension.");
-assert.match(battle, /defender\.stats\.energyRate = Math\.round\(\(defender\.stats\.energyRate \|\| base\.energyRate \|\| 7\) \* 3\)/, "Three-Headed Sunwell must triple energy production.");
+assert.ok(battle.includes("defender.stats.energyRate = Math.round((defender.stats.energyRate || base.energyRate || 7) * 3)"), "Three-Headed Sunwell must triple energy production.");
 assert.match(battle, /defender\.ascensionVolley/, "Ascended Archer must unlock its multi-shot volley.");
 assert.match(battle, /defender\.ascensionFreeze = true/, "Ascended Frost Mage must unlock its freeze ability.");
 assert.match(battle, /defender\.ascensionChain = true/, "Ascended lightning defenders must unlock chain power.");
