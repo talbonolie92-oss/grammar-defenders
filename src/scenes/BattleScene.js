@@ -1933,30 +1933,35 @@ export function createGameScene() {
       const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .88).setInteractive();
       const panel = this.add.rectangle(480, 170, 850, 330, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
       const topGlow = this.add.rectangle(480, 12, 838, 5, 0x91e5c2, .9);
+      const phoneQuestionLayout = this.mobilePerformanceMode && window.matchMedia?.("(orientation: landscape)").matches;
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
-        fontFamily: "Nunito", fontSize: "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
+        fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "12px" : "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: phoneQuestionLayout ? 1 : 2
       }).setOrigin(.5);
       const topic = this.add.text(480, 62, item.topic.toUpperCase(), {
-        fontFamily: "Nunito", fontSize: "14px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
+        fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "11px" : "14px", color: "#ffd779", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
-      const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32;
+      const questionFontSize = phoneQuestionLayout
+        ? (item.q.length > 170 ? 16 : item.q.length > 100 ? 18 : 20)
+        : (item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32);
       const question = this.add.text(480, 108, item.q, {
         fontFamily: "Nunito", fontSize: questionFontSize + "px", color: "#ffffff", fontStyle: "900",
-        align: "center", wordWrap: { width: 820 }, lineSpacing: 7
+        align: "center", wordWrap: { width: phoneQuestionLayout ? 780 : 820 }, lineSpacing: phoneQuestionLayout ? 1 : 7
       }).setOrigin(.5);
-      const instructionY = Math.max(153, 108 + question.height / 2 + 13);
+      if (phoneQuestionLayout) question.setFixedSize(780, 76);
+      const instructionY = phoneQuestionLayout ? 163 : Math.max(153, 108 + question.height / 2 + 13);
       const instruction = this.add.text(480, instructionY, "Choose the correct answer to unleash a battle power", {
-        fontFamily: "Nunito", fontSize: "15px", color: "#c8d8e9", fontStyle: "700"
+        fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "11px" : "15px", color: "#c8d8e9", fontStyle: "700"
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       const compactAnswers = item.a.length >= 4;
-      const answerStartY = Math.max(compactAnswers ? 180 : 188, instructionY + 25);
+      const answerStartY = phoneQuestionLayout ? 198 : Math.max(compactAnswers ? 180 : 188, instructionY + 25);
       item.a.forEach((answer, index) => {
-        // Larger labels and wider buttons improve readability without changing the answer flow.
-        const y = answerStartY + index * (compactAnswers ? 40 : 44);
-        const button = this.add.rectangle(480, y, 790, compactAnswers ? 42 : 46, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        // Phone landscape uses a fixed compact question area so every answer remains visible.
+        const y = answerStartY + index * (phoneQuestionLayout ? (compactAnswers ? 35 : 40) : (compactAnswers ? 40 : 44));
+        const buttonHeight = phoneQuestionLayout ? 33 : (compactAnswers ? 42 : 46);
+        const button = this.add.rectangle(480, y, 790, buttonHeight, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
-          fontFamily: "Nunito", fontSize: compactAnswers ? "19px" : "20px", color: "#ffffff", fontStyle: "900",
+          fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "15px" : (compactAnswers ? "19px" : "20px"), color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 750 }
         }).setOrigin(.5);
         button.on("pointerover", () => button.setFillStyle(0x376477));
