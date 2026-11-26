@@ -67,7 +67,8 @@ function parseDocxQuestions(source){
       continue;
     }
     if(!current){current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};continue;}
-    if(current.a.length){finish();current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};}
+    if(current.a.length>=2){finish();current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};}
+    else if(current.a.length===1)current.a[0]+=" "+line;
     else current.q+=" "+line;
   }
   finish();
