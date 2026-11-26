@@ -225,7 +225,7 @@ assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].include
 assert.ok(html.includes("src/main.js?v=reconnect-sync-3"), "The entry module cache token must refresh after reconnect and recovery changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=reconnect-sync-3"), "The BattleScene module cache token must refresh checkpoint and touch fixes.");
+assert.ok(main.includes("BattleScene.js?v=reconnect-sync-4"), "The BattleScene module cache token must refresh checkpoint and touch fixes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
