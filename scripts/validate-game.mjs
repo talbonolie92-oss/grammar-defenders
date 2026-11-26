@@ -198,7 +198,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=stability-audit-16"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=visual-consistency-2"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -211,7 +211,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=stability-audit-16"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=visual-consistency-2"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
@@ -223,6 +223,7 @@ assert.ok(main.includes("fps: { target: isTouchDevice ? ((navigator.hardwareConc
 assert.ok(main.includes("antialias: true") && main.includes("roundPixels: false"), "All devices must use consistent smooth vector rendering without pixel snapping artifacts.");
 assert.ok(main.includes("isTouchDevice ? 1.15 : 1.5"), "Touch devices must receive a modestly improved render resolution without excessive GPU load.");
 assert.ok(!battle.includes("const speedTrail = this.add.rectangle"), "Enemy runner accessories must not use thin moving rectangles that can stretch into visual streaks on some GPUs.");
+assert.ok(!battle.slice(battle.indexOf("const enemyParts = [shadow"), battle.indexOf("group.setActive(true).setVisible(true)", battle.indexOf("const enemyParts = [shadow"))).includes("child.setVisible(true)"), "Dense-wave visibility culling must not be undone during enemy container initialization.");
 
 
 // Refresh recovery regression checks.
