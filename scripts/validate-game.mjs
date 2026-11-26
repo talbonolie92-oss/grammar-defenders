@@ -123,7 +123,7 @@ console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn
 
 
 // Post-playtest improvements: late-game pacing, Tier III signature abilities, and clear end-of-session exit.
-assert.match(battle, /Math\.max\(0, this\.wave - 5\) \* 0\.10/, "Late-game enemy durability growth must be softened for upgraded teams.");
+assert.ok(battle.includes("Math.min(1.8, (this.wave - 1) * 0.08)"), "Enemy durability growth must remain gradual and capped as attacker counts increase.");
 assert.match(battle, /Gatling Ranger/, "Tier III Archer must have its Gatling evolution identity.");
 assert.match(battle, /this\.fireProjectile\(d, target, 0\.55, true, -5\)/, "Tier III Archer must fire bonus gatling bolts.");
 assert.match(battle, /GLACIAL BURST!/, "Tier III Frost Mage must apply its lane-wide crowd-control burst.");
