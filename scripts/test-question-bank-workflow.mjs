@@ -5,6 +5,8 @@ const html = await readFile(new URL("../teacher-dashboard.html", import.meta.url
 const dashboard = await readFile(new URL("../src/dashboard.js", import.meta.url), "utf8");
 const parser = await readFile(new URL("../src/docx-question-parser.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../css/dashboard.css", import.meta.url), "utf8");
+const battle = await readFile(new URL("../src/scenes/BattleScene.js", import.meta.url), "utf8");
+const main = await readFile(new URL("../src/main.js", import.meta.url), "utf8");
 
 // Manual entry supports A–C plus an optional D, and exposes all four correct-answer choices.
 for (const id of ["bank-q", "bank-a1", "bank-a2", "bank-a3", "bank-a4", "bank-correct"]) {
@@ -34,5 +36,15 @@ assert.match(dashboard, /data-draft-field="correct"/, "Imported correct answers 
 assert.match(parser, /correct: null/, "DOCX parser must not guess correct answers.");
 assert.match(dashboard, /a\.length>4/, "Question normalization must reject more than four choices.");
 assert.match(css, /\.bank-answer-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/, "Manual choices should use a balanced two-column layout.");
+
+assert.ok(html.includes('id="session-bank"'), "Session creation must expose a saved question-set selector.");
+assert.ok(html.includes('id="session-bank-status"'), "The session selector must explain available saved topics.");
+assert.ok(html.includes("Saved question sets"), "The dashboard must clearly label the saved question bank list.");
+assert.ok(dashboard.includes('Other / mixed grade'), "Saved banks outside the current grade groups must remain visible rather than disappearing.");
+assert.ok(dashboard.includes('questionBankId:bank?.id||""') && dashboard.includes('questionCount:bank?.questions?.length||0'), "New sessions must record the selected question bank and its question count.");
+assert.ok(dashboard.includes('if(bank)data.questions=bank.questions.map'), "The selected saved question set must be copied into the session payload.");
+assert.ok(main.includes('questions: Array.isArray(studentSession.questions) ? studentSession.questions : []'), "Student launch must pass the session questions into gameplay.");
+assert.ok(battle.includes('this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS'), "Boss challenges must use selected lesson questions when a custom bank is active.");
+assert.ok(css.includes(".session-topic-picker{") && css.includes(".saved-bank-section{"), "Topic selector and saved question list must be visually prominent.");
 
 console.log("Question-bank workflow tests passed: manual A–D entry, DOCX draft handoff, teacher answer review, and four-choice validation.");
