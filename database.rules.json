@@ -39,7 +39,7 @@
         "seats": {
           ".read": true,
           "$seatId": {
-            ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid && $seatId.matches(/^(0[1-9]|[12][0-9]|30)$/)",
+            ".write": "auth != null && $seatId.matches(/^(0[1-9]|[12][0-9]|30)$/) && ((!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid && !newData.exists()))",
             ".validate": "newData.hasChildren(['uid']) && newData.child('uid').isString() && newData.child('uid').val() === auth.uid"
           }
         }
