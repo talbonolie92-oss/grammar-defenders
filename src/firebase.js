@@ -2,15 +2,13 @@ import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getDatabase, ref, set, update, get, onValue, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
 const configured = Boolean(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_") && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("PASTE_") && firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("PASTE_PROJECT_ID"));
-let app = null, auth = null, db = null, functions = null;
+let app = null, auth = null, db = null;
 if (configured) {
   app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getDatabase(app);
-  functions = getFunctions(app, "asia-southeast1");
 }
 const needFirebase = () => { if (!configured || !auth || !db) throw new Error("Firebase is not configured yet. Add the project settings in src/firebase-config.js."); };
 export const firebaseReady = configured;
@@ -48,9 +46,3 @@ export const dbRemove = path => remove(dbRef(path));
 export const dbPush = path => push(dbRef(path));
 export const dbWatch = (path, callback, onError) => onValue(dbRef(path), callback, onError);
 export const newKey = path => dbPush(path).key;
-export const reserveSessionSeat = async (sessionId, name, classSection) => {
-  needFirebase();
-  if (!functions) throw new Error("Secure classroom joining is not initialized. Please ask your teacher to check the game setup.");
-  const reserve = httpsCallable(functions, "reserveSessionSeat");
-  return (await reserve({ sessionId, name, classSection })).data;
-};
