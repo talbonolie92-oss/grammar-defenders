@@ -35,6 +35,7 @@ export function createGameScene() {
       this.projectiles = [];
       this.projectilePool = [];
       // Phones get a lower simultaneous-enemy budget to protect frame time and touch input.
+      this.phoneLandscape = Boolean(window.matchMedia?.("(orientation: landscape) and (max-height: 500px)").matches);
       this.mobilePerformanceMode = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 ||
         window.matchMedia?.("(max-width: 900px)").matches || (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4));
       this.selectedTile = null;
@@ -109,7 +110,7 @@ export function createGameScene() {
 
     create() {
       this.drawWorld();
-      if (this.mobilePerformanceMode) {
+      if (this.phoneLandscape) {
         this.cameras.main.centerOn(480, 210);
         this.cameras.main.setZoom(1.12);
       }
@@ -1948,7 +1949,7 @@ export function createGameScene() {
       const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
       const panel = this.add.rectangle(480, 210, 850, 360, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
       const topGlow = this.add.rectangle(480, 30, 838, 5, 0x91e5c2, .9);
-      const phoneQuestionLayout = this.mobilePerformanceMode && window.matchMedia?.("(orientation: landscape)").matches;
+      const phoneQuestionLayout = this.phoneLandscape;
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "12px" : "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: phoneQuestionLayout ? 1 : 2
       }).setOrigin(.5);
@@ -2076,6 +2077,7 @@ export function createGameScene() {
         this.wave = Math.max(1, Math.floor(Number(saved.wave) || 1));
         this.enemiesPerWave = Phaser.Math.Clamp(Math.floor(Number(saved.enemiesPerWave) || getWaveEnemyCount(this.wave)), 1, 500);
         this.enemiesSpawnedThisWave = Phaser.Math.Clamp(Math.floor(Number(saved.enemiesSpawnedThisWave) || 0), 0, this.enemiesPerWave);
+        this.passiveEnergyBonus = Phaser.Math.Clamp(Number(saved.passiveEnergyBonus) || 0, 0, 5);
         this.waveActive = true;
         this.waveTransitioning = false;
         this.energy = Phaser.Math.Clamp(Number(saved.energy ?? 150), 0, this.maxEnergy);
@@ -2109,6 +2111,7 @@ export function createGameScene() {
             ? item.upgradePaths.filter(path => ["vanguard", "fortress", "mystic", "ranger", "rapidfire", "executioner", "vitality", "energycore"].includes(path)).slice(0, 6) : [];
           defender.damageReduction = Phaser.Math.Clamp(Number(item.damageReduction) || 0, 0, .55);
           defender.counterDamageMultiplier = Phaser.Math.Clamp(Number(item.counterDamageMultiplier) || 1, 1, 5);
+          defender.retaliateCooldown = Phaser.Math.Clamp(Number(item.retaliateCooldown) || 0, 0, 10);
           defender.ascended = Boolean(item.ascended);
           defender.ascensionName = typeof item.ascensionName === "string" ? item.ascensionName.slice(0, 80) : null;
           for (const flag of ["ascensionVolley", "ascensionFreeze", "ascensionChain", "ascensionSplash"]) defender[flag] = Boolean(item[flag]);
@@ -2136,6 +2139,7 @@ export function createGameScene() {
           }
           if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
         });
+        if (this.wave >= 6 || saved.advancedDeckUnlocked) this.unlockAdvancedDeck();
         this.message.textContent = "Battle restored from your last checkpoint. Your current wave and defenders are back!";
       } catch (error) {
         console.warn("Could not restore the local battle checkpoint:", error);
@@ -2153,6 +2157,8 @@ export function createGameScene() {
           elapsedSeconds: this.elapsedSeconds, remainingSeconds: this.remainingSeconds,
           questionIndex: this.questionIndex, bossQuestionIndex: this.bossQuestionIndex,
           lastAscensionWave: this.lastAscensionWave,
+          passiveEnergyBonus: this.passiveEnergyBonus || 0,
+          advancedDeckUnlocked: Boolean(this.advancedDeckUnlocked),
           enemiesPerWave: this.enemiesPerWave,
           enemiesSpawnedThisWave: this.enemiesSpawnedThisWave,
           defenders: this.defenders.filter(item => item.group?.active).map(item => ({
@@ -2166,6 +2172,7 @@ export function createGameScene() {
             upgradePaths: item.upgradePaths || [],
             damageReduction: item.damageReduction || 0,
             counterDamageMultiplier: item.counterDamageMultiplier || 1,
+            retaliateCooldown: item.retaliateCooldown || 0,
             ascended: Boolean(item.ascended), ascensionName: item.ascensionName || null,
             ascensionVolley: Boolean(item.ascensionVolley), ascensionFreeze: Boolean(item.ascensionFreeze),
             ascensionChain: Boolean(item.ascensionChain), ascensionSplash: Boolean(item.ascensionSplash)
