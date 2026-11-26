@@ -113,11 +113,9 @@ async function initializeStudentJoin() {
       if (studentSession.status === "running" && !studentSession.allowLateJoin) throw new Error("Your teacher has disabled late joining.");
       const blocked = await dbGet("sessions/" + sessionId + "/blockedPlayers/" + studentUid);
       if (blocked.exists() && blocked.val() === true) throw new Error("Your teacher removed you from this session. Please speak with your teacher.");
-      const rosterSnapshot = await dbGet("sessions/" + sessionId + "/players");
-      const roster = rosterSnapshot.val() || {};
-      if (!roster[studentUid] && Object.keys(roster).length >= 30) {
-        throw new Error("This classroom session is full (30 students). Please ask your teacher for another session.");
-      }
+      // Do not read the entire players collection here: database rules intentionally
+      // keep other students' names and class details private. The Firebase rule on
+      // this student's own player record enforces the 30-player session limit.
       const existingPlayer = await dbGet("sessions/" + sessionId + "/players/" + studentUid);
       if (existingPlayer.exists()) {
         name = existingPlayer.val().name || name;
