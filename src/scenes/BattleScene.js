@@ -1227,7 +1227,7 @@ export function createGameScene() {
       const sub = this.add.text(480, 69, "FREE BOSS REWARD  •  Tap any deployed defender on the battlefield to transform it", {
         fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
       }).setOrigin(.5);
-      const skip = this.add.rectangle(480, 282, 190, 34, 0x365a70, 1).setStrokeStyle(1.5, 0xb8d9e8).setInteractive({ useHandCursor: true });
+      const skip = this.add.rectangle(480, 282, 210, 44, 0x365a70, 1).setStrokeStyle(1.5, 0xb8d9e8).setInteractive({ useHandCursor: true });
       const skipText = this.add.text(480, 282, "SKIP REWARD", {
         fontFamily: "Nunito", fontSize: "12px", color: "#ffffff", fontStyle: "1000"
       }).setOrigin(.5);
@@ -1947,8 +1947,8 @@ export function createGameScene() {
       const answerStartY = Math.max(compactAnswers ? 180 : 188, instructionY + 25);
       item.a.forEach((answer, index) => {
         // Larger labels and wider buttons improve readability without changing the answer flow.
-        const y = answerStartY + index * (compactAnswers ? 36 : 41);
-        const button = this.add.rectangle(480, y, 790, compactAnswers ? 34 : 39, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        const y = answerStartY + index * (compactAnswers ? 40 : 44);
+        const button = this.add.rectangle(480, y, 790, compactAnswers ? 42 : 46, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
           fontFamily: "Nunito", fontSize: compactAnswers ? "19px" : "20px", color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 750 }
@@ -1999,7 +1999,7 @@ export function createGameScene() {
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
       // Give players an explicit way to resume if the automatic close timer is delayed on mobile.
-      const continueButton = this.add.rectangle(480, 287, 250, 34, 0x8be6b6, 1)
+      const continueButton = this.add.rectangle(480, 287, 270, 44, 0x8be6b6, 1)
         .setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
       const continueLabel = this.add.text(480, 287, "CONTINUE BATTLE  ▶", {
         fontFamily: "Nunito", fontSize: "13px", color: "#123b35", fontStyle: "1000"
