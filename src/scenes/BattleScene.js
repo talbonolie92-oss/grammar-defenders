@@ -1999,7 +1999,7 @@ export function createGameScene() {
       }).setOrigin(.5);
       const accuracy = this.questionsAnswered ? Math.round(this.correctAnswers / this.questionsAnswered * 100) : 0;
       const summary = this.add.text(480, 143,
-        "WAVE " + this.wave + "     •     " + this.kills + " KILLS     •     " + accuracy + "% ACCURACY\\n" +
+        "WAVE " + this.wave + "     •     " + this.kills + " KILLS     •     " + accuracy + "% ACCURACY\n" +
         this.questionsAnswered + " QUESTIONS ANSWERED     •     KEEP " + this.baseHealth + "%",
         { fontFamily: "Nunito", fontSize: "13px", color: "#d9e9f5", fontStyle: "900", align: "center", lineSpacing: 9 }
       ).setOrigin(.5);
