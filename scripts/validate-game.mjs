@@ -5,6 +5,7 @@ import { QUESTIONS, BOSS_QUESTIONS } from "../src/data/questions.js";
 const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 const battle = read("../src/scenes/BattleScene.js");
 const main = read("../src/main.js");
+const firebase = read("../src/firebase.js");
 const world = read("../src/three-world.js");
 const html = read("../index.html");
 const css = read("../css/game.css");
@@ -211,6 +212,7 @@ assert.ok(battle.includes("delay: 3500, loop: true, callback: () => this.saveChe
 assert.ok(battle.includes("emerald-frontier:"), "Checkpoints must be scoped to a session and player.");
 assert.ok(main.includes("form.requestSubmit()"), "A returning student must be able to rejoin automatically after refresh.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
+assert.ok(firebase.includes("auth.authStateReady()"), "Refresh recovery must wait for Firebase to restore the existing anonymous student UID.");
 
 
 // Offline-safe Firebase synchronization regression checks.
