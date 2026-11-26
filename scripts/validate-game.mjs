@@ -285,7 +285,7 @@ assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveC
 assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=stability-audit-16"), "The BattleScene cache token must refresh after phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=visual-consistency-2"), "The BattleScene cache token must refresh after phone question layout changes.");
 
 
 // 960x420 overlay geometry and phone answer-control regression checks.
