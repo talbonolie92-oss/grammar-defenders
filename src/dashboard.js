@@ -48,29 +48,41 @@ function getBankGrade(bank){
   return "Mixed";
 }
 function parseDocxQuestions(source){
-  const lines=String(source||"").replace(/\r/g,"").split("\n").map(v=>v.trim());
+  const lines=String(source||"").replace(/\r/g,"\n").split("\n")
+    .map(line=>line.replace(/[\u00a0\t]+/g," ").replace(/\s+/g," ").trim())
+    .filter(Boolean);
   const questions=[],unparsed=[];
   let current=null;
-  const optionPattern=/^\(?([A-D])\)?[.)\:]\s*(.+)$/i;
+  const cleanQuestion=line=>String(line).replace(/^\s*(?:question\s*)?\d+\s*[.)\]:-]\s*/i,"").replace(/^[-•*]\s*/,"").trim();
+  const marker=/^\s*(?:\(([A-D])\)|([A-D])\s*[.)：:]|([A-D])\s+-)\s*(.*?)\s*$/i;
+  const splitInline=line=>{
+    const re=/(?:^|\s)(?:\(([A-D])\)|([A-D])\s*[.)：:]|([A-D])\s+-)\s+/gi;
+    const marks=[];let m;
+    while((m=re.exec(line))!==null) marks.push({index:m.index+(m[0].startsWith(" ")?1:0),letter:(m[1]||m[2]||m[3]).toUpperCase(),end:re.lastIndex});
+    if(marks.length<2||line.slice(0,marks[0].index).trim())return null;
+    return marks.map((item,i)=>({letter:item.letter,text:line.slice(item.end,marks[i+1]?.index??line.length).trim()}));
+  };
   const finish=()=>{
     if(!current)return;
-    if(current.a.length>=2)questions.push({q:current.q.trim(),a:current.a,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
-    else unparsed.push("Incomplete question: "+[current.q,...current.a].join(" | "));
+    const choices=current.choices.filter(Boolean);
+    if(current.q.trim()&&choices.length>=2)questions.push({q:current.q.trim(),a:choices,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
+    else unparsed.push("Incomplete question block: "+[current.q,...choices].filter(Boolean).join(" | "));
     current=null;
   };
-  for(const line of lines){
-    if(!line)continue;
-    const match=line.match(optionPattern);
-    if(match){
-      if(!current){unparsed.push("Choice without a question: "+line);continue;}
-      const letter=match[1].toUpperCase(),index=letter.charCodeAt(0)-65;
-      if(index!==current.a.length||index>3){unparsed.push("Unexpected choice label: "+line);continue;}
-      current.a.push(match[2].trim());
-      continue;
-    }
-    if(!current){current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};continue;}
-    if(current.a.length>=2){finish();current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};}
-    else if(current.a.length===1)current.a[0]+=" "+line;
+  const addChoice=(letter,value,line)=>{
+    const index=letter.charCodeAt(0)-65;
+    if(index<0||index>3||!value.trim()){unparsed.push("Unrecognized choice: "+line);return;}
+    if(!current){unparsed.push("Choice without a question: "+line);return;}
+    current.choices[index]=value.trim();
+  };
+  for(const raw of lines){
+    const line=raw.replace(/^\s*(?:[-•*]\s*)/,"").trim();
+    const inline=splitInline(line);
+    if(inline){if(!current)unparsed.push("Choices without a question: "+line);else inline.forEach(x=>addChoice(x.letter,x.text,line));continue;}
+    const match=line.match(marker);
+    if(match){if(!current){unparsed.push("Choice without a question: "+line);continue;}addChoice((match[1]||match[2]||match[3]).toUpperCase(),match[4],line);continue;}
+    if(!current){current={q:cleanQuestion(line),choices:[]};continue;}
+    if(current.choices.some(Boolean)){finish();current={q:cleanQuestion(line),choices:[]};}
     else current.q+=" "+line;
   }
   finish();
@@ -93,18 +105,7 @@ function normalizeBankQuestion(raw, subject, topic){
   if(!q||a.length<2||a.length>4||!Number.isInteger(Number(correct))||Number(correct)<0||Number(correct)>=a.length)throw new Error("Each question needs text, 2–4 answers, and a valid correct answer.");
   return {topic:String(raw.topic||topic||subject||"General").trim(),grade:String(raw.grade||"Mixed"),q,a,correct:Number(correct),effect:String(raw.effect||"GRAMMAR POWER!").trim(),explanation:String(raw.explanation||"").trim(),sourceQuote:String(raw.sourceQuote||raw.source_quote||"").trim(),sourceSection:String(raw.sourceSection||raw.source_section||"").trim(),confidence:String(raw.confidence||"").trim(),reviewRequired:Boolean(raw.reviewRequired),approved:Boolean(raw.approved)};
 }
-function parseQuestionCsv(source){
-  source=String(source).replace(/^\uFEFF/,"");
-  const rows=[];let row=[],cell="",quoted=false;
-  for(let i=0;i<source.length;i++){const c=source[i];if(c==='"'&&quoted&&source[i+1]==='"'){cell+='"';i++;}else if(c==='"'){quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell="";}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&source[i+1]==="\n")i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=c;}
-  if(quoted)throw new Error("CSV contains an unclosed quotation mark. Check the question or answer text and try again.");
-  row.push(cell);if(row.some(v=>v.trim()))rows.push(row);
-  if(rows.length<2)throw new Error("CSV needs a header row and at least one question.");
-  const headers=rows.shift().map(v=>v.trim().toLowerCase().replace(/[ _-]+/g,""));
-  if(headers.some(key=>!key))throw new Error("CSV headers cannot be blank.");
-  if(new Set(headers).size!==headers.length)throw new Error("CSV contains duplicate column headers. Rename each header so it is unique.");
-  return rows.map(values=>Object.fromEntries(headers.map((key,i)=>[key,values[i]??""])));
-}
+
 function updateBankDraftCount(){
   setStatus("bank-draft-count",bankDraft.length+" questions in draft");
   const preview=$("bank-draft-preview");
@@ -126,19 +127,6 @@ function renderQuestionBanks(){
   const order=["Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12","Mixed"];
   $("bank-list").innerHTML=bankCache.length?order.filter(g=>groups[g]?.length).map(g=>'<section class="bank-grade-group"><h3>'+escapeHtml(g)+'</h3>'+groups[g].map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+escapeHtml(b.subject||"English")+' • '+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join("")+'</section>').join(""):'<div class="empty">No saved topics yet. Add a topic and questions above.</div>';
 }
-$("bank-load-file").addEventListener("click",async()=>{
-  const file=$("bank-file").files?.[0];if(!file){setStatus("bank-status","Choose a .JSON or .CSV file first.");return;}
-  try{
-    const source=await file.text();let raw;
-    if(file.name.toLowerCase().endsWith(".json")){const parsed=JSON.parse(source);raw=Array.isArray(parsed)?parsed:parsed.questions;}
-    else raw=parseQuestionCsv(source);
-    if(!Array.isArray(raw)||!raw.length)throw new Error("No question records found in this file.");
-    if(raw.length>300)throw new Error("This question set contains "+raw.length+" questions. The limit is 300; split the file into smaller sets.");
-    const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
-    const imported=raw.map(item=>normalizeBankQuestion(item,subject,topic));
-    bankDraft=imported;updateBankDraftCount();setStatus("bank-status","Loaded "+imported.length+" questions. Review the draft, then save the question set.");
-  }catch(error){setStatus("bank-status",error.message||"Could not read this file.");}
-});
 $("manual-question-form").addEventListener("submit",e=>{
   e.preventDefault();
   if(bankDraft.length>=300){setStatus("bank-status","A question set can contain up to 300 questions. Save this set or clear the draft before adding more.");return;}
