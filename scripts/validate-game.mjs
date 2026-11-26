@@ -262,7 +262,13 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
-assert.ok(html.includes("src/main.js?v=stability-audit-16"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(main.includes("reserveClassroomSeat") && main.includes("dbTransaction"), "New classroom students must reserve a seat through an atomic Realtime Database transaction.");
+assert.equal(Object.keys(databaseRules.rules.sessions.$sessionId.seats).includes("$seatId"), true, "The free seat ledger must expose individual protected seat records.");
+assert.ok(databaseRules.rules.sessions.$sessionId.seats[".read"] === true, "Students must be able to inspect anonymous seat occupancy without reading other students' personal records.");
+assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includes("!data.exists()"), "A seat may only be claimed while it is empty.");
+assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
+
+assert.ok(html.includes("src/main.js?v=free-seat-capacity-1"), "The entry module cache token must refresh after tablet stability changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=stability-audit-16"), "The BattleScene module cache token must refresh phone question layout changes.");
