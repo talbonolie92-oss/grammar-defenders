@@ -181,20 +181,21 @@ assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse poo
 
 
 assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield without distorting its coordinate system.");
-assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
+assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
+assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=phaser-fit-canvas-3"), "Phaser canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=phone-fit-canvas-4"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:340 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
 assert.ok(css.includes("aspect-ratio:48/17"), "The game container must retain the battlefield's native aspect ratio.");
-assert.ok(html.includes("game.css?v=phaser-fit-canvas-3"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=phone-fit-canvas-4"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
-assert.ok(battle.includes("const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32"), "Question text must use larger readable sizes with a long-question fallback.");
-assert.ok(battle.includes('fontSize: compactAnswers ? "19px" : "20px"'), "Answer choices must be enlarged for classroom phone readability.");
-assert.ok(main.includes("fps: { target: isSmallScreen ? 50 : 60"), "Mobile gameplay must use a lighter frame target while desktop retains 60 FPS.");
+assert.ok(battle.includes("const questionFontSize = phoneQuestionLayout") && battle.includes("question.setFixedSize(780, 76)"), "Phone landscape questions must fit a fixed readable area.");
+assert.ok(battle.includes("phoneQuestionLayout ? 198") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
+assert.ok(main.includes("fps: { target: isSmallScreen ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
 
 
 // Refresh recovery regression checks.
@@ -242,4 +243,4 @@ assert.ok(main.includes("BattleScene.js?v=reconnect-sync-5"), "The BattleScene m
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=reconnect-sync-5"), "The BattleScene cache token must refresh after immediate checkpoint changes.");
+assert.ok(main.includes("BattleScene.js?v=phone-readability-6"), "The BattleScene cache token must refresh after phone question layout changes.");
