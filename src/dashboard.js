@@ -85,14 +85,21 @@ function updateBankDraftCount(){
     <label>Correct answer<select class="review-field" data-draft-index="${i}" data-draft-field="correct"><option value="">Select the correct answer</option>${["A","B","C","D"].map((letter,n)=>`<option value="${n}" ${q.correct===n?"selected":""}>${letter}</option>`).join("")}</select></label>
   </article>`).join(""):'<div class="empty">No questions in the draft yet. Upload a Word document above or add one using the manual form below.</div>';
 }
+function updateSessionBankStatus(){
+  const status=$("session-bank-status");if(!status)return;
+  const id=$("session-bank").value,grade=$("session-grade").value;
+  const selected=bankCache.find(bank=>bank.id===id);
+  if(selected){status.textContent="Selected: "+selected.topic+" • "+(selected.questions?.length||0)+" questions. This exact question set will be used for regular and boss challenges.";return;}
+  const count=bankCache.filter(bank=>getBankGrade(bank)===grade).length;
+  status.textContent=count?count+" saved question set(s) available for "+grade+". Choose one above to use its questions in this game.":(bankCache.length?"No saved question sets for "+grade+". Your saved sets may belong to another grade.":"No saved question sets yet. Save a set in the Question Bank section below.");
+}
 function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
   const visibleBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12"].includes(getBankGrade(b)));
   const eligible=visibleBanks.filter(b=>getBankGrade(b)===grade);
   select.innerHTML='<option value="">Built-in questions (default)</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
   if(eligible.some(b=>b.id===current))select.value=current;
-  const status=$("session-bank-status");
-  if(status)status.textContent=eligible.length?eligible.length+" saved question set(s) available for "+grade+". Select one to use its questions in this game.":(bankCache.length?"No saved question sets for "+grade+". Your saved sets may belong to another grade.":"No saved question sets yet. Save a set in the Question Bank section below.");
+  updateSessionBankStatus();
   const groups={};
   bankCache.forEach(b=>{const raw=getBankGrade(b);const g=["Grade 10","Grade 11","Grade 12"].includes(raw)?raw:"Other / mixed grade";(groups[g]??=[]).push(b);});
   const order=["Grade 10","Grade 11","Grade 12","Other / mixed grade"];
@@ -263,6 +270,7 @@ $("sessions-list").addEventListener("click",async e=>{
   if(button.dataset.action==="delete")await deleteSession(s);
 });
 $("session-grade").addEventListener("change",()=>renderQuestionBanks());
+$("session-bank").addEventListener("change",updateSessionBankStatus);
 $("session-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!teacher)return;
   const title=safeName($("session-title").value);if(!title)return;
