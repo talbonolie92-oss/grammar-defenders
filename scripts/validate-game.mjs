@@ -125,3 +125,13 @@ assert.match(battle, /questionResolutionTimer = window\.setTimeout/, "Question c
 assert.match(battle, /questionAnsweredAt = Date\.now\(\)/, "Question answers must timestamp the recovery watchdog.");
 assert.match(battle, /Date\.now\(\) - this\.questionAnsweredAt >= 2600/, "The battle update loop must recover a stuck answered question.");
 assert.match(battle, /window\.clearTimeout\(this\.questionResolutionTimer\)/, "Question finish must clear its browser fallback timer.");
+
+// Boss Ascension reward regression checks.
+assert.match(battle, /this\.wave % 5 === 0 && this\.lastAscensionWave !== this\.wave/, "Every cleared boss wave must offer one Ascension reward.");
+assert.match(battle, /showBossAscension\(\)/, "Boss reward selection overlay must exist.");
+assert.match(battle, /applyBossAscension\(existing\)/, "Players must be able to select a deployed defender for Ascension.");
+assert.match(battle, /this\.stats\.energyRate = Math\.round\(\(defender\.stats\.energyRate \|\| base\.energyRate \|\| 7\) \* 3\)/, "Three-Headed Sunwell must triple energy production.");
+assert.match(battle, /defender\.ascensionVolley/, "Ascended Archer must unlock its multi-shot volley.");
+assert.match(battle, /defender\.ascensionFreeze = true/, "Ascended Frost Mage must unlock its freeze ability.");
+assert.match(battle, /defender\.ascensionChain = true/, "Ascended lightning defenders must unlock chain power.");
+assert.match(battle, /startNextWave\(\)/, "Battle must resume after an Ascension choice or skip.");
