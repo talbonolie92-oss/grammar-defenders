@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=mobile-performance-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=resume-checkpoint-1";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
