@@ -194,6 +194,8 @@ assert.ok(html.includes("game.css?v=phone-fit-canvas-4"), "The corrected canvas 
 // Mobile rendering and question readability regression checks.
 assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
 assert.ok(battle.includes("const questionFontSize = phoneQuestionLayout") && battle.includes("question.setFixedSize(780, 76)"), "Phone landscape questions must fit a fixed readable area.");
+assert.ok(battle.includes("handleQuestionPointer(pointer)") && battle.includes("questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + 4 })"), "Question taps must map by Phaser camera coordinates rather than scaled object hit tests.");
+assert.ok(battle.includes("g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72)"), "Five battlefield lanes must have high-contrast row boundaries.");
 assert.ok(battle.includes("phoneQuestionLayout ? 198") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
 assert.ok(main.includes("fps: { target: isSmallScreen ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
 
@@ -234,7 +236,7 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
-assert.ok(html.includes("src/main.js?v=phone-fit-canvas-4"), "The entry module cache token must refresh after phone layout changes.");
+assert.ok(html.includes("src/main.js?v=phone-touch-accuracy-5"), "The entry module cache token must refresh after phone touch accuracy changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=phone-readability-6"), "The BattleScene module cache token must refresh phone question layout changes.");
