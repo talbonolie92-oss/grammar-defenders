@@ -16,6 +16,10 @@ for (const value of [0, 1, 2, 3]) {
 }
 assert.match(dashboard, /a:\[\$\("bank-a1"\)\.value,\$\("bank-a2"\)\.value,\$\("bank-a3"\)\.value,\$\("bank-a4"\)\.value\]/, "Manual submission must pass all four choices.");
 assert.ok(dashboard.includes("mammoth.convertToHtml("), "DOCX extraction must preserve manual line breaks through HTML conversion.");
+assert.ok(dashboard.includes("if(importingDocx)return;"), "Repeated clicks must not start overlapping DOCX imports.");
+assert.ok(dashboard.includes("finally{importingDocx=false;$(\"docx-extract\").disabled=false;}"), "DOCX upload control must always recover after success or failure.");
+assert.ok(dashboard.includes("if(!teacher||savingBank)return;"), "Repeated clicks must not create duplicate question banks.");
+assert.ok(dashboard.includes("finally{savingBank=false;$(\"bank-save\").disabled=false;}"), "Save control must always recover after success or failure.");
 assert.ok(dashboard.includes(String.raw`.replace(/<br\s*\/?\s*>/gi,"\n")`), "DOCX HTML br elements must become parser-visible newlines.");
 assert.ok(dashboard.includes('docx-question-parser.js?v=docx-break-fix-1'), "Parser module URL must be cache-busted with the DOCX fix.");
 assert.match(dashboard, /const importedQuestions=parsed\.questions\.map/, "DOCX parser output must be normalized into the draft question shape.");
