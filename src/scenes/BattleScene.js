@@ -751,12 +751,12 @@ export function createGameScene() {
       if (this.questionTimer) this.questionTimer.paused = true;
       const overlay = this.add.container(0, 0).setDepth(950);
       this.upgradeChoiceOverlay = overlay;
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .9).setInteractive();
-      const panel = this.add.rectangle(480, 170, 940, 304, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
-      const heading = this.add.text(480, 27, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
+      const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .9).setInteractive();
+      const panel = this.add.rectangle(480, 210, 940, 360, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const heading = this.add.text(480, 67, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
         fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
       }).setOrigin(.5);
-      const sub = this.add.text(480, 50, (defender.evolutionName || defender.stats.name) + " — choose one permanent upgrade", {
+      const sub = this.add.text(480, 90, (defender.evolutionName || defender.stats.name) + " — choose one permanent upgrade", {
         fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
       }).setOrigin(.5);
       overlay.add([shade, panel, heading, sub]);
@@ -774,7 +774,7 @@ export function createGameScene() {
         const col = index % 4;
         const row = Math.floor(index / 4);
         const x = 125 + col * 237;
-        const y = row === 0 ? 119 : 231;
+        const y = row === 0 ? 159 : 271;
         const card = this.add.rectangle(x, y, 212, 99, choice.color, 1)
           .setStrokeStyle(2, 0xc8e7d8).setInteractive({ useHandCursor: true });
         const title = this.add.text(x, y - 29, choice.title, {
@@ -792,7 +792,7 @@ export function createGameScene() {
         card.on("pointerdown", () => this.applyDefenderUpgradeChoice(defender, choice.id));
         overlay.add([card, title, desc, pick]);
       });
-      overlay.add(this.add.text(480, 315, "Battle pauses while you choose. One choice is granted per evolution tier.", {
+      overlay.add(this.add.text(480, 355, "Battle pauses while you choose. One choice is granted per evolution tier.", {
         fontFamily: "Nunito", fontSize: "10px", color: "#b8ccdc", fontStyle: "700"
       }).setOrigin(.5));
     }
@@ -1248,23 +1248,23 @@ export function createGameScene() {
       if (this.questionTimer) this.questionTimer.paused = true;
       this.bossAscensionOverlay = this.add.container(0, 0).setDepth(980);
       const overlay = this.bossAscensionOverlay;
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .92).setInteractive();
-      const panel = this.add.rectangle(480, 170, 936, 306, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
-      const title = this.add.text(480, 34, "BOSS DEFEATED — CHOOSE YOUR ASCENSION", {
+      const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .92).setInteractive();
+      const panel = this.add.rectangle(480, 210, 936, 306, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const title = this.add.text(480, 74, "BOSS DEFEATED — CHOOSE YOUR ASCENSION", {
         fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: .6
       }).setOrigin(.5);
-      const sub = this.add.text(480, 69, "FREE BOSS REWARD  •  Tap any deployed defender on the battlefield to transform it", {
+      const sub = this.add.text(480, 109, "FREE BOSS REWARD  •  Tap any deployed defender on the battlefield to transform it", {
         fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
       }).setOrigin(.5);
-      const skip = this.add.rectangle(480, 282, 210, 44, 0x365a70, 1).setStrokeStyle(1.5, 0xb8d9e8).setInteractive({ useHandCursor: true });
-      const skipText = this.add.text(480, 282, "SKIP REWARD", {
+      const skip = this.add.rectangle(480, 322, 210, 44, 0x365a70, 1).setStrokeStyle(1.5, 0xb8d9e8).setInteractive({ useHandCursor: true });
+      const skipText = this.add.text(480, 322, "SKIP REWARD", {
         fontFamily: "Nunito", fontSize: "12px", color: "#ffffff", fontStyle: "1000"
       }).setOrigin(.5);
       skip.on("pointerdown", () => this.finishBossAscension(null));
       overlay.add([shade, panel, title, sub, skip, skipText]);
       const deployed = this.defenders.filter(d => d.group?.active);
       if (!deployed.length) {
-        const empty = this.add.text(480, 168, "No defenders deployed — skip this reward to continue.", {
+        const empty = this.add.text(480, 208, "No defenders deployed — skip this reward to continue.", {
           fontFamily: "Nunito", fontSize: "15px", color: "#ffffff", fontStyle: "800"
         }).setOrigin(.5);
         overlay.add(empty);
@@ -1965,11 +1965,11 @@ export function createGameScene() {
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
-      const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
-      const panel = this.add.rectangle(480, 210, 850, 360, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
-      const topGlow = this.add.rectangle(480, 30, 838, 5, 0x91e5c2, .9);
       this.refreshPhoneLayout();
       const phoneQuestionLayout = this.phoneLandscape;
+      const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
+      const panel = this.add.rectangle(480, 210, 850, phoneQuestionLayout ? 410 : 360, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
+      const topGlow = this.add.rectangle(480, 30, 838, 5, 0x91e5c2, .9);
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "12px" : "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: phoneQuestionLayout ? 1 : 2
       }).setOrigin(.5);
@@ -2040,14 +2040,15 @@ export function createGameScene() {
       // Persist the answered question and resulting battle state immediately,
       // rather than waiting for the next periodic checkpoint tick.
       this.saveCheckpoint();
-      const feedback = this.add.text(480, 319, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
+      const feedback = this.add.text(480, this.phoneLandscape ? 370 : 335, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
       // Give players an explicit way to resume if the automatic close timer is delayed on mobile.
-      const continueButton = this.add.rectangle(480, 287, 270, 44, 0x8be6b6, 1)
+      const continueY = this.phoneLandscape ? 395 : 365;
+      const continueButton = this.add.rectangle(480, continueY, 270, this.phoneLandscape ? 38 : 44, 0x8be6b6, 1)
         .setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
-      const continueLabel = this.add.text(480, 287, "CONTINUE BATTLE  ▶", {
+      const continueLabel = this.add.text(480, continueY, "CONTINUE BATTLE  ▶", {
         fontFamily: "Nunito", fontSize: "13px", color: "#123b35", fontStyle: "1000"
       }).setOrigin(.5);
       continueButton.on("pointerover", () => continueButton.setFillStyle(0xb4f5cc));
@@ -2406,20 +2407,20 @@ export function createGameScene() {
       if (this.questionTimer) this.questionTimer.paused = true;
       this.stopMusic();
       const overlay = this.add.container(0, 0).setDepth(2000);
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x06101e, .88).setInteractive();
-      const panel = this.add.rectangle(480, 170, 720, 270, 0x142b43, .98).setStrokeStyle(3, won ? 0x9af0c2 : 0xffa1a1);
-      const title = this.add.text(480, 83, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), {
+      const shade = this.add.rectangle(480, 210, 960, 420, 0x06101e, .88).setInteractive();
+      const panel = this.add.rectangle(480, 210, 720, 270, 0x142b43, .98).setStrokeStyle(3, won ? 0x9af0c2 : 0xffa1a1);
+      const title = this.add.text(480, 123, customTitle || (won ? "THE KEEP IS SAFE!" : "THE KEEP HAS FALLEN"), {
         fontFamily: "Nunito", fontSize: "30px", color: won ? "#c8ffda" : "#ffd1d1", fontStyle: "1000",
         align: "center", wordWrap: { width: 650 }
       }).setOrigin(.5);
       const accuracy = this.questionsAnswered ? Math.round(this.correctAnswers / this.questionsAnswered * 100) : 0;
-      const summary = this.add.text(480, 143,
+      const summary = this.add.text(480, 183,
         "WAVE " + this.wave + "     •     " + this.kills + " KILLS     •     " + accuracy + "% ACCURACY\n" +
         this.questionsAnswered + " QUESTIONS ANSWERED     •     KEEP " + this.baseHealth + "%",
         { fontFamily: "Nunito", fontSize: "13px", color: "#d9e9f5", fontStyle: "900", align: "center", lineSpacing: 9 }
       ).setOrigin(.5);
-      const restartButton = this.add.rectangle(480, 225, 270, 48, 0x8be6b6, 1).setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
-      const restartLabel = this.add.text(480, 225, "PLAY AGAIN  •  BACK TO SETUP", {
+      const restartButton = this.add.rectangle(480, 265, 270, 48, 0x8be6b6, 1).setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
+      const restartLabel = this.add.text(480, 265, "PLAY AGAIN  •  BACK TO SETUP", {
         fontFamily: "Nunito", fontSize: "13px", color: "#123b35", fontStyle: "1000", letterSpacing: .5
       }).setOrigin(.5);
       restartButton.on("pointerover", () => restartButton.setFillStyle(0xb4f5cc));
