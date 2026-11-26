@@ -109,6 +109,10 @@ export function createGameScene() {
 
     create() {
       this.drawWorld();
+      if (this.mobilePerformanceMode) {
+        this.cameras.main.centerOn(480, 210);
+        this.cameras.main.setZoom(1.12);
+      }
       this.createHud();
       // Use Phaser's camera-transformed pointer coordinates for the whole
       // board. This avoids per-object hit-test gaps on scaled mobile canvases.
@@ -262,25 +266,10 @@ export function createGameScene() {
         const mote = this.add.circle(95 + i * 67, 58 + (i % 4) * 11, 1.8, 0xd9efaa, 0.5);
         this.tweens.add({ targets: mote, y: mote.y - 12, alpha: 0.12, duration: 2400 + i * 90, yoyo: true, repeat: -1, delay: i * 110 });
       }
-      // Load the 3D world progressively; retain the original battlefield if WebGL is unavailable.
-      // Phones were creating two simultaneous WebGL renderers (Phaser + Three.js).
-      // Keep the proven Phaser battlefield on small screens to reduce GPU/context
-      // pressure; desktop keeps the optional 3D presentation.
-      const mobileDevice = window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 ||
-        window.matchMedia?.("(max-width: 900px)").matches || (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
-      if (mobileDevice) return;
-      import("../three-world.js").then(async ({ createThreeWorld }) => {
-        if (!this.sys.isActive()) return;
-        try {
-          const world = await createThreeWorld(document.getElementById("game-container"));
-          if (!this.sys.isActive()) { world.dispose(); return; }
-          this.threeWorld = world;
-          this.worldGraphics?.destroy();
-          this.worldGraphics = null;
-        } catch (error) {
-          console.warn("3D battlefield unavailable; keeping the classic battlefield:", error);
-        }
-      }).catch(error => console.warn("3D renderer could not load; keeping the classic battlefield:", error));
+      // Keep one renderer for predictable performance across classroom devices.
+      // The optional Three.js overlay created a second WebGL context and a second
+      // animation loop beside Phaser; disable it until a single-renderer 3D path
+      // can be measured on real iPads and Android tablets.
     }
 
     createHud() {
@@ -1954,8 +1943,8 @@ export function createGameScene() {
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
       const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
-      const panel = this.add.rectangle(480, 210, 850, 390, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
-      const topGlow = this.add.rectangle(480, 12, 838, 5, 0x91e5c2, .9);
+      const panel = this.add.rectangle(480, 210, 850, 360, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
+      const topGlow = this.add.rectangle(480, 30, 838, 5, 0x91e5c2, .9);
       const phoneQuestionLayout = this.mobilePerformanceMode && window.matchMedia?.("(orientation: landscape)").matches;
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "12px" : "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: phoneQuestionLayout ? 1 : 2
@@ -1992,7 +1981,7 @@ export function createGameScene() {
         overlay.add([button, label]);
       });
       this.tweens.add({ targets: overlay, alpha: { from: 0, to: 1 }, duration: 180, ease: "Quad.Out" });
-      this.cameras.main.shake(100, .0015);
+      if (!this.mobilePerformanceMode) this.cameras.main.shake(100, .0015);
     }
 
     answerQuestion(index, item, button, label) {
