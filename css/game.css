@@ -481,3 +481,32 @@ body.playing #game-container{
   body.playing #game-container canvas { position:absolute; inset:0; width:100%!important; height:100%!important; }
   body.playing .battle-footer { display:none!important; }
 }
+
+
+/* EMERALD FRONTIER — cinematic 3D-era landing refresh (homepage only). */
+body:not(.playing){background:radial-gradient(ellipse at 82% 8%,rgba(91,211,177,.16),transparent 32%),radial-gradient(ellipse at 12% 30%,rgba(71,125,173,.22),transparent 38%),linear-gradient(145deg,#07121f 0%,#0b1e2b 48%,#102b31 100%)}
+body:not(.playing) .app-shell{max-width:1540px}
+body:not(.playing) .topbar{padding:10px 14px;margin-bottom:16px;border:1px solid #9fe6c52a;border-radius:18px;background:linear-gradient(110deg,#0c2030e8,#102b36d9);box-shadow:0 12px 34px #02091466;backdrop-filter:blur(14px)}
+body:not(.playing) .brand-mark{border-radius:15px;background:linear-gradient(145deg,#f0f8b4,#75e0b1 55%,#4b9fc1);box-shadow:0 0 0 5px #9af0c212,0 0 32px #69dfb655,inset 0 1px #fff}
+body:not(.playing) .brand h1{font-size:clamp(20px,2.7vw,29px);letter-spacing:.3px}
+body:not(.playing) .brand p{color:#9ce8ca;letter-spacing:2px;font-weight:900}
+body:not(.playing) .landing-hero{min-height:clamp(330px,39vw,510px);margin:0 0 22px;padding:clamp(26px,4.5vw,62px);border:1px solid #8fe4c65c;border-radius:28px;background:linear-gradient(120deg,#0b1d2c 0%,#102c38 48%,#173f43 100%);box-shadow:0 28px 80px #0009,0 0 55px #5fe1b01a,inset 0 1px #ffffff1c}
+body:not(.playing) .landing-hero:before{z-index:1;background:linear-gradient(90deg,#071824 0%,#0b2030f5 27%,#0b2030a6 51%,#0b203030 82%,#07182455 100%)}
+body:not(.playing) .hero-art{width:76%;opacity:1;object-position:center 48%;filter:saturate(1.12) contrast(1.06);mask-image:linear-gradient(90deg,transparent 0%,#000 24%,#000 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 24%,#000 100%)}
+body:not(.playing) .hero-copy{max-width:570px}
+body:not(.playing) .hero-kicker{display:inline-flex;align-items:center;gap:9px;padding:8px 12px;margin-bottom:17px;border:1px solid #9af0c25c;border-radius:30px;background:#0b2b31cc;color:#aaf3cd;font-size:10px;letter-spacing:2px;box-shadow:0 0 22px #64dca51c}
+body:not(.playing) .hero-kicker:before{content:"";width:7px;height:7px;border-radius:50%;background:#9af0c2;box-shadow:0 0 12px #9af0c2}
+body:not(.playing) .hero-copy h2{font-size:clamp(42px,6.1vw,78px);line-height:.94;letter-spacing:-2.5px;text-shadow:0 8px 32px #000b}
+body:not(.playing) .hero-copy h2 span{color:#ffe19a;text-shadow:0 0 30px #f5c66b38}
+body:not(.playing) .hero-copy p{max-width:455px;color:#d0e4e5;font-size:clamp(13px,1.35vw,16px);line-height:1.75}
+body:not(.playing) .hero-pills span{padding:9px 12px;border-color:#a6e9cf55;background:#0a2636d9;color:#e5fff1;font-size:9px;letter-spacing:1px;box-shadow:inset 0 1px #ffffff12}
+body:not(.playing) .setup-screen{padding:0 10px 30px}
+body:not(.playing) .setup-card{width:min(820px,100%);padding:clamp(23px,4vw,42px);border:1px solid #8fe4c65c;border-radius:24px;background:linear-gradient(145deg,#173b45f2,#10283af5 58%,#0c1e31f5);box-shadow:0 25px 70px #0008,0 0 45px #60dca51a,inset 0 1px #ffffff18}
+body:not(.playing) .setup-kicker{color:#a5f0c7;letter-spacing:2.4px}
+body:not(.playing) .setup-card h2{font-size:clamp(27px,4vw,40px);letter-spacing:-.8px}
+body:not(.playing) .setup-description{color:#c2d8df;line-height:1.6}
+body:not(.playing) .setup-field select{min-height:47px;border-color:#5e8b8b;background:#091d2c;color:#f5fff9;border-radius:12px}
+body:not(.playing) .setup-note{border-color:#79cba255;background:#0b2933;color:#c5dfdc;border-radius:13px}
+body:not(.playing) .start-button{min-height:52px;border-color:#d9ffdc;border-radius:13px;background:linear-gradient(110deg,#e5f5a6,#8de8b5 54%,#66c8c5);box-shadow:0 10px 30px #65dba544,inset 0 1px #fff}
+body:not(.playing) .page-footer{color:#8eb9ae;letter-spacing:1.2px}
+@media(max-width:760px){body:not(.playing) .topbar{padding:9px 11px}body:not(.playing) .landing-hero{min-height:410px;padding:23px;border-radius:21px}body:not(.playing) .hero-art{object-position:60% center;opacity:.65}body:not(.playing) .landing-hero:before{background:linear-gradient(180deg,#07182466 0%,#071824a8 42%,#071824f5 100%)}body:not(.playing) .hero-copy h2{font-size:clamp(39px,10vw,58px)}body:not(.playing) .setup-screen{padding:0 0 20px}}
