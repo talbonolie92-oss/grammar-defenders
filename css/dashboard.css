@@ -20,3 +20,12 @@ button,input,select{font:inherit}.hidden{display:none!important}.dash-header{hei
 @media(max-width:650px){.docx-import{padding:11px}.docx-actions .button{width:100%}}
 
 .bank-grade-group{display:grid;gap:7px;padding:10px;border:1px solid #29445e;border-radius:12px;background:#0a192b}.bank-grade-group h3{margin:0;color:#a9f3ce;font-size:12px;letter-spacing:.04em}.draft-question{display:grid;gap:8px}.draft-question label{display:grid;gap:4px;color:#c9d8e7;font-size:10px;font-weight:800}.draft-question input,.draft-question select{width:100%;min-height:36px;border:1px solid #456782;border-radius:8px;padding:7px 9px;background:#091b30;color:#f4f8ff;font:inherit}.draft-question-heading{display:flex;align-items:center;justify-content:space-between}.review-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.docx-import{display:grid;gap:9px}.docx-import .status{min-height:18px}
+
+
+.session-topic-picker{padding:12px;border:1px solid #47745f;border-radius:11px;background:linear-gradient(145deg,#102d36,#0c2036)}
+.session-topic-picker select{min-height:44px;font-weight:900;border-color:#6aa98c}
+.field-help{display:block;color:#b9d3c8;font-size:10px;font-weight:700;line-height:1.5;margin-top:2px}
+.saved-bank-section{margin-top:20px;padding:15px;border:1px solid #456782;border-radius:12px;background:#0b1e33}
+.saved-bank-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.saved-bank-heading h3{font-size:15px;margin:0 0 4px;color:#a9f3ce}
+.saved-bank-heading p{font-size:10px;line-height:1.5;color:var(--muted);margin:0}
