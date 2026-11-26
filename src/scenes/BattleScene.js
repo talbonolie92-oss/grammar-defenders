@@ -1128,7 +1128,7 @@ export function createGameScene() {
       // Keep enemy visuals in a single visible container above the battlefield.
       // Dense waves keep the core silhouette but temporarily hide decorative
       // armor/accessories and feet to reduce Phaser draw calls on mobile.
-      const denseSpawn = this.enemies.length >= 22 && !isBoss;
+      const denseSpawn = this.enemies.length >= (this.mobilePerformanceMode ? 12 : 22) && !isBoss;
       if (denseSpawn) {
         details.forEach(part => part.setVisible(false));
         feet.forEach(part => part.setVisible(false));
@@ -1566,7 +1566,9 @@ export function createGameScene() {
         const defender = this.defenders[i];
         if (defender.lane >= 0 && defender.lane < LANES) this.defendersByLane[defender.lane].push(defender);
       }
-      const reducedCombatEffects = this.enemies.length > 24 || this.projectiles.length > 64;
+      const reducedCombatEffects = this.mobilePerformanceMode
+        ? (this.enemies.length > 12 || this.projectiles.length > 32)
+        : (this.enemies.length > 24 || this.projectiles.length > 64);
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
         const simplifyEnemy = reducedCombatEffects && !e.isBoss;
@@ -1848,7 +1850,7 @@ export function createGameScene() {
       // overlapping tweens or a burst of identical hit sounds.
       const hitFeedbackReady = (!enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140)
         && (!this.lastCombatVisualAt || this.time.now - this.lastCombatVisualAt >= 45);
-      if (hitFeedbackReady && this.enemies.length <= 24 && this.projectiles.length <= 64) {
+      if (hitFeedbackReady && !reducedCombatEffects) {
         enemy.lastHitFeedbackAt = this.time.now;
         this.lastCombatVisualAt = this.time.now;
         enemy.group.setScale(1.08);
