@@ -201,17 +201,23 @@ async function initializeStudentJoin() {
       const snapshot = await dbGet("sessions/" + sessionId + "/public");
       if (!snapshot.exists()) throw new Error("This session link is invalid or has been removed.");
       studentSession = snapshot.val();
-      if (studentSession.status === "ended") throw new Error("This classroom session has already ended.");
-      if (studentSession.status === "running" && !studentSession.allowLateJoin) throw new Error("Your teacher has disabled late joining.");
       const blocked = await dbGet("sessions/" + sessionId + "/blockedPlayers/" + studentUid);
       if (blocked.exists() && blocked.val() === true) throw new Error("Your teacher removed you from this session. Please speak with your teacher.");
       // Do not read the entire players collection here: database rules intentionally
       // keep other students' names and class details private. The Firebase rule on
       // this student's own player record enforces the 30-player session limit.
       const existingPlayer = await dbGet("sessions/" + sessionId + "/players/" + studentUid);
+      const hasPendingSaves = pendingAttempts.length > 0 || Boolean(pendingResult);
+      if (studentSession.status === "ended" && !hasPendingSaves) throw new Error("This classroom session has already ended.");
+      if (studentSession.status === "running" && !studentSession.allowLateJoin && !existingPlayer.exists() && !hasPendingSaves) {
+        throw new Error("Your teacher has disabled late joining.");
+      }
       if (existingPlayer.exists()) {
         name = existingPlayer.val().name || name;
         classSection = existingPlayer.val().classSection || classSection;
+        if (existingPlayer.val().status === "finished" && !hasPendingSaves) {
+          throw new Error("You have already completed this classroom game.");
+        }
       } else {
         await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
           name, classSection, joinedAt: Date.now(), status: "waiting", active: true
@@ -274,7 +280,9 @@ async function initializeStudentJoin() {
     const existing = await dbGet("sessions/" + sessionId + "/players/" + user.uid);
     if (!existing.exists()) return;
     const player = existing.val();
-    if (!["waiting", "playing"].includes(player.status) || form.dataset.autoResume === "done") return;
+    const hasPendingSaves = Boolean(localStorage.getItem("emerald-frontier:pending-attempts:" + sessionId + ":" + user.uid) ||
+      localStorage.getItem("emerald-frontier:pending-result:" + sessionId + ":" + user.uid));
+    if ((!["waiting", "playing"].includes(player.status) && !hasPendingSaves) || form.dataset.autoResume === "done") return;
     form.dataset.autoResume = "done";
     document.getElementById("student-name").value = player.name || "";
     document.getElementById("student-class").value = player.classSection || "";
