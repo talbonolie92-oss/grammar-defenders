@@ -759,7 +759,7 @@ export function createGameScene() {
       const overlay = this.add.container(0, 0).setDepth(950);
       this.upgradeChoiceOverlay = overlay;
       const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .9).setInteractive();
-      const panel = this.add.rectangle(480, 210, 940, 360, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const panel = this.add.rectangle(480, 210, this.phoneLandscape ? 820 : 940, this.phoneLandscape ? 390 : 360, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
       const heading = this.add.text(480, 67, "CHOOSE A TIER " + (tier === 2 ? "II" : "III") + " SPECIALIZATION", {
         fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: 1
       }).setOrigin(.5);
@@ -778,28 +778,31 @@ export function createGameScene() {
         { id: "energycore", title: "✧ ENERGY CORE", desc: "+1 energy per second\nand +100 energy now", color: 0x66518a }
       ];
       choices.forEach((choice, index) => {
-        const col = index % 4;
-        const row = Math.floor(index / 4);
-        const x = 125 + col * 237;
-        const y = row === 0 ? 159 : 271;
-        const card = this.add.rectangle(x, y, 212, 99, choice.color, 1)
+        const phoneLayout = this.phoneLandscape;
+        const col = index % (phoneLayout ? 2 : 4);
+        const row = Math.floor(index / (phoneLayout ? 2 : 4));
+        const x = phoneLayout ? (col === 0 ? 260 : 700) : 125 + col * 237;
+        const y = phoneLayout ? 125 + row * 65 : (row === 0 ? 159 : 271);
+        const cardWidth = phoneLayout ? 390 : 212;
+        const cardHeight = phoneLayout ? 58 : 99;
+        const card = this.add.rectangle(x, y, cardWidth, cardHeight, choice.color, 1)
           .setStrokeStyle(2, 0xc8e7d8).setInteractive({ useHandCursor: true });
-        const title = this.add.text(x, y - 29, choice.title, {
-          fontFamily: "Nunito", fontSize: "13px", color: "#fff1c5", fontStyle: "1000"
+        const title = this.add.text(x, y - (phoneLayout ? 17 : 29), choice.title, {
+          fontFamily: "Nunito", fontSize: phoneLayout ? "11px" : "13px", color: "#fff1c5", fontStyle: "1000"
         }).setOrigin(.5);
-        const desc = this.add.text(x, y + 4, choice.desc, {
-          fontFamily: "Nunito", fontSize: "10px", color: "#f0f5f8", fontStyle: "800",
-          align: "center", lineSpacing: 3
+        const desc = this.add.text(x, y + (phoneLayout ? 4 : 4), choice.desc, {
+          fontFamily: "Nunito", fontSize: phoneLayout ? "9px" : "10px", color: "#f0f5f8", fontStyle: "800",
+          align: "center", lineSpacing: 2
         }).setOrigin(.5);
-        const pick = this.add.text(x, y + 37, "SELECT", {
-          fontFamily: "Nunito", fontSize: "10px", color: "#a9f0cf", fontStyle: "1000", letterSpacing: 1
+        const pick = this.add.text(x, y + (phoneLayout ? 22 : 37), "SELECT", {
+          fontFamily: "Nunito", fontSize: phoneLayout ? "8px" : "10px", color: "#a9f0cf", fontStyle: "1000", letterSpacing: 1
         }).setOrigin(.5);
         card.on("pointerover", () => card.setStrokeStyle(3, 0xffdf78));
         card.on("pointerout", () => card.setStrokeStyle(2, 0xc8e7d8));
         card.on("pointerdown", () => this.applyDefenderUpgradeChoice(defender, choice.id));
         overlay.add([card, title, desc, pick]);
       });
-      overlay.add(this.add.text(480, 355, "Battle pauses while you choose. One choice is granted per evolution tier.", {
+      overlay.add(this.add.text(480, this.phoneLandscape ? 380 : 355, "Battle pauses while you choose. One choice is granted per evolution tier.", {
         fontFamily: "Nunito", fontSize: "10px", color: "#b8ccdc", fontStyle: "700"
       }).setOrigin(.5));
     }
@@ -1256,7 +1259,7 @@ export function createGameScene() {
       this.bossAscensionOverlay = this.add.container(0, 0).setDepth(980);
       const overlay = this.bossAscensionOverlay;
       const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .92).setInteractive();
-      const panel = this.add.rectangle(480, 210, 936, 306, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const panel = this.add.rectangle(480, 210, this.phoneLandscape ? 820 : 936, 306, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
       const title = this.add.text(480, 74, "BOSS DEFEATED — CHOOSE YOUR ASCENSION", {
         fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: .6
       }).setOrigin(.5);
@@ -1997,7 +2000,7 @@ export function createGameScene() {
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       const compactAnswers = item.a.length >= 4;
-      const answerStartY = phoneQuestionLayout ? 198 : Math.max(compactAnswers ? 180 : 188, instructionY + 25);
+      const answerStartY = phoneQuestionLayout ? 190 : Math.max(compactAnswers ? 180 : 188, instructionY + 25);
       this.questionAnswerTargets = [];
       item.a.forEach((answer, index) => {
         // Phone landscape uses a fixed compact question area so every answer remains visible.
@@ -2047,12 +2050,12 @@ export function createGameScene() {
       // Persist the answered question and resulting battle state immediately,
       // rather than waiting for the next periodic checkpoint tick.
       this.saveCheckpoint();
-      const feedback = this.add.text(480, this.phoneLandscape ? 370 : 335, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
+      const feedback = this.add.text(480, this.phoneLandscape ? 364 : 335, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
       // Give players an explicit way to resume if the automatic close timer is delayed on mobile.
-      const continueY = this.phoneLandscape ? 395 : 365;
+      const continueY = this.phoneLandscape ? 394 : 365;
       const continueButton = this.add.rectangle(480, continueY, 270, this.phoneLandscape ? 38 : 44, 0x8be6b6, 1)
         .setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
       const continueLabel = this.add.text(480, continueY, "CONTINUE BATTLE  ▶", {
