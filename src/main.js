@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=resume-checkpoint-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=offline-queue-1";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -83,7 +83,8 @@ async function flushPendingAttempts() {
   finally { attemptFlushPromise = null; }
 }
 async function syncPendingResult() {
-  if (!studentUid || !pendingResult || !pendingResultMeta || navigator.onLine === false) return;
+  if (!studentUid || !pendingResult || !pendingResultMeta) return;
+  if (navigator.onLine === false) throw new Error("The device is offline; the result remains saved locally.");
   if (resultSavePromise) return resultSavePromise;
   const saved = pendingResultMeta;
   resultSavePromise = (async () => {
