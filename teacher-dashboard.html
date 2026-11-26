@@ -7,6 +7,7 @@
   <title>Teacher Dashboard • Emerald Frontier</title>
   <link rel="stylesheet" href="css/dashboard.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
 </head>
 <body>
   <header class="dash-header">
@@ -60,9 +61,21 @@
         <div class="bank-import-grid">
           <label>Subject<input id="bank-subject" maxlength="60" placeholder="e.g. English, Science, Social Studies"></label>
           <label>Topic / lesson<input id="bank-topic" maxlength="70" placeholder="e.g. Customer Service"></label>
-          <label class="wide">Upload questions (.JSON or .CSV)<input id="bank-file" type="file" accept=".json,.csv,application/json,text/csv"></label>
-          <button id="bank-load-file" class="button ghost" type="button">Load file into draft</button>
-          <p class="bank-help">CSV columns: topic, grade, question, answer1, answer2, answer3, correct, effect. Correct accepts A/B/C or 1/2/3. <a class="bank-template-link" href="question-bank-template.csv" download>Download CSV template</a>. For JSON, use an array of question objects with q, a, and correct fields.</p>
+          <label class="wide">Upload existing questions (.JSON or .CSV)<input id="bank-file" type="file" accept=".json,.csv,application/json,text/csv"></label>
+          <button id="bank-load-file" class="button ghost" type="button">Load questions into draft</button>
+          <p class="bank-help">CSV columns: topic, grade, question, answer1, answer2, answer3, correct, effect. Correct accepts A/B/C/D or 1/2/3/4. <a class="bank-template-link" href="question-bank-template.csv" download>Download CSV template</a>.</p>
+          <div class="docx-import wide">
+            <h3>Generate questions from a Word lesson</h3>
+            <p>Upload a .DOCX lesson or reading. The dashboard extracts its text and prepares a source-grounded prompt. Use ChatGPT to generate the questions, then paste the JSON result below for source checks and teacher review.</p>
+            <label>Word document (.DOCX)<input id="docx-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+            <button id="docx-extract" class="button ghost" type="button">Read Word document</button>
+            <p id="docx-status" class="status" role="status"></p>
+            <label>Extracted lesson text<textarea id="docx-source" rows="7" placeholder="The Word document text will appear here."></textarea></label>
+            <div class="docx-actions"><button id="docx-copy-prompt" class="button primary" type="button">Copy question-generation prompt</button></div>
+            <label>Paste AI-generated JSON<textarea id="docx-json" rows="7" placeholder='{"questions":[{"q":"...","a":["...","...","..."],"correct":"A","explanation":"...","sourceQuote":"Exact sentence from the lesson","sourceSection":"..."}]}'></textarea></label>
+            <button id="docx-import-json" class="button ghost" type="button">Check answers &amp; add to review</button>
+            <p class="bank-help">The app does not contain an AI API connection, so generation uses ChatGPT via copy/paste. Exact source-quote checks are automatic; semantic correctness still requires your approval.</p>
+          </div>
         </div>
         <form id="manual-question-form" class="manual-question-form">
           <h3>Add a question manually</h3>
