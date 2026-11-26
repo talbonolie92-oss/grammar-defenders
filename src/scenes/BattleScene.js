@@ -201,15 +201,18 @@ export function createGameScene() {
         const y = GRID_Y + lane * TILE_H;
         g.fillStyle(0x102b2c, 0.42);
         g.fillRoundedRect(GRID_X - 5, y + 4, GRID_W + 10, TILE_H, 9);
-        g.fillStyle(lane % 2 ? 0x376b55 : 0x477b5d, 0.98);
+        g.fillStyle(lane % 2 ? 0x35684f : 0x4a805d, 0.99);
         g.fillRoundedRect(GRID_X, y, GRID_W, TILE_H - 3, 8);
-        g.lineStyle(2, 0xb4d89a, 0.22);
+        // Higher-contrast lane borders keep all five rows distinguishable on phones.
+        g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72);
         g.strokeRoundedRect(GRID_X, y, GRID_W, TILE_H - 3, 8);
+        g.lineStyle(2, 0x102f2e, 0.78);
+        g.lineBetween(GRID_X + 3, y + TILE_H - 4, GRID_X + GRID_W - 3, y + TILE_H - 4);
         g.fillStyle(0x1c4c43, 0.2);
         g.fillRect(GRID_X + 2, y + TILE_H - 13, GRID_W - 4, 9);
         for (let col = 0; col < 7; col++) {
           const x = GRID_X + col * TILE_W;
-          g.lineStyle(1, 0xe1efbd, 0.18);
+          g.lineStyle(1, 0xf1f7d8, 0.32);
           g.strokeRoundedRect(x + 2, y + 2, TILE_W - 4, TILE_H - 7, 5);
           if ((lane + col) % 3 === 0) {
             g.fillStyle(0xc6e69a, 0.25);
@@ -366,9 +369,14 @@ export function createGameScene() {
     }
 
     handleBoardPointer(pointer) {
-      if (!pointer || !this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
-      // pointer.x/y are already converted by Phaser's Scale Manager. Transform
-      // through the active camera, then map the point to one of the 35 tiles.
+      if (!pointer || !this.battleStarted || this.gameOver) return;
+      // Route question taps through the same camera-transformed coordinates
+      // used by the board. This avoids per-object hit-test drift on scaled phones.
+      if (this.questionActive) {
+        this.handleQuestionPointer(pointer);
+        return;
+      }
+      if (this.upgradeChoiceActive) return;
       const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
       const localX = point.x - GRID_X;
       const localY = point.y - GRID_Y;
@@ -377,6 +385,18 @@ export function createGameScene() {
       const lane = Math.floor(localY / TILE_H);
       if (lane >= 0 && lane < LANES && col >= 0 && col < 7) {
         this.handleTileTap(lane, col);
+      }
+    }
+
+    handleQuestionPointer(pointer) {
+      if (this.questionAnswered || !this.questionAnswerTargets?.length) return;
+      const point = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      if (Math.abs(point.x - 480) > 405) return;
+      for (const target of this.questionAnswerTargets) {
+        if (Math.abs(point.y - target.y) <= target.hitHeight / 2) {
+          this.answerQuestion(target.index, target.item, target.button, target.label);
+          return;
+        }
       }
     }
 
@@ -1920,6 +1940,7 @@ export function createGameScene() {
       }
       this.questionActive = true;
       this.questionAnswered = false;
+      this.questionAnswerTargets = [];
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
       const fallbackPool = this.customQuestions.length ? this.customQuestions : (isBoss ? BOSS_QUESTIONS : QUESTIONS);
@@ -1957,18 +1978,17 @@ export function createGameScene() {
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       const compactAnswers = item.a.length >= 4;
       const answerStartY = phoneQuestionLayout ? 198 : Math.max(compactAnswers ? 180 : 188, instructionY + 25);
+      this.questionAnswerTargets = [];
       item.a.forEach((answer, index) => {
         // Phone landscape uses a fixed compact question area so every answer remains visible.
         const y = answerStartY + index * (phoneQuestionLayout ? (compactAnswers ? 35 : 40) : (compactAnswers ? 40 : 44));
         const buttonHeight = phoneQuestionLayout ? 33 : (compactAnswers ? 42 : 46);
-        const button = this.add.rectangle(480, y, 790, buttonHeight, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        const button = this.add.rectangle(480, y, 790, buttonHeight, 0x294969, 1).setStrokeStyle(2, 0x587d9b);
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
           fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "15px" : (compactAnswers ? "19px" : "20px"), color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 750 }
         }).setOrigin(.5);
-        button.on("pointerover", () => button.setFillStyle(0x376477));
-        button.on("pointerout", () => button.setFillStyle(0x294969));
-        button.on("pointerdown", () => this.answerQuestion(index, item, button, label));
+        this.questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + 4 });
         overlay.add([button, label]);
       });
       this.tweens.add({ targets: overlay, alpha: { from: 0, to: 1 }, duration: 180, ease: "Quad.Out" });
@@ -2039,6 +2059,7 @@ export function createGameScene() {
       if (this.questionOverlay?.active) this.questionOverlay.destroy(true);
       this.questionOverlay = null;
       this.questionActive = false;
+      this.questionAnswerTargets = [];
       this.questionAnswered = false;
       this.isBossQuestion = false;
       if (this.pendingBossQuestion && !this.gameOver) {
