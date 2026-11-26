@@ -3,7 +3,7 @@ import { getDatabase } from "firebase-admin/database";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { createSeatReservation, MAX_SESSION_PLAYERS } from "./capacity.js";
 
-initializeApp();
+initializeApp({ databaseURL: "https://grammar-defenders-default-rtdb.asia-southeast1.firebasedatabase.app" });
 
 export const reserveSessionSeat = onCall(
   { region: "asia-southeast1", maxInstances: 20 },
