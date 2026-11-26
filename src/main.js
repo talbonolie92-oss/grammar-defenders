@@ -40,6 +40,10 @@ let pendingResult = null;
 let pendingResultMeta = null;
 let pendingAttempts = [];
 let attemptFlushPromise = null;
+let attemptRetryTimer = null;
+let resultRetryTimer = null;
+let attemptRetryDelay = 1500;
+let resultRetryDelay = 2000;
 let stopConnectionWatch = null;
 let studentLaunchStarted = false;
 
@@ -61,6 +65,24 @@ function loadPendingSaves() {
       pendingResultMeta = saved;
     }
   } catch (_) { pendingResult = null; pendingResultMeta = null; }
+}
+function scheduleAttemptRetry() {
+  if (navigator.onLine === false || attemptRetryTimer || !pendingAttempts.length) return;
+  const delay = attemptRetryDelay;
+  attemptRetryDelay = Math.min(30000, attemptRetryDelay * 2);
+  attemptRetryTimer = window.setTimeout(() => {
+    attemptRetryTimer = null;
+    flushPendingAttempts().catch(error => console.warn("Question attempt retry remains queued:", error));
+  }, delay);
+}
+function scheduleResultRetry() {
+  if (navigator.onLine === false || resultRetryTimer || !pendingResult) return;
+  const delay = resultRetryDelay;
+  resultRetryDelay = Math.min(30000, resultRetryDelay * 2);
+  resultRetryTimer = window.setTimeout(() => {
+    resultRetryTimer = null;
+    syncPendingResult().catch(error => console.warn("Final result retry remains queued:", error));
+  }, delay);
 }
 function persistPendingAttempts() {
   try { localStorage.setItem(attemptQueueStorageKey(), JSON.stringify(pendingAttempts)); }
