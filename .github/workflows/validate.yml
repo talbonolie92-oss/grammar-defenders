@@ -26,5 +26,7 @@ jobs:
         run: node scripts/validate-data.mjs
       - name: Test DOCX question parser
         run: node scripts/test-docx-parser.mjs
+      - name: Test question-bank workflow
+        run: node scripts/test-question-bank-workflow.mjs
       - name: Validate core game structure and mobile layout
         run: node scripts/validate-game.mjs
