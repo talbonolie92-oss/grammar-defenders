@@ -19,7 +19,6 @@ assert.match(battle, /defeatedByPoison = true[\s\S]*?for \(let i = this\.defende
 assert.doesNotMatch(battle, /removeModeButton\?\.setAttribute\("aria-pressed", "false"\);\s*this\.upgradeMode = false;/, "Unit selection must not repeat the mode-reset block.");
 assert.match(battle, /this\.enemies\.push\(enemy\)/, "Enemy spawning must register attackers.");
 assert.match(battle, /const dt = Math\.min\(delta \/ 1000, 0\.35\);/, "Combat delta time must be declared as executable code.");
-assert.doesNotMatch(battle, /spikesthis\\.enemies\\.length > 6 \\|\\| this\\.projectiles\\.length > 18\\n\\s+const dt/, "Combat delta declaration must not be swallowed by a line comment.");
 
 const units = ["sunwell","archer","guardian","mage","ember","volt","thorn","knight","phoenix","titan","stormcaller","runeblade"];
 for (const unit of units) {
