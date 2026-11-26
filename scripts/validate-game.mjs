@@ -268,6 +268,9 @@ assert.ok(main.includes("BattleScene.js?v=tablet-stability-10"), "The BattleScen
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
+assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n      if (this.pendingBossQuestion"), "A selected defender specialization must be checkpointed immediately.");
+assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveCheckpoint();"), "Boss ascension progress must be checkpointed before the next wave transition.");
+assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
 assert.ok(main.includes("BattleScene.js?v=tablet-stability-10"), "The BattleScene cache token must refresh after phone question layout changes.");
