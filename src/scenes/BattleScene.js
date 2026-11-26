@@ -35,8 +35,8 @@ export function createGameScene() {
       this.projectiles = [];
       this.projectilePool = [];
       // Phones get a lower simultaneous-enemy budget to protect frame time and touch input.
-      this.mobilePerformanceMode = Boolean(window.matchMedia?.("(max-width: 900px)").matches ||
-        (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4));
+      this.mobilePerformanceMode = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 ||
+        window.matchMedia?.("(max-width: 900px)").matches || (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4));
       this.selectedTile = null;
       this.questionIndex = 0;
       this.bossQuestionIndex = 0;
@@ -266,8 +266,8 @@ export function createGameScene() {
       // Phones were creating two simultaneous WebGL renderers (Phaser + Three.js).
       // Keep the proven Phaser battlefield on small screens to reduce GPU/context
       // pressure; desktop keeps the optional 3D presentation.
-      const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches ||
-        (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
+      const mobileDevice = window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 ||
+        window.matchMedia?.("(max-width: 900px)").matches || (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
       if (mobileDevice) return;
       import("../three-world.js").then(async ({ createThreeWorld }) => {
         if (!this.sys.isActive()) return;
@@ -1148,7 +1148,7 @@ export function createGameScene() {
       // Keep enemy visuals in a single visible container above the battlefield.
       // Dense waves keep the core silhouette but temporarily hide decorative
       // armor/accessories and feet to reduce Phaser draw calls on mobile.
-      const denseSpawn = this.enemies.length >= (this.mobilePerformanceMode ? 12 : 22) && !isBoss;
+      const denseSpawn = this.enemies.length >= (this.mobilePerformanceMode ? 6 : 22) && !isBoss;
       if (denseSpawn) {
         details.forEach(part => part.setVisible(false));
         feet.forEach(part => part.setVisible(false));
@@ -1587,7 +1587,7 @@ export function createGameScene() {
         if (defender.lane >= 0 && defender.lane < LANES) this.defendersByLane[defender.lane].push(defender);
       }
       const reducedCombatEffects = this.mobilePerformanceMode
-        ? (this.enemies.length > 12 || this.projectiles.length > 32)
+        ? (this.enemies.length > 6 || this.projectiles.length > 18)
         : (this.enemies.length > 24 || this.projectiles.length > 64);
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
@@ -1953,8 +1953,8 @@ export function createGameScene() {
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .88).setInteractive();
-      const panel = this.add.rectangle(480, 170, 850, 330, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
+      const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
+      const panel = this.add.rectangle(480, 210, 850, 390, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
       const topGlow = this.add.rectangle(480, 12, 838, 5, 0x91e5c2, .9);
       const phoneQuestionLayout = this.mobilePerformanceMode && window.matchMedia?.("(orientation: landscape)").matches;
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
