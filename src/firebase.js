@@ -16,7 +16,14 @@ export const firebaseAuth = auth;
 export const firebaseDb = db;
 export const timestamp = () => serverTimestamp();
 export const teacherSignIn = async (email, password) => { needFirebase(); return signInWithEmailAndPassword(auth, email, password); };
-export const studentSignIn = async () => { needFirebase(); return auth.currentUser || (await signInAnonymously(auth)).user; };
+export const studentSignIn = async () => {
+  needFirebase();
+  // Wait until Firebase restores the browser's persisted anonymous identity.
+  // Otherwise a fast page refresh can create a new UID and lose the student's
+  // existing player record and local checkpoint association.
+  if (typeof auth.authStateReady === "function") await auth.authStateReady();
+  return auth.currentUser || (await signInAnonymously(auth)).user;
+};
 export const teacherSignOut = async () => { needFirebase(); return signOut(auth); };
 export const watchAuth = callback => { needFirebase(); return onAuthStateChanged(auth, callback); };
 export const dbRef = path => { needFirebase(); return ref(db, path); };
