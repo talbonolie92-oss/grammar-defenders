@@ -123,7 +123,7 @@ $("bank-save").addEventListener("click",async()=>{
   try{
     const normalized=bankDraft.map((q,i)=>{
       if(q.correct===null||q.correct===undefined||q.correct==="")throw new Error("Question "+(i+1)+": mark its correct answer before saving.");
-      return normalizeBankQuestion({...q,grade},subject,topic);
+      return normalizeBankQuestion({...q,grade,topic},subject,topic);
     });
     const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
     const existing=bankCache.find(b=>b.id===id);
@@ -311,7 +311,7 @@ function openSession(s){
 function renderDetail(){
   const s=selectedSession;if(!s)return;
   $("detail-title").textContent=s.title||"Session details";
-  $("detail-meta").textContent=[s.grade,s.section,s.subject,s.topic,s.mode==="endless"?"Endless Survival":"Fixed Waves",s.timeLimitMinutes+" min",s.status].filter(Boolean).join(" • ");
+  $("detail-meta").textContent=[s.grade,s.section,s.subject,s.topic,s.questionCount?s.questionCount+" questions":"",s.mode==="endless"?"Endless Survival":"Fixed Waves",s.timeLimitMinutes+" min",s.status].filter(Boolean).join(" • ");
   const link=studentUrl(s.id);$("detail-link").value=link;
   $("session-share").classList.toggle("hidden",s.status==="ended");
   $("detail-qr").innerHTML="";if(window.QRCode&&s.status!=="ended")new QRCode($("detail-qr"),{text:link,width:150,height:150,colorDark:"#10243c",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
