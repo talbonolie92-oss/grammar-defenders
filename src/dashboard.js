@@ -72,9 +72,15 @@ function updateBankDraftCount(){
   const preview=$("bank-draft-preview");
   if(!preview)return;
   preview.innerHTML=bankDraft.map((q,i)=>`<article class="draft-question">
-    <b>${i+1}. ${escapeHtml(q.q)}</b>
-    <small>Correct answer: ${escapeHtml(q.a[q.correct])}</small>
-    ${q.reviewRequired?`<p><b>Explanation:</b> ${escapeHtml(q.explanation||"No explanation supplied.")}</p><p><b>Source evidence:</b> ${escapeHtml(q.sourceQuote||"Missing source quote.")}</p><p><b>Section:</b> ${escapeHtml(q.sourceSection||"Not specified")}</p><label class="review-check"><input type="checkbox" data-review-index="${i}" ${q.approved?"checked":""}> I verified this answer against the lesson and approve this question.</label>`:q.explanation?`<small>${escapeHtml(q.explanation)}</small>`:""}
+    ${q.reviewRequired?`<b>Question ${i+1} — teacher review required</b>
+      <label>Question<input class="review-field" data-draft-index="${i}" data-draft-field="q" value="${escapeHtml(q.q)}"></label>
+      <div class="review-options">${[0,1,2,3].map(n=>`<label>Answer ${"ABCD"[n]}<input class="review-field" data-draft-index="${i}" data-draft-answer="${n}" value="${escapeHtml(q.a[n]||"")}" placeholder="Answer ${"ABCD"[n]}"></label>`).join("")}</div>
+      <label>Correct answer<select class="review-field" data-draft-index="${i}" data-draft-field="correct">${["A","B","C","D"].map((letter,n)=>`<option value="${n}" ${q.correct===n?"selected":""}>${letter}</option>`).join("")}</select></label>
+      <label>Explanation<textarea class="review-field" data-draft-index="${i}" data-draft-field="explanation" rows="2">${escapeHtml(q.explanation||"")}</textarea></label>
+      <label>Exact source evidence<textarea class="review-field" data-draft-index="${i}" data-draft-field="sourceQuote" rows="2">${escapeHtml(q.sourceQuote||"")}</textarea></label>
+      <label>Source section<input class="review-field" data-draft-index="${i}" data-draft-field="sourceSection" value="${escapeHtml(q.sourceSection||"")}"></label>
+      <small>AI confidence: ${escapeHtml(q.confidence||"not provided")} • Source quote is checked against the uploaded document.</small>
+      <label class="review-check"><input type="checkbox" data-review-index="${i}" ${q.approved?"checked":""}> I verified the correct answer, explanation, and source evidence.</label>`: `<b>${i+1}. ${escapeHtml(q.q)}</b><small>Correct answer: ${escapeHtml(q.a[q.correct])}</small>${q.explanation?`<small>${escapeHtml(q.explanation)}</small>`:""}`}
   </article>`).join("");
 }
 function renderQuestionBanks(){
@@ -108,6 +114,8 @@ $("bank-save").addEventListener("click",async()=>{
   if(!teacher)return;
   const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
   if(!subject||!topic||!bankDraft.length){setStatus("bank-status","Enter a subject, topic, and at least one question.");return;}
+  try{bankDraft=bankDraft.map(q=>normalizeBankQuestion(q,subject,topic));}
+  catch(error){setStatus("bank-status",error.message);return;}
   const pendingReview=bankDraft.filter(q=>q.reviewRequired&&!q.approved).length;
   if(pendingReview){setStatus("bank-status","Please approve all "+pendingReview+" source-based questions before saving.");return;}
   if(bankDraft.length>300){setStatus("bank-status","A question set can contain up to 300 questions.");return;}
@@ -120,11 +128,26 @@ $("bank-save").addEventListener("click",async()=>{
 });
 $("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
 
+$("bank-draft-preview").addEventListener("input",e=>{
+  const field=e.target.closest("[data-draft-index]");if(!field)return;
+  const item=bankDraft[Number(field.dataset.draftIndex)];if(!item)return;
+  if(field.dataset.draftAnswer!==undefined){item.a[Number(field.dataset.draftAnswer)]=field.value;}
+  else if(field.dataset.draftField==="correct")item.correct=Number(field.value);
+  else item[field.dataset.draftField]=field.value;
+  item.approved=false;
+});
 $("bank-draft-preview").addEventListener("change",e=>{
   const box=e.target.closest("input[data-review-index]");if(!box)return;
-  const item=bankDraft[Number(box.dataset.reviewIndex)];if(!item)return;
-  item.approved=box.checked;
-  setStatus("bank-status",box.checked?"Question approved.":"Approval removed; this question cannot be saved yet.");
+  const index=Number(box.dataset.reviewIndex),item=bankDraft[index];if(!item)return;
+  if(box.checked){
+    try{
+      normalizeBankQuestion(item,$("bank-subject").value,$("bank-topic").value);
+      const compact=s=>String(s||"").toLowerCase().replace(/\\s+/g," ").trim();
+      if(!item.sourceQuote||!compact($("docx-source").value).includes(compact(item.sourceQuote)))throw new Error("The source evidence must exactly match the uploaded Word lesson.");
+      if(!item.explanation.trim())throw new Error("Add an explanation before approval.");
+      item.approved=true;setStatus("bank-status","Question "+(index+1)+" approved.");
+    }catch(error){box.checked=false;item.approved=false;setStatus("bank-status","Question "+(index+1)+": "+error.message);}
+  }else{item.approved=false;setStatus("bank-status","Approval removed; this question cannot be saved yet.");}
 });
 $("docx-extract").addEventListener("click",async()=>{
   const file=$("docx-file").files?.[0];
