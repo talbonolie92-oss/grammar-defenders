@@ -68,6 +68,15 @@ export function createGameScene() {
       this.upgradeMode = false;
       this.upgradeChoiceActive = false;
       this.upgradeChoiceOverlay = null;
+      this.bossAscensionActive = false;
+      this.bossAscensionOverlay = null;
+      this.lastAscensionWave = 0;
+      this.ascensionNames = {
+        archer: "Gatling Gunner", guardian: "Aegis Colossus", mage: "Glacial Archmage",
+        ember: "Inferno Lord", volt: "Thunder Titan", thorn: "Ancient Worldroot",
+        knight: "Eternal Sentinel", phoenix: "Eternal Phoenix", sunwell: "Three-Headed Sunwell",
+        titan: "Worldbreaker", stormcaller: "Storm Sovereign", runeblade: "Rune Emperor"
+      };
       this.advancedDeckUnlocked = false;
       this.unitCards = [...document.querySelectorAll("[data-unit]")];
       this.unitStats = {
@@ -344,6 +353,13 @@ export function createGameScene() {
       if (!Number.isInteger(lane) || !Number.isInteger(col) ||
           lane < 0 || lane >= LANES || col < 0 || col >= 7) return;
       const existing = this.defenders.find(d => d.lane === lane && d.col === col);
+      if (this.bossAscensionActive) {
+        if (existing) {
+          if (existing.ascended) this.message.textContent = "That defender has already ascended. Choose another.";
+          else this.applyBossAscension(existing);
+        } else this.message.textContent = "Choose a tile with one of your deployed defenders.";
+        return;
+      }
       if (this.upgradeMode) {
         if (existing) this.upgradeDefender(existing);
         else this.message.textContent = "Choose a tile with a defender to upgrade.";
@@ -1142,34 +1158,131 @@ export function createGameScene() {
         return;
       }
 
+      if (this.wave % 5 === 0 && this.lastAscensionWave !== this.wave) {
+        this.showBossAscension();
+        return;
+      }
       this.message.textContent = "Wave cleared! The next wave approaches...";
       this.playSound("wave");
-      this.time.delayedCall(5000, () => {
-        if (this.gameOver) return;
-        this.wave++;
-        this.enemiesSpawnedThisWave = 0;
-        const bossWave = this.wave % 5 === 0;
-        // Boss waves are full assaults: a larger minion wave followed by the boss.
-        // After the first boss, enemy waves become substantially larger.
-        // Later bosses bring heavier reinforcements; the active cap protects frame rate.
-        this.enemiesPerWave = bossWave
-          ? Math.min(55, this.wave === 5 ? 21 : 32 + Math.floor(this.wave / 5) * 3 + Math.max(0, this.wave - 10) * 2)
-          : this.wave <= 5
-            ? Math.min(20, 8 + Math.floor((this.wave - 1) * 1.2))
-            : Math.min(55, 22 + (this.wave - 6) * 4);
-        if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
-        this.waveActive = true;
-        this.waveTransitioning = false;
-        this.spawnTimer.delay = bossWave
-          ? Math.max(650, 1150 - Math.floor(this.wave / 5) * 45)
-          : this.wave > 5
-            ? Math.max(480, 2050 - (this.wave - 6) * 130)
-            : Math.max(620, 3200 - (this.wave - 1) * 170);
-        this.spawnTimer.paused = false;
-        this.message.textContent = "Wave " + this.wave + " — defend the keep!";
-        this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
-        this.updateHud();
-      });
+      this.time.delayedCall(5000, () => this.startNextWave());
+    }
+
+    showBossAscension() {
+      this.bossAscensionActive = true;
+      this.bossAscensionOverlay = this.add.container(0, 0).setDepth(980);
+      const overlay = this.bossAscensionOverlay;
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .92).setInteractive();
+      const panel = this.add.rectangle(480, 170, 936, 306, 0x142b43, .99).setStrokeStyle(3, 0xffdf78);
+      const title = this.add.text(480, 34, "BOSS DEFEATED — CHOOSE YOUR ASCENSION", {
+        fontFamily: "Nunito", fontSize: "19px", color: "#ffe7a1", fontStyle: "1000", letterSpacing: .6
+      }).setOrigin(.5);
+      const sub = this.add.text(480, 69, "FREE BOSS REWARD  •  Tap any deployed defender on the battlefield to transform it", {
+        fontFamily: "Nunito", fontSize: "11px", color: "#d2e4f0", fontStyle: "800"
+      }).setOrigin(.5);
+      const skip = this.add.rectangle(480, 282, 190, 34, 0x365a70, 1).setStrokeStyle(1.5, 0xb8d9e8).setInteractive({ useHandCursor: true });
+      const skipText = this.add.text(480, 282, "SKIP REWARD", {
+        fontFamily: "Nunito", fontSize: "12px", color: "#ffffff", fontStyle: "1000"
+      }).setOrigin(.5);
+      skip.on("pointerdown", () => this.finishBossAscension(null));
+      overlay.add([shade, panel, title, sub, skip, skipText]);
+      const deployed = this.defenders.filter(d => d.group?.active);
+      if (!deployed.length) {
+        const empty = this.add.text(480, 168, "No defenders deployed — skip this reward to continue.", {
+          fontFamily: "Nunito", fontSize: "15px", color: "#ffffff", fontStyle: "800"
+        }).setOrigin(.5);
+        overlay.add(empty);
+      } else {
+        this.message.textContent = "BOSS REWARD: Tap one of your deployed defenders to ascend it.";
+      }
+      this.playSound("boss");
+    }
+
+    applyBossAscension(defender) {
+      if (!this.bossAscensionActive || !defender || !this.defenders.includes(defender) || defender.ascended) {
+        if (defender?.ascended) this.message.textContent = "This defender has already received an Ascension.";
+        return;
+      }
+      const unit = defender.unitType;
+      const base = this.unitStats[unit];
+      defender.ascended = true;
+      defender.ascensionName = this.ascensionNames[unit] || (defender.stats.name + " Ascendant");
+      defender.stats.name = defender.ascensionName;
+      if (unit === "sunwell") {
+        defender.stats.energyRate = Math.round((defender.stats.energyRate || base.energyRate || 7) * 3);
+        defender.stats.energyInterval = Math.max(2.2, (defender.stats.energyInterval || 3.5) * .85);
+        defender.energyCrystals?.forEach(crystal => crystal.destroy());
+        defender.energyCrystals = [];
+        for (let i = 0; i < 3; i++) {
+          const crystal = this.add.star((i - 1) * 15, -43 - (i % 2) * 5, 5, 5, 10, 0xffe58c).setStrokeStyle(2, 0xffffff);
+          defender.group.add(crystal);
+          defender.energyCrystals.push(crystal);
+        }
+      } else {
+        if (defender.stats.damage > 0) defender.stats.damage = Math.round(defender.stats.damage * 1.35);
+        if (defender.stats.cooldown > 0) defender.stats.cooldown = Math.max(.34, defender.stats.cooldown * .82);
+        if (defender.stats.range > 0) defender.stats.range = Math.round(defender.stats.range * 1.12);
+        defender.maxHp = Math.round(defender.maxHp * 1.4);
+        defender.hp = Math.min(defender.maxHp, defender.hp + Math.round(defender.maxHp * .4));
+        if (unit === "guardian" || unit === "knight" || unit === "runeblade") {
+          defender.damageReduction = Math.min(.55, (defender.damageReduction || 0) + .2);
+          defender.counterDamageMultiplier = (defender.counterDamageMultiplier || 1) * 1.35;
+        }
+        if (unit === "mage") defender.ascensionFreeze = true;
+        if (unit === "volt" || unit === "stormcaller") defender.ascensionChain = true;
+        if (unit === "ember" || unit === "phoenix" || unit === "thorn") defender.ascensionSplash = true;
+        if (unit === "archer") defender.ascensionVolley = true;
+      }
+      defender.level = 3;
+      defender.levelBadge?.setText("ASC");
+      defender.levelBadge?.setColor("#ffe18b");
+      defender.group?.setScale((defender.group.scaleX || 1) * 1.12);
+      if (defender.evolutionMark?.active) defender.evolutionMark.destroy();
+      defender.evolutionMark = this.add.star(0, -61, 8, 7, 14, 0xffdf78).setStrokeStyle(2, 0xffffff);
+      defender.group?.add(defender.evolutionMark);
+      if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
+      const aura = this.add.circle(0, 0, 46, 0xffdf78, .08).setStrokeStyle(3, 0xffdf78, .95);
+      defender.group?.add(aura);
+      this.tweens.add({ targets: aura, scale: 1.65, alpha: 0, duration: 900, onComplete: () => aura.destroy() });
+      this.message.textContent = defender.ascensionName + " ASCENDED! Signature power unlocked.";
+      this.playSound("deploy");
+      this.finishBossAscension(defender);
+    }
+
+    finishBossAscension(defender) {
+      if (!this.bossAscensionActive) return;
+      this.bossAscensionActive = false;
+      this.lastAscensionWave = this.wave;
+      this.bossAscensionOverlay?.destroy(true);
+      this.bossAscensionOverlay = null;
+      this.message.textContent = defender
+        ? defender.ascensionName + " ascended! The next assault begins soon."
+        : "Ascension skipped. The next assault begins soon.";
+      this.updateHud();
+      this.time.delayedCall(1800, () => this.startNextWave());
+    }
+
+    startNextWave() {
+      if (this.gameOver) return;
+      this.wave++;
+      this.enemiesSpawnedThisWave = 0;
+      const bossWave = this.wave % 5 === 0;
+      this.enemiesPerWave = bossWave
+        ? Math.min(55, this.wave === 5 ? 21 : 32 + Math.floor(this.wave / 5) * 3 + Math.max(0, this.wave - 10) * 2)
+        : this.wave <= 5
+          ? Math.min(20, 8 + Math.floor((this.wave - 1) * 1.2))
+          : Math.min(55, 22 + (this.wave - 6) * 4);
+      if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
+      this.waveActive = true;
+      this.waveTransitioning = false;
+      this.spawnTimer.delay = bossWave
+        ? Math.max(650, 1150 - Math.floor(this.wave / 5) * 45)
+        : this.wave > 5
+          ? Math.max(480, 2050 - (this.wave - 6) * 130)
+          : Math.max(620, 3200 - (this.wave - 1) * 170);
+      this.spawnTimer.paused = false;
+      this.message.textContent = "Wave " + this.wave + " — defend the keep!";
+      this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
+      this.updateHud();
     }
 
     showSunwellEnergy(defender, amount) {
@@ -1272,6 +1385,12 @@ export function createGameScene() {
             if (d.unitType === "archer" && d.level >= 3) {
               this.fireProjectile(d, target, 0.55, true, -5);
               this.fireProjectile(d, target, 0.55, true, 5);
+            }
+            if (d.ascensionVolley) {
+              this.fireProjectile(d, target, 0.42, true, -10);
+              this.fireProjectile(d, target, 0.42, true, -5);
+              this.fireProjectile(d, target, 0.42, true, 5);
+              this.fireProjectile(d, target, 0.42, true, 10);
             }
             d.cooldown = d.stats.cooldown * (this.teamSurgeUntil && this.time.now < this.teamSurgeUntil ? 0.72 : 1);
           }
