@@ -218,3 +218,8 @@ assert.ok(attemptWriteRule.includes("blockedPlayers"), "Blocked students must no
 assert.ok(main.includes('!studentSession.allowLateJoin && !existingPlayer.exists()'), "Late-join restrictions must not block an existing student from reconnecting.");
 assert.ok(main.includes('localStorage.getItem("emerald-frontier:pending-attempts:" + sessionId + ":" + user.uid)'), "A finished player's unsynced attempts must trigger a rejoin for recovery.");
 assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendingSaves'), "A completed student must not accidentally start a second attempt without pending data.");
+
+// Firebase Realtime Database rule compatibility and cache-refresh guards.
+assert.doesNotMatch(JSON.stringify(databaseRules), /numChildren\\s*\\(/, "Realtime Database rules must not use the unsupported numChildren() method.");
+assert.match(databaseRules.rules.sessions.$sessionId.players.$uid[".write"], /auth\\.uid === \\$uid/, "A student must only write their own player record.");
+assert.match(html, /src\\/main\\.js\\?v=reconnect-sync-3/, "The entry module cache token must refresh after reconnect and recovery changes.");
