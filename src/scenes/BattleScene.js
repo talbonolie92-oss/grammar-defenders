@@ -611,7 +611,7 @@ export function createGameScene() {
 
     upgradeDefender(defender) {
       if (!defender || !this.defenders.includes(defender)) return;
-      if (defender.level >= 3) {
+      if (defender.level >= 3 || defender.ascended) {
         this.message.textContent = defender.stats.name + " has reached MAX evolution.";
         return;
       }
@@ -1169,6 +1169,8 @@ export function createGameScene() {
 
     showBossAscension() {
       this.bossAscensionActive = true;
+      if (this.spawnTimer) this.spawnTimer.paused = true;
+      if (this.questionTimer) this.questionTimer.paused = true;
       this.bossAscensionOverlay = this.add.container(0, 0).setDepth(980);
       const overlay = this.bossAscensionOverlay;
       const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .92).setInteractive();
@@ -1265,6 +1267,7 @@ export function createGameScene() {
       if (this.gameOver) return;
       this.wave++;
       this.enemiesSpawnedThisWave = 0;
+      this.waveTransitioning = false;
       const bossWave = this.wave % 5 === 0;
       this.enemiesPerWave = bossWave
         ? Math.min(55, this.wave === 5 ? 21 : 32 + Math.floor(this.wave / 5) * 3 + Math.max(0, this.wave - 10) * 2)
@@ -1280,6 +1283,7 @@ export function createGameScene() {
           ? Math.max(480, 2050 - (this.wave - 6) * 130)
           : Math.max(620, 3200 - (this.wave - 1) * 170);
       this.spawnTimer.paused = false;
+      if (this.questionTimer) this.questionTimer.paused = false;
       this.message.textContent = "Wave " + this.wave + " — defend the keep!";
       this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
       this.updateHud();
@@ -1317,7 +1321,7 @@ export function createGameScene() {
         this.finishQuestion(this.questionResolutionToken);
         return;
       }
-      if (this.questionActive || this.upgradeChoiceActive) return;
+      if (this.questionActive || this.upgradeChoiceActive || this.bossAscensionActive) return;
       // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.
       const dt = Math.min(delta / 1000, 0.25);
       const energyDt = Math.min(delta / 1000, 1);
@@ -1735,6 +1739,7 @@ export function createGameScene() {
       p.projectileSpeed = stats.projectileSpeed;
       p.unitType = defender.unitType;
       p.level = defender.level || 1;
+      p.ascended = !!defender.ascended;
       p.bonusShot = bonusShot;
       this.projectiles.push(p);
       if (!this.lastShotSoundAt || this.time.now - this.lastShotSoundAt >= 110) {
