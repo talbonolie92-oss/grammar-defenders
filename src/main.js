@@ -163,6 +163,19 @@ async function initializeStudentJoin() {
       if (studentSession.status === "running") launchStudentGame(name, classSection);
     } catch (error) { status.textContent = error.message || "Unable to join this session."; }
   });
+
+  // A returning student on the same browser can rejoin without typing their
+  // details again. Firebase's persisted anonymous UID identifies their record.
+  studentSignIn().then(async user => {
+    const existing = await dbGet("sessions/" + sessionId + "/players/" + user.uid);
+    if (!existing.exists()) return;
+    const player = existing.val();
+    if (!["waiting", "playing"].includes(player.status) || form.dataset.autoResume === "done") return;
+    form.dataset.autoResume = "done";
+    document.getElementById("student-name").value = player.name || "";
+    document.getElementById("student-class").value = player.classSection || "";
+    form.requestSubmit();
+  }).catch(() => {});
 }
 
 async function launchStudentGame(name, classSection) {
@@ -256,12 +269,18 @@ async function launchStudentGame(name, classSection) {
 
 document.addEventListener("visibilitychange", () => {
   if (!game || !game.scene) return;
-  if (document.hidden) game.loop.sleep(); else game.loop.wake();
+  if (document.hidden) {
+    game.scene.getScene("BattleScene")?.saveCheckpoint?.();
+    game.loop.sleep();
+  } else game.loop.wake();
 });
 window.addEventListener("online", () => {
   if (pendingResult && !resultSaved && typeof window.GD_SAVE_RESULT === "function") {
     window.GD_SAVE_RESULT(pendingResult).catch(error => console.warn("Result sync will retry when the connection returns:", error));
   }
+});
+window.addEventListener("pagehide", () => {
+  game.scene.getScene("BattleScene")?.saveCheckpoint?.();
 });
 window.addEventListener("beforeunload", () => {
   if (stopSessionWatch) stopSessionWatch();
