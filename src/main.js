@@ -13,7 +13,7 @@ const config = {
   type: Phaser.AUTO,
   parent: "game-container",
   width: 960,
-  height: 340,
+  height: 420,
   transparent: true,
   resolution: pixelRatio,
   render: { antialias: !isSmallScreen, pixelArt: false, roundPixels: true, powerPreference: isSmallScreen ? "low-power" : "high-performance" },
