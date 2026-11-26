@@ -181,9 +181,9 @@ assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse poo
 
 
 // Preserve the 960:340 game canvas aspect ratio on narrow landscape screens.
-assert.match(gameCss, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
-assert.ok(gameCss.includes("aspect-ratio:48/17"), "The game container must retain the battlefield's native aspect ratio.");
-assert.ok(indexHtml.includes("game.css?v=aspect-ratio-contain-2"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
+assert.ok(css.includes("aspect-ratio:48/17"), "The game container must retain the battlefield's native aspect ratio.");
+assert.ok(html.includes("game.css?v=aspect-ratio-contain-2"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
