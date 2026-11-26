@@ -119,6 +119,8 @@ export function createGameScene() {
     create() {
       this.drawWorld();
       this.refreshPhoneLayout();
+      this.cameras.main.centerOn(480, 210);
+      this.cameras.main.setZoom(this.phoneLandscape ? 1.12 : 1);
       this.handleViewportChange = () => this.refreshPhoneLayout();
       window.addEventListener("resize", this.handleViewportChange, { passive: true });
       window.addEventListener("orientationchange", this.handleViewportChange, { passive: true });
