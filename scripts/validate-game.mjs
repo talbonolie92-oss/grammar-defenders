@@ -107,3 +107,13 @@ assert.equal(new Set(BOSS_QUESTIONS.map(item => item.q.trim())).size, BOSS_QUEST
 console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn slots, lane/tile centers, 3D actor sync, audio hooks, 8 specializations, and 34 validated questions.");
 
 // Final pre-device-test regression rerun marker: keep this workflow exercising the complete suite.
+
+
+// Post-playtest improvements: late-game pacing, Tier III signature abilities, and clear end-of-session exit.
+assert.match(battle, /Math\.max\(0, this\.wave - 5\) \* 0\.10/, "Late-game enemy durability growth must be softened for upgraded teams.");
+assert.match(battle, /Gatling Ranger/, "Tier III Archer must have its Gatling evolution identity.");
+assert.match(battle, /this\.fireProjectile\(d, target, 0\.55, true, -5\)/, "Tier III Archer must fire bonus gatling bolts.");
+assert.match(battle, /GLACIAL BURST!/, "Tier III Frost Mage must apply its lane-wide crowd-control burst.");
+assert.match(battle, /PLAY AGAIN  •  BACK TO SETUP/, "The end-of-session overlay must provide a visible in-game restart action.");
+assert.match(battle, /restartButton\.on\("pointerdown", \(\) => window\.location\.reload\(\)\)/, "The end-of-session restart action must return to setup.");
+assert.match(css, /cinematic 3D-era landing refresh/, "Homepage must use the refreshed 3D-era visual design.");
