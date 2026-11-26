@@ -1,5 +1,5 @@
 import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-16";
-import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
+import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, reserveSessionSeat } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
 const setupScreen = document.getElementById("setup-screen");
@@ -244,10 +244,11 @@ async function initializeStudentJoin() {
         if (existingPlayer.val().status === "finished" && !hasPendingSaves) {
           throw new Error("You have already completed this classroom game.");
         }
-      } else {
-        await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
-          name, classSection, joinedAt: Date.now(), status: "waiting", active: true
-        });
+      }
+      // New student records must be created by the trusted server function.
+      // Database rules reject direct client-side creation, enforcing the 30-seat limit.
+      if (!existingPlayer.exists()) {
+        await reserveSessionSeat(sessionId, name, classSection);
       }
       document.getElementById("student-session-name").textContent = studentSession.title || "Your teacher's Emerald Frontier session";
       form.classList.add("hidden");
