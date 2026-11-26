@@ -204,7 +204,7 @@ assert.ok(html.includes("game.css?v=stability-audit-12"), "Phone canvas sizing c
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
 assert.ok(main.includes("height: 420,"), "The battlefield must use the expanded 960:420 logical canvas.");
 assert.ok(main.includes('matchMedia?.("(pointer: coarse)")') && main.includes("navigator.maxTouchPoints > 0"), "iPads and touch tablets must use the touch-device performance profile.");
-assert.ok(battle.includes("this.cameras.main.setZoom(1.12)"), "Touch devices must enlarge the five-lane battlefield without clipping it.");
+assert.ok(battle.includes("this.cameras.main.setZoom(this.phoneLandscape ? 1.12 : 1)"), "Touch devices must enlarge the five-lane battlefield without clipping it.");
 assert.ok(battle.includes("refreshPhoneLayout()") && battle.includes('window.addEventListener("orientationchange", this.handleViewportChange') && battle.includes('window.removeEventListener("orientationchange", this.handleViewportChange)'), "Phone camera and question layout must update when a student rotates the device and clean up the orientation listener.");
 assert.ok(battle.includes('this.phoneLandscape = Boolean(window.matchMedia?.("(orientation: landscape) and (max-height: 500px)").matches)') && battle.includes("const phoneQuestionLayout = this.phoneLandscape"), "Phone-only layout zoom and compact question sizing must not be applied to full-size tablets.");
 assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") && battle.includes("saved.advancedDeckUnlocked"), "Refresh checkpoints must preserve global energy upgrades and elite deck unlocks.");
