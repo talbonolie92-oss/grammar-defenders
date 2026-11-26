@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-16";
+import { createGameScene } from "./scenes/BattleScene.js?v=visual-consistency-1";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
@@ -9,7 +9,7 @@ const studentJoinScreen = document.getElementById("student-join-screen");
 const landingHero = document.getElementById("landing-hero");
 const sessionId = params.get("session");
 const isTouchDevice = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 || window.matchMedia?.("(max-width: 900px)").matches);
-const pixelRatio = Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1 : 1.5);
+const pixelRatio = Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1.15 : 1.5);
 const config = {
   type: Phaser.AUTO,
   parent: "game-container",
@@ -17,7 +17,7 @@ const config = {
   height: 420,
   transparent: true,
   resolution: pixelRatio,
-  render: { antialias: !isTouchDevice, pixelArt: false, roundPixels: true, powerPreference: isTouchDevice ? "low-power" : "high-performance" },
+  render: { antialias: true, pixelArt: false, roundPixels: false, powerPreference: isTouchDevice ? "low-power" : "high-performance" },
   fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60, min: 24, forceSetTimeOut: false },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [createGameScene()]
