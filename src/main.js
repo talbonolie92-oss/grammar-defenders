@@ -1,5 +1,5 @@
 import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-16";
-import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js";
+import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
 const params = new URLSearchParams(window.location.search);
