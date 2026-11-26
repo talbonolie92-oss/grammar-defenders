@@ -70,12 +70,12 @@ function updateBankDraftCount(){
   setStatus("bank-draft-count",bankDraft.length+" questions in draft");
   const preview=$("bank-draft-preview");
   if(!preview)return;
-  preview.innerHTML=bankDraft.map((q,i)=>`<article class="draft-question">
+  preview.innerHTML=bankDraft.length?bankDraft.map((q,i)=>`<article class="draft-question">
     <div class="draft-question-heading"><b>Question ${i+1}</b><button type="button" class="button ghost" data-draft-remove="${i}">Remove</button></div>
     <label>Question<input class="review-field" data-draft-index="${i}" data-draft-field="q" value="${escapeHtml(q.q)}"></label>
     <div class="review-options">${[0,1,2,3].map(n=>`<label>Choice ${"ABCD"[n]}<input class="review-field" data-draft-index="${i}" data-draft-answer="${n}" value="${escapeHtml(q.a[n]||"")}" placeholder="Choice ${"ABCD"[n]}"></label>`).join("")}</div>
     <label>Correct answer<select class="review-field" data-draft-index="${i}" data-draft-field="correct"><option value="">Select the correct answer</option>${["A","B","C","D"].map((letter,n)=>`<option value="${n}" ${q.correct===n?"selected":""}>${letter}</option>`).join("")}</select></label>
-  </article>`).join("");
+  </article>`).join(""):'<div class="empty">No questions in the draft yet. Upload a Word document above or add one using the manual form below.</div>';
 }
 function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
@@ -117,13 +117,15 @@ $("bank-save").addEventListener("click",async()=>{
 });
 $("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
 
-$("bank-draft-preview").addEventListener("input",e=>{
+function updateDraftField(e){
   const field=e.target.closest("[data-draft-index]");if(!field)return;
   const item=bankDraft[Number(field.dataset.draftIndex)];if(!item)return;
   if(field.dataset.draftAnswer!==undefined)item.a[Number(field.dataset.draftAnswer)]=field.value;
   else if(field.dataset.draftField==="correct")item.correct=field.value===""?null:Number(field.value);
   else item[field.dataset.draftField]=field.value;
-});
+}
+$("bank-draft-preview").addEventListener("input",updateDraftField);
+$("bank-draft-preview").addEventListener("change",updateDraftField);
 $("bank-draft-preview").addEventListener("click",e=>{
   const button=e.target.closest("[data-draft-remove]");if(!button)return;
   bankDraft.splice(Number(button.dataset.draftRemove),1);updateBankDraftCount();
@@ -158,7 +160,7 @@ $("docx-extract").addEventListener("click",async()=>{
     if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" incomplete or unrecognized block(s) were skipped; check the extracted text and source document before saving.";
     setStatus("docx-status",message);setStatus("bank-status",message);
     if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
-    $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
+    $("bank-draft-area").scrollIntoView({behavior:"smooth",block:"start"});
   }catch(error){setStatus("docx-status",error.message||"Could not import this Word document.");}
 });
 $("bank-list").addEventListener("click",async e=>{
