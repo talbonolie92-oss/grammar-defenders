@@ -412,6 +412,7 @@ export function createGameScene() {
         this.deployDefender(lane, col, this.selectedUnit);
         this.energy -= stats.cost;
         this.updateHud();
+        this.saveCheckpoint();
       } catch (error) {
         console.error("Defender deployment failed:", error);
         this.message.textContent = "Deployment failed. Energy was not spent. Please reload and try again.";
@@ -434,6 +435,7 @@ export function createGameScene() {
       this.message.textContent = defender.stats.name + " removed. Energy is not refunded.";
       this.playSound("remove");
       this.updateHud();
+      this.saveCheckpoint();
     }
 
     deployDefender(lane, col, unitType = "archer") {
@@ -1989,6 +1991,9 @@ export function createGameScene() {
         this.enemyPressureUntil = Math.max(this.enemyPressureUntil || 0, this.time.now) + 5000;
         this.message.textContent = "Not quite! Enemies surge forward for a moment — defend your lanes!";
       }
+      // Persist the answered question and resulting battle state immediately,
+      // rather than waiting for the next periodic checkpoint tick.
+      this.saveCheckpoint();
       const feedback = this.add.text(480, 319, correct ? "CORRECT! BATTLE POWER ACTIVATED" : "NOT QUITE — THE BATTLE CONTINUES", {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
