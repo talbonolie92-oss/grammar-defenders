@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=phone-fullscreen-field-8";
+import { createGameScene } from "./scenes/BattleScene.js?v=tablet-stability-9";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -7,8 +7,8 @@ const gameLayout = document.getElementById("game-layout");
 const studentJoinScreen = document.getElementById("student-join-screen");
 const landingHero = document.getElementById("landing-hero");
 const sessionId = params.get("session");
-const isSmallScreen = window.matchMedia?.("(max-width: 900px)").matches || false;
-const pixelRatio = Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1 : 1.5);
+const isTouchDevice = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 || window.matchMedia?.("(max-width: 900px)").matches);
+const pixelRatio = Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1 : 1.5);
 const config = {
   type: Phaser.AUTO,
   parent: "game-container",
@@ -16,8 +16,8 @@ const config = {
   height: 420,
   transparent: true,
   resolution: pixelRatio,
-  render: { antialias: !isSmallScreen, pixelArt: false, roundPixels: true, powerPreference: isSmallScreen ? "low-power" : "high-performance" },
-  fps: { target: isSmallScreen ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60, min: 24, forceSetTimeOut: false },
+  render: { antialias: !isTouchDevice, pixelArt: false, roundPixels: true, powerPreference: isTouchDevice ? "low-power" : "high-performance" },
+  fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60, min: 24, forceSetTimeOut: false },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [createGameScene()]
 };
