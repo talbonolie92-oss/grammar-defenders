@@ -52,8 +52,8 @@ assert.ok(dashboard.includes('normalizeBankQuestion({...q,grade,topic},subject,t
 assert.ok(dashboard.includes('s.questionCount?s.questionCount+" questions":""'), "Session details must show how many saved questions were loaded.");
 assert.ok(main.includes('questions: Array.isArray(studentSession.questions) ? studentSession.questions : []'), "Student launch must pass the session questions into gameplay.");
 assert.ok(battle.includes('this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS'), "Boss challenges must use selected lesson questions when a custom bank is active.");
-assert.ok(battle.includes('fontSize: questionFontSize + "px"') && battle.includes('item.q.length > 95 ? 25 : 28'), "Gameplay questions must use larger adaptive text for readability.");
-assert.ok(battle.includes('fontSize: compactAnswers ? "17px" : "18px"'), "Gameplay answer choices must use larger readable text.");
+assert.ok(battle.includes('fontSize: questionFontSize + "px"') && battle.includes('item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32'), "Gameplay questions must use larger adaptive text for readability.");
+assert.ok(battle.includes('fontSize: compactAnswers ? "19px" : "20px"'), "Gameplay answer choices must use larger readable text.");
 assert.ok(battle.includes('this.add.rectangle(480, 170, 850, 330'), "The question panel must use more of the available battlefield space.");
 assert.ok((await readFile(new URL("../css/game.css", import.meta.url), "utf8")).includes("READABILITY PASS: larger challenge typography"), "The defender deck should be more compact to leave room for the battlefield.");
 assert.ok(css.includes(".session-topic-picker{") && css.includes(".saved-bank-section{"), "Topic selector and saved question list must be visually prominent.");
