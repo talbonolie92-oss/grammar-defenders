@@ -16,6 +16,9 @@ for (const value of [0, 1, 2, 3]) {
 }
 assert.match(dashboard, /a:\[\$\("bank-a1"\)\.value,\$\("bank-a2"\)\.value,\$\("bank-a3"\)\.value,\$\("bank-a4"\)\.value\]/, "Manual submission must pass all four choices.");
 assert.match(dashboard, /bankDraft\.push\(\.\.\.parsed\.questions\)/, "DOCX questions should flow directly into the shared draft.");
+assert.ok(html.indexOf('id="bank-draft-area"') < html.indexOf('id="manual-question-form"'), "Imported question review must appear before the optional manual-entry form.");
+assert.match(dashboard, /preview\.innerHTML=bankDraft\.length\?/, "Draft review must render an explicit empty state and imported question cards.");
+assert.match(dashboard, /\$\("bank-draft-area"\)\.scrollIntoView/, "After DOCX import, scroll directly to the imported question review area.");
 assert.match(dashboard, /q\.correct===null[\s\S]*?mark its correct answer before saving/, "Saving must require teacher approval of each imported answer.");
 assert.match(dashboard, /data-draft-answer/, "Imported choices must be editable in the review cards.");
 assert.match(dashboard, /data-draft-field="correct"/, "Imported correct answers must be teacher-selectable.");
