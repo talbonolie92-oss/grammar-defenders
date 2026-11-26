@@ -226,3 +226,9 @@ assert.ok(html.includes("src/main.js?v=reconnect-sync-3"), "The entry module cac
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=reconnect-sync-3"), "The BattleScene module cache token must refresh checkpoint and touch fixes.");
+
+// Important player actions must checkpoint immediately, not only on the periodic timer.
+assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
+assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
+assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
+assert.ok(main.includes("BattleScene.js?v=reconnect-sync-4"), "The BattleScene cache token must refresh after immediate checkpoint changes.");
