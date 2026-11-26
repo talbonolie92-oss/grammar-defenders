@@ -540,3 +540,13 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
 .codex-footer{display:flex;justify-content:space-between;gap:10px;margin-top:18px;padding-top:13px;border-top:1px solid #d5b87566;color:#e8c982;font-size:9px;font-weight:1000;letter-spacing:1.3px}
 @media(max-width:650px){.topbar-actions{margin-left:auto}.instructions-trigger{min-height:36px;padding:7px 10px;font-size:9px}.codex-grid{grid-template-columns:1fr}.codex-entry{padding:11px}.instructions-dialog{max-height:90dvh}.codex-footer{font-size:8px}}
 @media(orientation:landscape) and (max-height:600px){.instructions-dialog{max-height:94dvh}.codex-frame{padding:13px}.codex-intro{margin:10px 0 12px}.codex-grid{gap:7px}.codex-entry{padding:9px}}
+
+
+/* READABILITY PASS: larger challenge typography and a more compact defender deck. */
+.unit-card{min-height:56px;padding:8px 8px;margin-bottom:7px;gap:8px}
+.unit-icon{width:34px;height:34px;flex-basis:34px;font-size:20px;border-radius:10px}
+@media (orientation:landscape) and (max-width:900px){
+  body.playing .side-panel{flex-basis:44px!important;min-height:44px!important}
+  body.playing .deck-grid .unit-card{height:38px!important;min-height:38px!important}
+  body.playing .deck-grid .unit-icon{width:22px!important;height:22px!important;flex-basis:22px!important;font-size:13px!important;border-radius:6px!important}
+}
