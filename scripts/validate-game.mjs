@@ -77,7 +77,7 @@ assert.match(battle, /const y = GRID_Y \+ lane \* TILE_H \+ TILE_H \/ 2/,
   "Attacker spawn Y must be centered in its assigned lane.");
 assert.match(battle, /const x = GRID_X \+ col \* TILE_W \+ TILE_W \/ 2/,
   "Defenders must deploy at the center of their selected tile.");
-assert.match(battle, /this\.world\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
+assert.match(battle, /this\.threeWorld\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
   "The 3D actor renderer must receive live defender, attacker, and projectile positions.");
 assert.match(battle, /if \(this\.pendingBossQuestion && !this\.gameOver\)/,
   "Boss questions must be queued safely if another overlay is already active.");
