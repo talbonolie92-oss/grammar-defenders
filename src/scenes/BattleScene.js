@@ -1139,7 +1139,7 @@ export function createGameScene() {
       const speedFactor = [1, 1.65, 0.68, 1.35, .82, 1.05, .9, .62, .78, .55][Math.max(0, enemyLevel)];
       const enemy = {
         lane, x, y, baseY: y, group, hp, maxHp: hp, armorLevel,
-        speed: isBoss ? 10 + this.wave * 0.8 : Math.min(48, (17 + this.wave * 1.7) * speedFactor),
+        speed: isBoss ? Math.min(30, 10 + this.wave * 0.55) : Math.min(48, (17 + this.wave * 1.7) * speedFactor),
         bar, isBoss, enemyType, enemyLevel, phase: 1, body, aura, frostRing, feet,
         bobOffset: Phaser.Math.FloatBetween(0, Math.PI * 2),
         specialCooldown: isBoss && this.wave >= 10 ? Phaser.Math.FloatBetween(4.2, 5.2) : 0,
@@ -1572,7 +1572,8 @@ export function createGameScene() {
           e.attackCooldown = (e.attackCooldown || 0) - dt;
           if (e.attackCooldown <= 0) {
             const baseHit = ["Brute", "War Crusher", "Dread Beast", "Dark Overlord"].includes(e.enemyType) ? 6 : e.enemyType === "Runner" || e.enemyType === "Shadow Stalker" ? 2 : e.enemyType === "Venom Beast" ? 4 : 3;
-            const rawHit = Math.ceil(baseHit * (1 + (this.wave - 1) * 0.1 + Math.max(0, this.wave - 5) * 0.05));
+            const attackScale = Math.min(2.8, 1 + (this.wave - 1) * 0.055 + Math.max(0, this.wave - 5) * 0.025);
+            const rawHit = Math.ceil(baseHit * attackScale);
             const guardReduction = blocker.unitType === "guardian" && blocker.level >= 2
               ? (blocker.level >= 3 ? .45 : .25) : 0;
             const hit = Math.max(1, Math.ceil(rawHit * (1 - guardReduction) * (1 - Math.min(.35, blocker.damageReduction || 0))));
@@ -1678,7 +1679,7 @@ export function createGameScene() {
               if (e.laneAlert?.active) e.laneAlert.destroy();
               e.specialRing = null;
               e.laneAlert = null;
-              const pulseDamage = 8 + Math.floor(this.wave / 5) * 2 + (e.phase - 1) * 3;
+              const pulseDamage = Math.min(24, 8 + Math.floor(this.wave / 5) * 2 + (e.phase - 1) * 3);
               let defendersHit = 0;
               for (let i = this.defenders.length - 1; i >= 0; i--) {
                 const defender = this.defenders[i];
