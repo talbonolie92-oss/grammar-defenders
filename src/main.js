@@ -1,5 +1,5 @@
 import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-16";
-import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, reserveSessionSeat } from "./firebase.js";
+import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, reserveSessionSeat } from "./firebase.js?v=seat-reservation-1";
 
 const params = new URLSearchParams(window.location.search);
 const setupScreen = document.getElementById("setup-screen");
