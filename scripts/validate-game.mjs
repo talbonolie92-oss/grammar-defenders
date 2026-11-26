@@ -223,3 +223,6 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
 assert.ok(html.includes("src/main.js?v=reconnect-sync-3"), "The entry module cache token must refresh after reconnect and recovery changes.");
+
+// Ensure nested gameplay module also bypasses stale browser caches.
+assert.ok(main.includes("BattleScene.js?v=reconnect-sync-3"), "The BattleScene module cache token must refresh checkpoint and touch fixes.");
