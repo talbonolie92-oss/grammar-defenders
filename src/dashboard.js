@@ -1,9 +1,17 @@
 import { firebaseReady, watchAuth, teacherSignIn, teacherSignOut, dbRef, dbGet, dbSet, dbUpdate, dbRemove, dbPush, dbWatch, timestamp } from "./firebase.js";
-import { parseDocxQuestions } from "./docx-question-parser.js";
+import { parseDocxQuestions } from "./docx-question-parser.js?v=docx-break-fix-1";
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
 let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0;
+function docxHtmlToText(html){
+  const marked=String(html??"")
+    .replace(/<br\\s*\\/?\\s*>/gi,"\\n")
+    .replace(/<\\/(?:p|li|h[1-6]|tr)\\s*>/gi,"\\n")
+    .replace(/<\\/(?:td|th)\\s*>/gi,"\\t");
+  const parsed=new DOMParser().parseFromString(marked,"text/html");
+  return parsed.body.textContent||"";
+}
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const setStatus=(id,msg)=>{if($(id))$(id).textContent=msg;};
 const statusClass=s=>["waiting","running","ended"].includes(s)?s:"ended";
@@ -138,9 +146,9 @@ $("docx-extract").addEventListener("click",async()=>{
   setStatus("docx-status","Reading Word document…");
   $("docx-debug")?.classList.add("hidden");
   const loadMammoth=()=>new Promise((resolve,reject)=>{
-    if(window.mammoth?.extractRawText)return resolve(window.mammoth);
+    if(window.mammoth?.convertToHtml)return resolve(window.mammoth);
     const urls=["https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js","https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js","https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"];let index=0;
-    const next=()=>{if(window.mammoth?.extractRawText)return resolve(window.mammoth);if(index>=urls.length)return reject(new Error("Could not load the Word reader. Check your internet connection and refresh."));const script=document.createElement("script");script.src=urls[index++];script.async=true;script.onload=()=>window.mammoth?.extractRawText?resolve(window.mammoth):next();script.onerror=next;document.head.appendChild(script);};next();
+    const next=()=>{if(window.mammoth?.convertToHtml)return resolve(window.mammoth);if(index>=urls.length)return reject(new Error("Could not load the Word reader. Check your internet connection and refresh."));const script=document.createElement("script");script.src=urls[index++];script.async=true;script.onload=()=>window.mammoth?.convertToHtml?resolve(window.mammoth):next();script.onerror=next;document.head.appendChild(script);};next();
   });
   try{
     const mammoth=await loadMammoth();
