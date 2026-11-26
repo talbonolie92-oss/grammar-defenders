@@ -201,15 +201,20 @@ startSoloSetup();
 
 async function reserveClassroomSeat() {
   const seatsPath = "sessions/" + sessionId + "/seats";
-  const seatsSnapshot = await dbGet(seatsPath);
-  const plan = getSeatReservationPlan(seatsSnapshot.val() || {}, studentUid);
-  if (plan.existingSeatId) return plan.existingSeatId;
-  for (const seatId of plan.availableSeatIds) {
-    const seatPath = seatsPath + "/" + seatId;
-    const reservation = await dbTransaction(seatPath, current =>
+  const triedSeatIds = new Set();
+  while (triedSeatIds.size < 30) {
+    const seatsSnapshot = await dbGet(seatsPath);
+    const plan = getSeatReservationPlan(seatsSnapshot.val() || {}, studentUid);
+    if (plan.existingSeatId) return plan.existingSeatId;
+    const seatId = plan.availableSeatIds.find(id => !triedSeatIds.has(id));
+    if (!seatId) break;
+    triedSeatIds.add(seatId);
+    const reservation = await dbTransaction(seatsPath + "/" + seatId, current =>
       current === null ? { uid: studentUid, reservedAt: Date.now() } : undefined
     );
     if (reservation.committed) return seatId;
+    // Another student may have won this slot, or a duplicate join from this
+    // same browser may have completed. Re-read before trying another seat.
   }
   throw new Error("This classroom session is full (30 students). Please tell your teacher.");
 }
