@@ -1908,31 +1908,34 @@ export function createGameScene() {
       this.isBossQuestion = isBoss;
       const overlay = this.add.container(0, 0).setDepth(1000);
       this.questionOverlay = overlay;
-      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .84).setInteractive();
-      const panel = this.add.rectangle(480, 170, 770, 310, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
-      const topGlow = this.add.rectangle(480, 22, 760, 5, 0x91e5c2, .9);
-      const eyebrow = this.add.text(480, 43, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
-        fontFamily: "Nunito", fontSize: "15px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
+      const shade = this.add.rectangle(480, 170, 960, 340, 0x071321, .88).setInteractive();
+      const panel = this.add.rectangle(480, 170, 850, 330, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
+      const topGlow = this.add.rectangle(480, 12, 838, 5, 0x91e5c2, .9);
+      const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
+        fontFamily: "Nunito", fontSize: "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: 2
       }).setOrigin(.5);
-      const topic = this.add.text(480, 72, item.topic.toUpperCase(), {
-        fontFamily: "Nunito", fontSize: "12px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
+      const topic = this.add.text(480, 62, item.topic.toUpperCase(), {
+        fontFamily: "Nunito", fontSize: "14px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
       }).setOrigin(.5);
-      const question = this.add.text(480, 111, item.q, {
-        fontFamily: "Nunito", fontSize: "22px", color: "#ffffff", fontStyle: "900",
-        align: "center", wordWrap: { width: 680 }, lineSpacing: 7
+      const questionFontSize = item.q.length > 150 ? 23 : item.q.length > 95 ? 25 : 28;
+      const question = this.add.text(480, 108, item.q, {
+        fontFamily: "Nunito", fontSize: questionFontSize + "px", color: "#ffffff", fontStyle: "900",
+        align: "center", wordWrap: { width: 750 }, lineSpacing: 6
       }).setOrigin(.5);
-      const instruction = this.add.text(480, 158, "Choose the correct answer to unleash a battle power", {
-        fontFamily: "Nunito", fontSize: "12px", color: "#b6c8dc", fontStyle: "700"
+      const instructionY = Math.max(153, 108 + question.height / 2 + 13);
+      const instruction = this.add.text(480, instructionY, "Choose the correct answer to unleash a battle power", {
+        fontFamily: "Nunito", fontSize: "13px", color: "#c8d8e9", fontStyle: "700"
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       const compactAnswers = item.a.length >= 4;
+      const answerStartY = Math.max(compactAnswers ? 181 : 190, instructionY + 27);
       item.a.forEach((answer, index) => {
-        // Four-choice banks must fit inside the question panel without covering feedback.
-        const y = (compactAnswers ? 184 : 192) + index * (compactAnswers ? 35 : 40);
-        const button = this.add.rectangle(480, y, 660, compactAnswers ? 30 : 34, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        // Larger labels and wider buttons improve readability without changing the answer flow.
+        const y = answerStartY + index * (compactAnswers ? 35 : 40);
+        const button = this.add.rectangle(480, y, 720, compactAnswers ? 32 : 36, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
-          fontFamily: "Nunito", fontSize: compactAnswers ? "14px" : "16px", color: "#ffffff", fontStyle: "900",
-          align: "center", wordWrap: { width: 620 }
+          fontFamily: "Nunito", fontSize: compactAnswers ? "17px" : "18px", color: "#ffffff", fontStyle: "900",
+          align: "center", wordWrap: { width: 680 }
         }).setOrigin(.5);
         button.on("pointerover", () => button.setFillStyle(0x376477));
         button.on("pointerout", () => button.setFillStyle(0x294969));
