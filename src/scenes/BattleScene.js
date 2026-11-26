@@ -1330,8 +1330,8 @@ export function createGameScene() {
         return;
       }
       if (this.questionActive || this.upgradeChoiceActive || this.bossAscensionActive) return;
-      // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.
-      const dt = Math.min(delta / 1000, 0.25);
+      // Preserve combat time through heavier late-wave frames; only cap long tab-resume pauses.
+      const dt = Math.min(delta / 1000, 0.35);
       const energyDt = Math.min(delta / 1000, 1);
       // Baseline energy regeneration is independent of enemy kills or Sunwell placement.
       // Use a separate bounded clock so low frame rates do not silently slow energy income.
