@@ -195,8 +195,21 @@ $("docx-copy-prompt").addEventListener("click",async()=>{
   catch(error){$("docx-json").value=prompt;setStatus("docx-status","Clipboard access was blocked. The prompt has been placed in the JSON box; copy it manually.");}
 });
 $("docx-import-json").addEventListener("click",()=>{
+  const rawInput=$("docx-json").value.trim();
+  const showImportStatus=message=>{
+    setStatus("bank-status",message);
+    setStatus("docx-status",message);
+  };
+  showImportStatus("Checking the generated questions…");
   try{
-    const parsed=JSON.parse($("docx-json").value.trim());
+    if(!rawInput)throw new Error("Paste the JSON returned by ChatGPT into the box first. Do not paste the question-generation prompt here.");
+    if(/^Act as a careful educational assessment writer/i.test(rawInput)||rawInput.includes("LESSON SOURCE:")){
+      throw new Error("This is the question-generation prompt, not the generated questions. Copy the prompt, send it in a ChatGPT conversation, then paste ChatGPT's JSON reply into this box.");
+    }
+    const cleaned=rawInput.replace(/^﻿/,"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();
+    let parsed;
+    try{parsed=JSON.parse(cleaned);}
+    catch(parseError){throw new Error("The text is not valid JSON. In ChatGPT, ask it to return ONLY valid JSON, then copy its complete reply here. Details: "+parseError.message);}
     const raw=Array.isArray(parsed)?parsed:parsed.questions;
     if(!Array.isArray(raw)||!raw.length)throw new Error("The JSON must contain a non-empty questions array.");
     if(raw.length>50)throw new Error("Import up to 50 generated questions at a time.");
@@ -213,9 +226,12 @@ $("docx-import-json").addEventListener("click",()=>{
     });
     if(bankDraft.length+imported.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
     bankDraft.push(...imported);updateBankDraftCount();
-    setStatus("bank-status","Added "+imported.length+" questions for teacher review. Verify each correct answer and approve every item before saving.");
+    showImportStatus("Success: added "+imported.length+" questions for teacher review. Check each answer and approve every item before saving.");
     $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
-  }catch(error){setStatus("bank-status",error.message||"Could not import generated questions.");}
+  }catch(error){
+    showImportStatus(error.message||"Could not import generated questions.");
+    console.error("Generated question import failed:",error);
+  }
 });
 
 $("bank-list").addEventListener("click",async e=>{
