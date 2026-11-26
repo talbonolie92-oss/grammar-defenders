@@ -202,6 +202,9 @@ assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve it
 assert.ok(main.includes("height: 420,"), "The battlefield must use the expanded 960:420 logical canvas.");
 assert.ok(main.includes('matchMedia?.("(pointer: coarse)")') && main.includes("navigator.maxTouchPoints > 0"), "iPads and touch tablets must use the touch-device performance profile.");
 assert.ok(battle.includes("this.cameras.main.setZoom(1.12)"), "Touch devices must enlarge the five-lane battlefield without clipping it.");
+assert.ok(battle.includes('this.phoneLandscape = Boolean(window.matchMedia?.("(orientation: landscape) and (max-height: 500px)").matches)') && battle.includes("const phoneQuestionLayout = this.phoneLandscape"), "Phone-only layout zoom and compact question sizing must not be applied to full-size tablets.");
+assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") && battle.includes("saved.advancedDeckUnlocked"), "Refresh checkpoints must preserve global energy upgrades and elite deck unlocks.");
+assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
 assert.ok(html.includes("game.css?v=tablet-stability-10"), "The corrected canvas sizing stylesheet must be cache-busted.");
