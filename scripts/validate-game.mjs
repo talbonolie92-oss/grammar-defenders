@@ -137,3 +137,10 @@ assert.match(battle, /defender\.ascensionChain = true/, "Ascended lightning defe
 assert.match(battle, /startNextWave\(\)/, "Battle must resume after an Ascension choice or skip.");
 assert.match(battle, /this\.questionActive \|\| this\.upgradeChoiceActive \|\| this\.bossAscensionActive/, "Combat updates must pause during Ascension selection.");
 assert.match(battle, /this\.bossAscensionFinal[\s\S]*?this\.endGame\(true\)/, "The final fixed-mode boss must still grant its Ascension reward before victory.");
+
+// Late-wave adaptive rendering keeps combat responsive on mobile devices.
+assert.match(threeWorld, /let performanceMode = false/, "3D renderer must support adaptive high-load mode.");
+assert.match(threeWorld, /enemies\.length > 22 \|\| projectiles\.length > 48/, "Crowded late waves must trigger reduced 3D detail.");
+assert.match(threeWorld, /if \(!performanceMode\) syncList\(enemies, true\)/, "High-load mode must retain lightweight Phaser enemy sprites instead of expensive 3D enemy rigs.");
+assert.match(threeWorld, /performanceMode \? \(isSmallScreen \? 100 : 66\)/, "3D rendering cadence must reduce under heavy combat load.");
+assert.match(battle, /Math\.min\(delta \/ 1000, 0\.35\)/, "Combat simulation must tolerate larger late-wave frame intervals.");
