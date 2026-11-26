@@ -36,7 +36,7 @@
           <div class="panel-title"><div><p class="eyebrow">NEW SESSION</p><h2>Create a game</h2></div><span class="step">01</span></div>
           <form id="session-form" class="form-grid">
             <label class="wide">Session name<input id="session-title" maxlength="70" placeholder="e.g. Grade 10 Challenge" required></label>
-            <label>Grade level<select id="session-grade"><option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option selected>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>Mixed</option></select></label>
+            <label>Grade level<select id="session-grade"><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option></select></label>
             <label>Class / section<input id="session-section" placeholder="e.g. 10A"></label>
             <label class="wide">Topic / question set<select id="session-bank"><option value="">Built-in Grammar Questions</option></select></label>
             <label>Game mode<select id="session-mode"><option value="endless">Endless Survival</option><option value="fixed">Fixed Waves</option></select></label>
@@ -58,18 +58,15 @@
       <section class="panel bank-panel">
         <div class="panel-title"><div><p class="eyebrow">YOUR TEACHING MATERIALS</p><h2>Question bank</h2><p class="muted">Organize questions by grade level, then topic.</p></div><span class="step">02</span></div>
         <div class="bank-import-grid">
-          <label>Grade level<select id="bank-grade"><option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option selected>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>Mixed</option></select></label>
+          <label>Grade level<select id="bank-grade"><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option></select></label>
           <label>Subject<input id="bank-subject" maxlength="60" value="English" placeholder="e.g. English"></label>
           <label class="wide">Topic / lesson<input id="bank-topic" maxlength="70" placeholder="e.g. Articles and prepositions"></label>
-          <label class="wide">Import questions from a file (.JSON or .CSV)<input id="bank-file" type="file" accept=".json,.csv,application/json,text/csv"></label>
-          <button id="bank-load-file" class="button ghost" type="button">Load file into draft</button>
-          <p class="bank-help">CSV template: <a class="bank-template-link" href="question-bank-template.csv" download>Download question template</a>.</p>
           <div class="docx-import wide">
             <h3>Import questions from Word</h3>
-            <p>Upload a DOCX containing questions and choices labeled A, B, C, and D. Questions do not need numbering. The system organizes them automatically; you choose the correct answer for each one.</p>
+            <p>Upload a Word document with questions and answer choices. Numbering is optional. The system will organize the questions; you will mark each correct answer before saving.</p>
             <label>Word document (.DOCX)<input id="docx-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
             <button id="docx-extract" class="button primary" type="button">Upload &amp; organize questions</button>
-            <p id="docx-status" class="status" role="status"></p>
+            <p id="docx-status" class="status" role="status"></p><details id="docx-debug" class="hidden"><summary>View text extracted from Word</summary><pre id="docx-extracted-preview"></pre></details>
           </div>
         </div>
         <form id="manual-question-form" class="manual-question-form">
