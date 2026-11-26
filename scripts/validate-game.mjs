@@ -183,3 +183,12 @@ assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width:
 assert.ok(battle.includes("const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32"), "Question text must use larger readable sizes with a long-question fallback.");
 assert.ok(battle.includes('fontSize: compactAnswers ? "19px" : "20px"'), "Answer choices must be enlarged for classroom phone readability.");
 assert.ok(main.includes("fps: { target: isSmallScreen ? 50 : 60"), "Mobile gameplay must use a lighter frame target while desktop retains 60 FPS.");
+
+
+// Refresh recovery regression checks.
+assert.match(battle, /restoreCheckpoint\\(\\)/, "A returning player must restore their latest local battle checkpoint.");
+assert.match(battle, /saveCheckpoint\\(\\)/, "The battle must periodically persist progress locally.");
+assert.match(battle, /delay: 3500, loop: true, callback: \\(\\) => this\\.saveCheckpoint\\(\\)/, "Progress checkpoints must be written throughout active play.");
+assert.match(battle, /emerald-frontier:/, "Checkpoints must be scoped to a session and player.");
+assert.match(main, /form\\.requestSubmit\\(\\)/, "A returning student must be able to rejoin automatically after refresh.");
+assert.match(main, /saveCheckpoint\\?\\.\\(\\)/, "The current checkpoint must be saved when the page is hidden or exited.");
