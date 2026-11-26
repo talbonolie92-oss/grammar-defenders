@@ -35,7 +35,7 @@ assert.match(world, /scene\.background = null/, "Three.js background must remain
 assert.match(world, /setClearColor\(0x000000, 0\)/, "Three.js canvas must clear with alpha zero.");
 assert.match(css, /three-world-canvas.*z-index:2/, "3D battlefield must render below the Phaser gameplay canvas.");
 assert.match(css, /canvas:not.*three-world-canvas.*z-index:3/, "Phaser defender and attacker sprites must remain on the top visual layer.");
-assert.match(world, /const frameInterval = isSmallScreen \? 42 : 32/, "3D render loop must remain frame-throttled.");
+assert.match(world, /const normalFrameInterval = isSmallScreen \? 42 : 32/, "3D render loop must remain frame-throttled at normal load.");
 assert.match(world, /renderer\.render\(scene, camera\);\n  raf = requestAnimationFrame\(render\);/, "3D renderer must complete its first frame before activation.");
 assert.doesNotMatch(world, /projectile\.setVisible\?\.\(false\)/, "Phaser projectile fallback must remain visible.");
 assert.match(battle, /group\.setActive\(true\)\.setVisible\(true\)\.setAlpha\(1\)/, "Deployed actors must remain visible.");
