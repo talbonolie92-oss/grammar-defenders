@@ -55,18 +55,23 @@ assert.match(world, /const z = \(38 \+ lane \* 54 \+ 27\) \/ 50 - 3\.4;/, "3D ti
 
 
 // Gameplay progression, question-bank, and combat regression checks.
-const expectedWaveCount = wave => wave === 1 ? 8
-  : wave % 5 === 0
-    ? Math.min(55, wave === 5 ? 21 : 32 + Math.floor(wave / 5) * 3 + Math.max(0, wave - 10) * 2)
-    : wave <= 5 ? Math.min(20, 8 + Math.floor((wave - 1) * 1.2))
-      : Math.min(55, 22 + (wave - 6) * 4);
+const expectedWaveCount = wave => {
+  const regularCount = wave <= 4 ? [25, 40, 60, 80][wave - 1] : 80 + (wave - 4) * 20;
+  return regularCount + (wave % 5 === 0 ? 50 : 0);
+};
 const checkedWaves = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,50];
 const expectedCounts = checkedWaves.map(expectedWaveCount);
-assert.deepEqual(expectedCounts.slice(0, 15), [8,9,10,11,21,22,26,30,34,38,42,46,50,54,51],
-  "Early and mid-game wave quantities must follow the intended progression.");
-assert.ok(expectedCounts.every(count => count >= 8 && count <= 55), "Wave quantities must remain within safe limits.");
-assert.ok(battle.includes("this.enemiesPerWave = bossWave") && battle.includes("Math.min(55, 22 + (this.wave - 6) * 4)"),
-  "Wave progression must preserve the escalating normal/boss formulas.");
+assert.deepEqual(expectedCounts.slice(0, 10), [25,40,60,80,150,120,140,160,180,250],
+  "Wave armies must grow progressively, with 50 additional attackers on boss waves.");
+assert.ok(expectedCounts.every(count => count >= 25), "Every wave must contain a meaningful attacker army.");
+assert.ok(battle.includes("this.enemiesPerWave = getWaveEnemyCount(this.wave)") &&
+  battle.includes("return regularCount + (safeWave % 5 === 0 ? 50 : 0)"),
+  "The live game must use the escalating wave-count formula and boss bonus.");
+assert.ok(battle.includes("Math.min(1.8, (this.wave - 1) * 0.08)"),
+  "Enemy health growth must remain gradual and capped as army size increases.");
+assert.ok(battle.includes("Math.max(300, 600 - Math.floor(this.wave / 5) * 30)") &&
+  battle.includes("Math.max(300, 850 - this.wave * 35)"),
+  "Spawn pacing must accelerate while retaining a minimum interval.");
 assert.match(battle, /const isBoss = this\.enemiesSpawnedThisWave === this\.enemiesPerWave - 1 && this\.wave % 5 === 0/,
   "Every fifth wave must reserve its final spawn for the Dark Overlord.");
 assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/,
@@ -88,6 +93,14 @@ assert.ok(battle.includes("const choices = [") && battle.includes('{ id: "energy
 assert.match(battle, /unlockAdvancedDeck\(\)/, "Advanced defenders must unlock after the first boss.");
 assert.match(battle, /this\.playSound\("shot"\)/, "Combat audio must be wired to projectile attacks.");
 assert.match(battle, /startMusic\(\)/, "Music toggle must start the background score.");
+
+assert.ok(html.includes('id="open-instructions"') && html.includes('id="game-instructions"') &&
+  html.includes("Adventurer's Handbook"), "Homepage must expose a clickable, accessible game handbook.");
+assert.ok(html.includes("Choose Your Defenders") && html.includes("Manage Your Energy") &&
+  html.includes("Defeat Bosses & Ascend") && html.includes("Protect Every Lane"),
+  "The handbook must explain core gameplay, progression, bosses, and lane defense.");
+assert.ok(css.includes(".instructions-dialog") && css.includes(".codex-entry"),
+  "The handbook must use RPG-themed responsive codex styling.");
 
 const validateQuestion = (item, index, bankName) => {
   assert.ok(item && typeof item.topic === "string" && item.topic.trim(), `${bankName} question ${index + 1} needs a topic.`);
