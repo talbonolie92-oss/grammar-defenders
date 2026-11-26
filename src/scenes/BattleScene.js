@@ -5,6 +5,15 @@ const GRID_X = 72;
 const GRID_Y = 38;
 const GRID_W = TILE_W * 7;
 const GRID_H = TILE_H * LANES;
+
+// Wave 1–4: 25, 40, 60, 80. Add 20 regular attackers per wave thereafter.
+// Every fifth (boss) wave adds 50 more attackers, including its final boss spawn.
+function getWaveEnemyCount(wave) {
+  const safeWave = Math.max(1, Math.floor(Number(wave) || 1));
+  const regularCount = safeWave <= 4 ? [25, 40, 60, 80][safeWave - 1] : 80 + (safeWave - 4) * 20;
+  return regularCount + (safeWave % 5 === 0 ? 50 : 0);
+}
+
 import { QUESTIONS, BOSS_QUESTIONS } from "../data/questions.js";
 
 export function createGameScene() {
@@ -48,7 +57,7 @@ export function createGameScene() {
       this.lastCombatVisualAt = 0;
       this.lastKillVisualAt = 0;
       this.enemiesSpawnedThisWave = 0;
-      this.enemiesPerWave = 8;
+      this.enemiesPerWave = 25;
       this.waveActive = true;
       this.waveTransitioning = false;
       this.maxWaves = 10;
@@ -144,7 +153,7 @@ export function createGameScene() {
       // Spawn the first attacker immediately so the battlefield never starts empty.
       this.spawnEnemySafely();
       this.spawnTimer = this.time.addEvent({
-        delay: 2600,
+        delay: 815,
         loop: true,
         callback: () => this.spawnEnemySafely()
       });
@@ -1108,9 +1117,9 @@ export function createGameScene() {
 
       // The opening Grunt now survives five basic Archer hits. Elite classes
       // receive a meaningful durability jump, then scale with later waves.
-      const baseHp = 5 + Math.floor((this.wave - 1) / 3);
-      // Ease late-game durability growth slightly so upgraded teams can still clear dense final waves.
-      const waveMultiplier = 1 + (this.wave - 1) * 0.18 + Math.max(0, this.wave - 5) * 0.10;
+      const baseHp = 5 + Math.min(4, Math.floor((this.wave - 1) / 3));
+      // Enemy numbers now provide the main difficulty ramp. Keep HP growth gradual and capped.
+      const waveMultiplier = 1 + Math.min(1.8, (this.wave - 1) * 0.08);
       const enemyLevel = enemyRoster.indexOf(enemyType);
       const hpScale = [1, 1.2, 2, 1.6, 1.8, 1.7, 1.9, 2.4, 2.8, 4.2][Math.max(0, enemyLevel)];
       const hp = Math.max(5, Math.round((baseHp + [0, 1, 2][type]) * hpScale * waveMultiplier * (isBoss ? 5 : 1)));
@@ -1285,19 +1294,15 @@ export function createGameScene() {
       this.enemiesSpawnedThisWave = 0;
       this.waveTransitioning = false;
       const bossWave = this.wave % 5 === 0;
-      this.enemiesPerWave = bossWave
-        ? Math.min(55, this.wave === 5 ? 21 : 32 + Math.floor(this.wave / 5) * 3 + Math.max(0, this.wave - 10) * 2)
-        : this.wave <= 5
-          ? Math.min(20, 8 + Math.floor((this.wave - 1) * 1.2))
-          : Math.min(55, 22 + (this.wave - 6) * 4);
+      // Large, escalating armies. Boss waves add 50 extra attackers; the final spawn is the boss.
+      this.enemiesPerWave = getWaveEnemyCount(this.wave);
       if (this.wave >= 6 && !this.advancedDeckUnlocked) this.unlockAdvancedDeck();
       this.waveActive = true;
       this.waveTransitioning = false;
+      // Keep attackers flowing without flooding the battlefield; active caps remain in place.
       this.spawnTimer.delay = bossWave
-        ? Math.max(650, 1150 - Math.floor(this.wave / 5) * 45)
-        : this.wave > 5
-          ? Math.max(480, 2050 - (this.wave - 6) * 130)
-          : Math.max(620, 3200 - (this.wave - 1) * 170);
+        ? Math.max(300, 600 - Math.floor(this.wave / 5) * 30)
+        : Math.max(300, 850 - this.wave * 35);
       this.spawnTimer.paused = false;
       if (this.questionTimer) this.questionTimer.paused = false;
       this.message.textContent = "Wave " + this.wave + " — defend the keep!";
