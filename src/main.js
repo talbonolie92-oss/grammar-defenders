@@ -1,5 +1,6 @@
 import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-16";
-import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
+import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js";
+import { getSeatReservationPlan } from "./session-capacity.js";
 
 const params = new URLSearchParams(window.location.search);
 const setupScreen = document.getElementById("setup-screen");
@@ -198,6 +199,21 @@ function startSoloSetup() {
 }
 startSoloSetup();
 
+async function reserveClassroomSeat() {
+  const seatsPath = "sessions/" + sessionId + "/seats";
+  const seatsSnapshot = await dbGet(seatsPath);
+  const plan = getSeatReservationPlan(seatsSnapshot.val() || {}, studentUid);
+  if (plan.existingSeatId) return plan.existingSeatId;
+  for (const seatId of plan.availableSeatIds) {
+    const seatPath = seatsPath + "/" + seatId;
+    const reservation = await dbTransaction(seatPath, current =>
+      current === null ? { uid: studentUid, reservedAt: Date.now() } : undefined
+    );
+    if (reservation.committed) return seatId;
+  }
+  throw new Error("This classroom session is full (30 students). Please tell your teacher.");
+}
+
 async function initializeStudentJoin() {
   const form = document.getElementById("student-join-form");
   form?.addEventListener("submit", async event => {
@@ -245,9 +261,19 @@ async function initializeStudentJoin() {
           throw new Error("You have already completed this classroom game.");
         }
       } else {
-        await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
-          name, classSection, joinedAt: Date.now(), status: "waiting", active: true
-        });
+        let reservedSeatId = null;
+        try {
+          reservedSeatId = await reserveClassroomSeat();
+          await dbSet("sessions/" + sessionId + "/players/" + studentUid, {
+            name, classSection, joinedAt: Date.now(), status: "waiting", active: true
+          });
+        } catch (joinError) {
+          if (reservedSeatId) {
+            try { await dbRemove("sessions/" + sessionId + "/seats/" + reservedSeatId); }
+            catch (cleanupError) { console.warn("Unused seat cleanup will need teacher attention:", cleanupError); }
+          }
+          throw joinError;
+        }
       }
       document.getElementById("student-session-name").textContent = studentSession.title || "Your teacher's Emerald Frontier session";
       form.classList.add("hidden");
