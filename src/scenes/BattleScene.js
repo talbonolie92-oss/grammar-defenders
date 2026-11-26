@@ -108,17 +108,27 @@ export function createGameScene() {
       };
     }
 
+    refreshPhoneLayout() {
+      const nextPhoneLandscape = Boolean(window.matchMedia?.("(orientation: landscape) and (max-height: 500px)").matches);
+      if (nextPhoneLandscape === this.phoneLandscape) return;
+      this.phoneLandscape = nextPhoneLandscape;
+      this.cameras.main.centerOn(480, 210);
+      this.cameras.main.setZoom(this.phoneLandscape ? 1.12 : 1);
+    }
+
     create() {
       this.drawWorld();
-      if (this.phoneLandscape) {
-        this.cameras.main.centerOn(480, 210);
-        this.cameras.main.setZoom(1.12);
-      }
+      this.refreshPhoneLayout();
+      this.handleViewportChange = () => this.refreshPhoneLayout();
+      window.addEventListener("resize", this.handleViewportChange, { passive: true });
+      window.addEventListener("orientationchange", this.handleViewportChange, { passive: true });
       this.createHud();
       // Use Phaser's camera-transformed pointer coordinates for the whole
       // board. This avoids per-object hit-test gaps on scaled mobile canvases.
       this.input.on("pointerdown", pointer => this.handleBoardPointer(pointer));
       this.events.on("shutdown", () => {
+        window.removeEventListener("resize", this.handleViewportChange);
+        window.removeEventListener("orientationchange", this.handleViewportChange);
         this.clearTimers();
         if (this.battleClockInterval) {
           window.clearInterval(this.battleClockInterval);
@@ -1956,6 +1966,7 @@ export function createGameScene() {
       const shade = this.add.rectangle(480, 210, 960, 420, 0x071321, .88).setInteractive();
       const panel = this.add.rectangle(480, 210, 850, 360, isBoss ? 0x321d35 : 0x172d49, .99).setStrokeStyle(3, isBoss ? 0xf0a0c3 : 0x91d8c2);
       const topGlow = this.add.rectangle(480, 30, 838, 5, 0x91e5c2, .9);
+      this.refreshPhoneLayout();
       const phoneQuestionLayout = this.phoneLandscape;
       const eyebrow = this.add.text(480, 34, isBoss ? "☠  BOSS GRAMMAR TRIAL  ☠" : "✦  GRAMMAR CHALLENGE  ✦", {
         fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "12px" : "16px", color: "#a9f0cf", fontStyle: "900", letterSpacing: phoneQuestionLayout ? 1 : 2
