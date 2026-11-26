@@ -78,8 +78,8 @@ assert.ok(battle.includes("Math.max(300, 600 - Math.floor(this.wave / 5) * 30)")
   "Spawn pacing must accelerate while retaining a minimum interval.");
 assert.match(battle, /const isBoss = this\.enemiesSpawnedThisWave === this\.enemiesPerWave - 1 && this\.wave % 5 === 0/,
   "Every fifth wave must reserve its final spawn for the Dark Overlord.");
-assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/,
-  "Active enemy caps must protect performance without changing total wave counts.");
+assert.match(battle, /const activeEnemyCap = this\.mobilePerformanceMode[\s\S]*?if \(this\.enemies\.length >= activeEnemyCap\)/,
+  "Desktop and mobile must enforce their respective active-enemy caps without changing total wave counts.");
 assert.match(battle, /const lane = Phaser\.Math\.Between\(0, LANES - 1\)/,
   "Attackers must be assigned to one of the five valid lanes.");
 assert.match(battle, /const y = GRID_Y \+ lane \* TILE_H \+ TILE_H \/ 2/,
