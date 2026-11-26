@@ -17,7 +17,9 @@
         <div class="brand-mark">EF</div>
         <div><h1>Emerald Frontier</h1><p>Build. Defend. Survive.</p></div>
       </div>
-
+      <div class="topbar-actions">
+        <button id="open-instructions" class="instructions-trigger" type="button" aria-haspopup="dialog" aria-controls="game-instructions">📜 How to Play</button>
+      </div>
     </header>
 
     <section id="landing-hero" class="landing-hero" aria-label="Emerald Frontier fantasy battlefield">
@@ -121,8 +123,36 @@
 
     </section>
 
+    <dialog id="game-instructions" class="instructions-dialog" aria-labelledby="instructions-title">
+      <div class="codex-frame">
+        <div class="codex-heading">
+          <div><p class="codex-kicker">FIELD GUIDE • EMERALD FRONTIER</p><h2 id="instructions-title">Adventurer's Handbook</h2></div>
+          <button id="close-instructions" class="codex-close" type="button" aria-label="Close instructions">✕</button>
+        </div>
+        <p class="codex-intro">Your mission is to protect the Emerald Keep from the army emerging through the Dark Gate. Build wisely, evolve your defenders, and survive every assault.</p>
+        <div class="codex-grid">
+          <article class="codex-entry"><span>01</span><div><h3>Choose Your Defenders</h3><p>Select a unit card, then tap an empty tile on one of the five lanes. Each defender has a different role, cost, and attack style.</p></div></article>
+          <article class="codex-entry"><span>02</span><div><h3>Manage Your Energy</h3><p>Energy regenerates over time and defeating attackers rewards more. Save for stronger units, but build a balanced defense across all lanes.</p></div></article>
+          <article class="codex-entry"><span>03</span><div><h3>Upgrade & Specialize</h3><p>Tap Upgrade, then select a deployed defender to evolve it. Higher tiers improve power and unlock specializations. Elite defenders unlock as you progress.</p></div></article>
+          <article class="codex-entry"><span>04</span><div><h3>Survive the Waves</h3><p>Enemy armies grow larger every wave and appear in random lanes. Watch for fast, armored, poisonous, and heavy attackers. Stop them before they reach the Keep.</p></div></article>
+          <article class="codex-entry"><span>05</span><div><h3>Defeat Bosses & Ascend</h3><p>Every fifth wave is a boss encounter. After defeating it, tap one deployed defender for a free Ascension—or skip the reward.</p></div></article>
+          <article class="codex-entry"><span>06</span><div><h3>Answer the Challenges</h3><p>Answer knowledge questions when they appear. Boss encounters also trigger a special challenge. Read carefully and use rewards to strengthen your defense.</p></div></article>
+          <article class="codex-entry"><span>07</span><div><h3>Protect Every Lane</h3><p>Each lane has three lives. When attackers break through, that lane loses a life. If your defenses collapse, the Emerald Keep is in danger.</p></div></article>
+          <article class="codex-entry"><span>08</span><div><h3>Battle Controls</h3><p>Use Remove to clear a deployed defender (no energy refund). Use sound and music buttons to adjust audio. On phones, rotate to landscape.</p></div></article>
+        </div>
+        <div class="codex-footer"><span>⚔ PLAN YOUR DEFENSE</span><span>✦ DEFEND THE KEEP ✦</span></div>
+      </div>
+    </dialog>
     <footer class="page-footer">A classroom strategy game • Development build</footer>
   </main>
+  <script>
+    (() => {
+      const dialog = document.getElementById("game-instructions");
+      document.getElementById("open-instructions")?.addEventListener("click", () => dialog?.showModal());
+      document.getElementById("close-instructions")?.addEventListener("click", () => dialog?.close());
+      dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+    })();
+  </script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
