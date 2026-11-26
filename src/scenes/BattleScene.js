@@ -1859,6 +1859,9 @@ export function createGameScene() {
       // overlapping tweens or a burst of identical hit sounds.
       const hitFeedbackReady = (!enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140)
         && (!this.lastCombatVisualAt || this.time.now - this.lastCombatVisualAt >= 45);
+      const reducedCombatEffects = this.mobilePerformanceMode
+        ? (this.enemies.length > 6 || this.projectiles.length > 18)
+        : (this.enemies.length > 24 || this.projectiles.length > 64);
       if (hitFeedbackReady && !reducedCombatEffects) {
         enemy.lastHitFeedbackAt = this.time.now;
         this.lastCombatVisualAt = this.time.now;
@@ -2071,6 +2074,10 @@ export function createGameScene() {
           return;
         }
         this.wave = Math.max(1, Math.floor(Number(saved.wave) || 1));
+        this.enemiesPerWave = Phaser.Math.Clamp(Math.floor(Number(saved.enemiesPerWave) || getWaveEnemyCount(this.wave)), 1, 500);
+        this.enemiesSpawnedThisWave = Phaser.Math.Clamp(Math.floor(Number(saved.enemiesSpawnedThisWave) || 0), 0, this.enemiesPerWave);
+        this.waveActive = true;
+        this.waveTransitioning = false;
         this.energy = Phaser.Math.Clamp(Number(saved.energy ?? 150), 0, this.maxEnergy);
         this.baseHealth = Phaser.Math.Clamp(Number(saved.baseHealth ?? 100), 0, 100);
         this.baseShield = Phaser.Math.Clamp(Number(saved.baseShield ?? 0), 0, 60);
@@ -2089,10 +2096,45 @@ export function createGameScene() {
           if (!item || !this.unitStats[item.unitType] || !Number.isInteger(item.lane) || !Number.isInteger(item.col)) return;
           if (item.lane < 0 || item.lane >= LANES || item.col < 0 || item.col >= 7) return;
           const defender = this.deployDefender(item.lane, item.col, item.unitType);
-          if (defender && Number(item.level) >= 2) {
-            defender.level = Phaser.Math.Clamp(Math.floor(Number(item.level)), 1, 3);
-            defender.levelBadge?.setText(["I", "II", "III"][defender.level - 1]);
+          if (!defender) return;
+          const savedStats = item.stats && typeof item.stats === "object" ? item.stats : {};
+          for (const key of ["damage", "cooldown", "range", "projectileSpeed", "energyRate", "energyInterval"]) {
+            if (Number.isFinite(Number(savedStats[key])) && Number(savedStats[key]) >= 0) defender.stats[key] = Number(savedStats[key]);
           }
+          if (typeof savedStats.name === "string") defender.stats.name = savedStats.name.slice(0, 80);
+          defender.level = Phaser.Math.Clamp(Math.floor(Number(item.level) || 1), 1, 3);
+          defender.maxHp = Phaser.Math.Clamp(Number(item.maxHp) || defender.maxHp, 1, 10000);
+          defender.hp = Phaser.Math.Clamp(Number(item.hp ?? defender.maxHp), 0, defender.maxHp);
+          defender.upgradePaths = Array.isArray(item.upgradePaths)
+            ? item.upgradePaths.filter(path => ["vanguard", "fortress", "mystic", "ranger", "rapidfire", "executioner", "vitality", "energycore"].includes(path)).slice(0, 6) : [];
+          defender.damageReduction = Phaser.Math.Clamp(Number(item.damageReduction) || 0, 0, .55);
+          defender.counterDamageMultiplier = Phaser.Math.Clamp(Number(item.counterDamageMultiplier) || 1, 1, 5);
+          defender.ascended = Boolean(item.ascended);
+          defender.ascensionName = typeof item.ascensionName === "string" ? item.ascensionName.slice(0, 80) : null;
+          for (const flag of ["ascensionVolley", "ascensionFreeze", "ascensionChain", "ascensionSplash"]) defender[flag] = Boolean(item[flag]);
+          defender.levelBadge?.setText(defender.ascended ? "ASC" : ["I", "II", "III"][defender.level - 1]);
+          defender.levelBadge?.setColor(defender.level >= 3 ? "#ffe18b" : "#d9f4ff");
+          if (defender.level >= 2) {
+            defender.group.setScale(1 + (defender.level - 1) * .06);
+            defender.evolutionMark = this.add.star(0, -57, defender.level + 3, 5, 10 + defender.level * 2, defender.level >= 3 ? 0xffdf78 : 0x9ce8ff).setStrokeStyle(2, 0xffffff);
+            defender.group.add(defender.evolutionMark);
+          }
+          if (defender.ascended) {
+            defender.group.setScale((defender.group.scaleX || 1) * 1.12);
+            defender.evolutionMark?.destroy();
+            defender.evolutionMark = this.add.star(0, -61, 8, 7, 14, 0xffdf78).setStrokeStyle(2, 0xffffff);
+            defender.group.add(defender.evolutionMark);
+          }
+          if (defender.unitType === "sunwell" && defender.level >= 2) {
+            defender.energyCrystals = [];
+            const crystalCount = defender.ascended ? 3 : defender.level;
+            for (let i = 0; i < crystalCount; i++) {
+              const crystal = this.add.star((i - (crystalCount - 1) / 2) * 13, -42 - (i % 2) * 5, 5, 4, 8, 0xffe58c).setStrokeStyle(1.5, 0xffffff);
+              defender.group.add(crystal);
+              defender.energyCrystals.push(crystal);
+            }
+          }
+          if (defender.healthBar?.active) this.drawGuardianHealth(defender.healthBar, defender.hp, defender.maxHp);
         });
         this.message.textContent = "Battle restored from your last checkpoint. Your current wave and defenders are back!";
       } catch (error) {
@@ -2111,8 +2153,22 @@ export function createGameScene() {
           elapsedSeconds: this.elapsedSeconds, remainingSeconds: this.remainingSeconds,
           questionIndex: this.questionIndex, bossQuestionIndex: this.bossQuestionIndex,
           lastAscensionWave: this.lastAscensionWave,
+          enemiesPerWave: this.enemiesPerWave,
+          enemiesSpawnedThisWave: this.enemiesSpawnedThisWave,
           defenders: this.defenders.filter(item => item.group?.active).map(item => ({
-            lane: item.lane, col: item.col, unitType: item.unitType, level: item.level
+            lane: item.lane, col: item.col, unitType: item.unitType, level: item.level,
+            hp: item.hp, maxHp: item.maxHp,
+            stats: {
+              name: item.stats.name, damage: item.stats.damage, cooldown: item.stats.cooldown,
+              range: item.stats.range, projectileSpeed: item.stats.projectileSpeed,
+              energyRate: item.stats.energyRate, energyInterval: item.stats.energyInterval
+            },
+            upgradePaths: item.upgradePaths || [],
+            damageReduction: item.damageReduction || 0,
+            counterDamageMultiplier: item.counterDamageMultiplier || 1,
+            ascended: Boolean(item.ascended), ascensionName: item.ascensionName || null,
+            ascensionVolley: Boolean(item.ascensionVolley), ascensionFreeze: Boolean(item.ascensionFreeze),
+            ascensionChain: Boolean(item.ascensionChain), ascensionSplash: Boolean(item.ascensionSplash)
           }))
         };
         localStorage.setItem(this.checkpointKey, JSON.stringify(checkpoint));
