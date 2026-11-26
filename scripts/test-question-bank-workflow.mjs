@@ -43,6 +43,10 @@ assert.ok(html.includes("Saved question sets"), "The dashboard must clearly labe
 assert.ok(dashboard.includes('Other / mixed grade'), "Saved banks outside the current grade groups must remain visible rather than disappearing.");
 assert.ok(dashboard.includes('questionBankId:bank?.id||""') && dashboard.includes('questionCount:bank?.questions?.length||0'), "New sessions must record the selected question bank and its question count.");
 assert.ok(dashboard.includes("updateSessionBankStatus") && dashboard.includes("regular and boss challenges"), "The selected topic and its gameplay scope must be explicit in the session form.");
+assert.ok(dashboard.includes('const availableBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12","Mixed"].includes(getBankGrade(b)))'), "The session topic selector must show saved topics across grades instead of hiding non-matching grades.");
+assert.ok(dashboard.includes('"["+getBankGrade(b)+"] "+(b.topic||"Untitled topic")'), "Each saved topic option must identify its grade.");
+assert.ok(dashboard.includes('if(["Grade 10","Grade 11","Grade 12"].includes(bankGrade))$("session-grade").value=bankGrade'), "Choosing a saved topic must automatically align the session grade.");
+assert.ok(dashboard.includes('getBankGrade(bank)!=="Mixed"&&getBankGrade(bank)!==grade'), "Mixed-grade question sets should remain selectable without a false grade mismatch.");
 assert.ok(dashboard.includes('if(bank)data.questions=bank.questions.map'), "The selected saved question set must be copied into the session payload.");
 assert.ok(dashboard.includes('normalizeBankQuestion({...q,grade,topic},subject,topic)'), "Every imported question must display the saved topic selected by the teacher.");
 assert.ok(dashboard.includes('s.questionCount?s.questionCount+" questions":""'), "Session details must show how many saved questions were loaded.");
