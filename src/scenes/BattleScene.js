@@ -103,6 +103,10 @@ export function createGameScene() {
       this.input.on("pointerdown", pointer => this.handleBoardPointer(pointer));
       this.events.on("shutdown", () => {
         this.clearTimers();
+        if (this.battleClockInterval) {
+          window.clearInterval(this.battleClockInterval);
+          this.battleClockInterval = null;
+        }
         this.threeWorld?.dispose();
         this.threeWorld = null;
       });
@@ -118,6 +122,7 @@ export function createGameScene() {
       this.timeLimitMinutes = Phaser.Math.Clamp(Number(config.timeLimitMinutes) || 10, 1, 180);
       this.remainingSeconds = this.timeLimitMinutes * 60;
       this.elapsedSeconds = 0;
+      this.lastClockAt = Date.now();
       this.questionIntervalSeconds = Phaser.Math.Clamp(Number(config.questionIntervalSeconds) || 45, 15, 180);
       this.difficulty = ["easy", "normal", "hard"].includes(config.difficulty) ? config.difficulty : "normal";
       this.customQuestions = Array.isArray(config.questions) ? config.questions
@@ -144,7 +149,10 @@ export function createGameScene() {
         callback: () => this.spawnEnemySafely()
       });
       this.questionTimer = this.time.addEvent({ delay: this.questionIntervalSeconds * 1000, loop: true, callback: () => this.showQuestion(false) });
-      this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickBattleClock() });
+      // Keep the session countdown independent from Phaser's frame clock.
+      // A busy late wave must not make the 10-minute session timer run in slow motion.
+      if (this.battleClockInterval) window.clearInterval(this.battleClockInterval);
+      this.battleClockInterval = window.setInterval(() => this.tickBattleClock(), 250);
       this.updateHud();
     }
 
@@ -1519,6 +1527,7 @@ export function createGameScene() {
         const defender = this.defenders[i];
         if (defender.lane >= 0 && defender.lane < LANES) this.defendersByLane[defender.lane].push(defender);
       }
+      const reducedCombatEffects = this.enemies.length > 24 || this.projectiles.length > 64;
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
         if (!e.group.active) {
@@ -1685,14 +1694,15 @@ export function createGameScene() {
           }
         }
         e.group.x = e.x;
-        e.group.y = e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
+        e.group.y = reducedCombatEffects ? e.baseY
+          : e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
         const frostActive = Boolean(e.slowUntil && this.time.now < e.slowUntil);
         if (e.frostRing) {
           e.frostRing.setVisible(frostActive);
-          e.frostRing.setAlpha(frostActive ? .62 + Math.sin(this.time.now * .012) * .18 : 0);
-          e.frostRing.rotation += dt * 0.7;
+          e.frostRing.setAlpha(frostActive ? (reducedCombatEffects ? .72 : .62 + Math.sin(this.time.now * .012) * .18) : 0);
+          if (!reducedCombatEffects) e.frostRing.rotation += dt * 0.7;
         }
-        if (e.feet) {
+        if (e.feet && !reducedCombatEffects) {
           e.feet[0].rotation = Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
           e.feet[1].rotation = -Math.sin(this.time.now * 0.012 + e.bobOffset) * .22;
         }
@@ -1792,7 +1802,7 @@ export function createGameScene() {
       // overlapping tweens or a burst of identical hit sounds.
       const hitFeedbackReady = (!enemy.lastHitFeedbackAt || this.time.now - enemy.lastHitFeedbackAt >= 140)
         && (!this.lastCombatVisualAt || this.time.now - this.lastCombatVisualAt >= 45);
-      if (hitFeedbackReady) {
+      if (hitFeedbackReady && this.enemies.length <= 24 && this.projectiles.length <= 64) {
         enemy.lastHitFeedbackAt = this.time.now;
         this.lastCombatVisualAt = this.time.now;
         enemy.group.setScale(1.08);
@@ -2114,14 +2124,21 @@ export function createGameScene() {
     }
 
     tickBattleClock() {
-      if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
-      {
-        this.elapsedSeconds++;
-        this.remainingSeconds = Math.max(0, this.remainingSeconds - 1);
-        if (this.remainingSeconds === 0) {
-          this.endGame(this.endlessMode, this.endlessMode ? "TIME LIMIT REACHED!" : "TIME IS UP! DEFENSE INCOMPLETE");
-          return;
-        }
+      if (!this.battleStarted || this.gameOver) return;
+      const now = Date.now();
+      // Questions, upgrade choices, and boss rewards pause the session clock.
+      if (this.questionActive || this.upgradeChoiceActive || this.bossAscensionActive) {
+        this.lastClockAt = now;
+        return;
+      }
+      const elapsedWholeSeconds = Math.floor((now - (this.lastClockAt || now)) / 1000);
+      if (elapsedWholeSeconds < 1) return;
+      this.lastClockAt += elapsedWholeSeconds * 1000;
+      this.elapsedSeconds += elapsedWholeSeconds;
+      this.remainingSeconds = Math.max(0, this.remainingSeconds - elapsedWholeSeconds);
+      if (this.remainingSeconds === 0) {
+        this.endGame(this.endlessMode, this.endlessMode ? "TIME LIMIT REACHED!" : "TIME IS UP! DEFENSE INCOMPLETE");
+        return;
       }
       this.updateHud();
     }
@@ -2129,6 +2146,26 @@ export function createGameScene() {
     endGame(won, customTitle = "") {
       if (this.gameOver) return;
       this.gameOver = true;
+      if (this.battleClockInterval) {
+        window.clearInterval(this.battleClockInterval);
+        this.battleClockInterval = null;
+      }
+      if (this.questionResolutionTimer) {
+        window.clearTimeout(this.questionResolutionTimer);
+        this.questionResolutionTimer = null;
+      }
+      this.questionResolutionToken++;
+      this.questionActive = false;
+      this.questionAnswered = false;
+      this.pendingBossQuestion = false;
+      this.questionOverlay?.destroy(true);
+      this.questionOverlay = null;
+      this.bossAscensionActive = false;
+      this.bossAscensionOverlay?.destroy(true);
+      this.bossAscensionOverlay = null;
+      this.upgradeChoiceActive = false;
+      this.upgradeChoiceOverlay?.destroy(true);
+      this.upgradeChoiceOverlay = null;
       if (typeof window.GD_SAVE_RESULT === "function") {
         const result = {
           questionsAnswered: this.questionsAnswered,
