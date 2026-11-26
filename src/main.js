@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=reconnect-sync-5";
+import { createGameScene } from "./scenes/BattleScene.js?v=phone-readability-6";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -17,7 +17,7 @@ const config = {
   transparent: true,
   resolution: pixelRatio,
   render: { antialias: !isSmallScreen, pixelArt: false, roundPixels: true, powerPreference: isSmallScreen ? "low-power" : "high-performance" },
-  fps: { target: isSmallScreen ? 50 : 60, min: 30, forceSetTimeOut: false },
+  fps: { target: isSmallScreen ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60, min: 24, forceSetTimeOut: false },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [createGameScene()]
 };
