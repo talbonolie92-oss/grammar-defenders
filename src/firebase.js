@@ -1,7 +1,7 @@
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getDatabase, ref, set, update, get, onValue, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { getDatabase, ref, set, update, get, onValue, push, remove, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 const configured = Boolean(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_") && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("PASTE_") && firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("PASTE_PROJECT_ID"));
 let app = null, auth = null, db = null;
@@ -43,6 +43,7 @@ export const dbGet = path => get(dbRef(path));
 export const dbSet = (path, value) => set(dbRef(path), value);
 export const dbUpdate = (path, value) => update(dbRef(path), value);
 export const dbRemove = path => remove(dbRef(path));
+export const dbTransaction = (path, updater) => runTransaction(dbRef(path), updater, { applyLocally: false });
 export const dbPush = path => push(dbRef(path));
 export const dbWatch = (path, callback, onError) => onValue(dbRef(path), callback, onError);
 export const newKey = path => dbPush(path).key;
