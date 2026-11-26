@@ -132,7 +132,13 @@ export function createGameScene() {
       this.events.once("shutdown", () => {
         window.removeEventListener("resize", this.handleViewportChange);
         window.removeEventListener("orientationchange", this.handleViewportChange);
+        this.input.off("pointerdown", this.handleBoardPointerInput);
         this.clearTimers();
+        if (this.questionResolutionTimer) {
+          window.clearTimeout(this.questionResolutionTimer);
+          this.questionResolutionTimer = null;
+        }
+        this.questionResolutionToken++;
         if (this.battleClockInterval) {
           window.clearInterval(this.battleClockInterval);
           this.battleClockInterval = null;
