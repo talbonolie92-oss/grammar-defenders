@@ -184,7 +184,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=tablet-stability-9"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=tablet-stability-10"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -193,7 +193,7 @@ assert.ok(main.includes('matchMedia?.("(pointer: coarse)")') && main.includes("n
 assert.ok(battle.includes("this.cameras.main.setZoom(1.12)"), "Touch devices must enlarge the five-lane battlefield without clipping it.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=tablet-stability-9"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=tablet-stability-10"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
