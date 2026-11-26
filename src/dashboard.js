@@ -38,6 +38,41 @@ function watchQuestionBanks(){
     renderQuestionBanks();
   },err=>setStatus("bank-status",err.message));
 }
+function selectedBankGrade(){return $("bank-grade").value||"Mixed";}
+function getBankGrade(bank){
+  if(bank.grade)return bank.grade;
+  const grades=[...new Set((bank.questions||[]).map(q=>String(q.grade||"").trim()).filter(Boolean))];
+  if(grades.length===1&&/^Grade\s*(7|8|9|10|11|12)$/i.test(grades[0]))return grades[0].replace(/\s+/g," ");
+  return "Mixed";
+}
+function parseDocxQuestions(source){
+  const lines=String(source||"").replace(/\r/g,"").split("\n").map(v=>v.trim());
+  const questions=[],unparsed=[];
+  let current=null;
+  const optionPattern=/^\(?([A-D])\)?[.)\:]\s*(.+)$/i;
+  const finish=()=>{
+    if(!current)return;
+    if(current.a.length>=2)questions.push({q:current.q.trim(),a:current.a,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
+    else unparsed.push("Incomplete question: "+[current.q,...current.a].join(" | "));
+    current=null;
+  };
+  for(const line of lines){
+    if(!line)continue;
+    const match=line.match(optionPattern);
+    if(match){
+      if(!current){unparsed.push("Choice without a question: "+line);continue;}
+      const letter=match[1].toUpperCase(),index=letter.charCodeAt(0)-65;
+      if(index!==current.a.length||index>3){unparsed.push("Unexpected choice label: "+line);continue;}
+      current.a.push(match[2].trim());
+      continue;
+    }
+    if(!current){current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};continue;}
+    if(current.a.length){finish();current={q:line.replace(/^\d+[.)]\s*/,""),a:[]};}
+    else current.q+=" "+line;
+  }
+  finish();
+  return {questions,unparsed};
+}
 function normalizeBankQuestion(raw, subject, topic){
   const q=String(raw.q??raw.question??"").trim();
   const answers=Array.isArray(raw.a)?raw.a:(Array.isArray(raw.answers)?raw.answers:[raw.answer1??raw.optiona??raw.choicea,raw.answer2??raw.optionb??raw.choiceb,raw.answer3??raw.optionc??raw.choicec,raw.answer4??raw.optiond??raw.choiced]);
@@ -72,22 +107,21 @@ function updateBankDraftCount(){
   const preview=$("bank-draft-preview");
   if(!preview)return;
   preview.innerHTML=bankDraft.map((q,i)=>`<article class="draft-question">
-    ${q.reviewRequired?`<b>Question ${i+1} — teacher review required</b>
-      <label>Question<input class="review-field" data-draft-index="${i}" data-draft-field="q" value="${escapeHtml(q.q)}"></label>
-      <div class="review-options">${[0,1,2,3].map(n=>`<label>Answer ${"ABCD"[n]}<input class="review-field" data-draft-index="${i}" data-draft-answer="${n}" value="${escapeHtml(q.a[n]||"")}" placeholder="Answer ${"ABCD"[n]}"></label>`).join("")}</div>
-      <label>Correct answer<select class="review-field" data-draft-index="${i}" data-draft-field="correct">${["A","B","C","D"].map((letter,n)=>`<option value="${n}" ${q.correct===n?"selected":""}>${letter}</option>`).join("")}</select></label>
-      <label>Explanation<textarea class="review-field" data-draft-index="${i}" data-draft-field="explanation" rows="2">${escapeHtml(q.explanation||"")}</textarea></label>
-      <label>Exact source evidence<textarea class="review-field" data-draft-index="${i}" data-draft-field="sourceQuote" rows="2">${escapeHtml(q.sourceQuote||"")}</textarea></label>
-      <label>Source section<input class="review-field" data-draft-index="${i}" data-draft-field="sourceSection" value="${escapeHtml(q.sourceSection||"")}"></label>
-      <small>AI confidence: ${escapeHtml(q.confidence||"not provided")} • Source quote is checked against the uploaded document.</small>
-      <label class="review-check"><input type="checkbox" data-review-index="${i}" ${q.approved?"checked":""}> I verified the correct answer, explanation, and source evidence.</label>`: `<b>${i+1}. ${escapeHtml(q.q)}</b><small>Correct answer: ${escapeHtml(q.a[q.correct])}</small>${q.explanation?`<small>${escapeHtml(q.explanation)}</small>`:""}`}
+    <div class="draft-question-heading"><b>Question ${i+1}</b><button type="button" class="button ghost" data-draft-remove="${i}">Remove</button></div>
+    <label>Question<input class="review-field" data-draft-index="${i}" data-draft-field="q" value="${escapeHtml(q.q)}"></label>
+    <div class="review-options">${[0,1,2,3].map(n=>`<label>Choice ${"ABCD"[n]}<input class="review-field" data-draft-index="${i}" data-draft-answer="${n}" value="${escapeHtml(q.a[n]||"")}" placeholder="Choice ${"ABCD"[n]}"></label>`).join("")}</div>
+    <label>Correct answer<select class="review-field" data-draft-index="${i}" data-draft-field="correct"><option value="">Select the correct answer</option>${["A","B","C","D"].map((letter,n)=>`<option value="${n}" ${q.correct===n?"selected":""}>${letter}</option>`).join("")}</select></label>
   </article>`).join("");
 }
 function renderQuestionBanks(){
-  const select=$("session-bank"),current=select.value;
-  select.innerHTML='<option value="">Built-in Grammar Questions</option>'+bankCache.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.subject+" • "+b.topic+" ("+(b.questions?.length||0)+")")+'</option>').join("");
-  if(bankCache.some(b=>b.id===current))select.value=current;
-  $("bank-list").innerHTML=bankCache.length?bankCache.map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.subject||"Subject")+' • '+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join(""):'<div class="empty">No saved question sets yet.</div>';
+  const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
+  const eligible=bankCache.filter(b=>getBankGrade(b)===grade||getBankGrade(b)==="Mixed");
+  select.innerHTML='<option value="">Built-in Grammar Questions</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
+  if(eligible.some(b=>b.id===current))select.value=current;
+  const groups={};
+  bankCache.forEach(b=>{const g=getBankGrade(b);(groups[g]??=[]).push(b);});
+  const order=["Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12","Mixed"];
+  $("bank-list").innerHTML=bankCache.length?order.filter(g=>groups[g]?.length).map(g=>'<section class="bank-grade-group"><h3>'+escapeHtml(g)+'</h3>'+groups[g].map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+escapeHtml(b.subject||"English")+' • '+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join("")+'</section>').join(""):'<div class="empty">No saved topics yet. Add a topic and questions above.</div>';
 }
 $("bank-load-file").addEventListener("click",async()=>{
   const file=$("bank-file").files?.[0];if(!file){setStatus("bank-status","Choose a .JSON or .CSV file first.");return;}
@@ -112,134 +146,71 @@ $("manual-question-form").addEventListener("submit",e=>{
 });
 $("bank-save").addEventListener("click",async()=>{
   if(!teacher)return;
-  const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
-  if(!subject||!topic||!bankDraft.length){setStatus("bank-status","Enter a subject, topic, and at least one question.");return;}
-  try{bankDraft=bankDraft.map(q=>normalizeBankQuestion(q,subject,topic));}
-  catch(error){setStatus("bank-status",error.message);return;}
-  const pendingReview=bankDraft.filter(q=>q.reviewRequired&&!q.approved).length;
-  if(pendingReview){setStatus("bank-status","Please approve all "+pendingReview+" source-based questions before saving.");return;}
-  if(bankDraft.length>300){setStatus("bank-status","A question set can contain up to 300 questions.");return;}
-  const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
-  const existing=bankCache.find(b=>b.id===id);
+  const subject=$("bank-subject").value.trim()||"English",topic=$("bank-topic").value.trim(),grade=selectedBankGrade();
+  if(!topic||!bankDraft.length){setStatus("bank-status","Enter a topic and add at least one question.");return;}
+  if(bankDraft.length>300){setStatus("bank-status","A topic can contain up to 300 questions.");return;}
   try{
-    await dbSet("teacherSessions/"+teacher.uid+"/questionBanks/"+id,{subject,topic,questions:bankDraft,createdAt:existing?.createdAt||Date.now(),updatedAt:Date.now()});
-    $("bank-edit-id").value=id;setStatus("bank-status","Saved "+bankDraft.length+" questions. You can now select this set when creating a session.");
-  }catch(error){setStatus("bank-status",error.message||"Could not save the question set.");}
+    const normalized=bankDraft.map((q,i)=>{
+      if(q.correct===null||q.correct===undefined||q.correct==="")throw new Error("Question "+(i+1)+": mark its correct answer before saving.");
+      return normalizeBankQuestion({...q,grade},subject,topic);
+    });
+    const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
+    const existing=bankCache.find(b=>b.id===id);
+    await dbSet("teacherSessions/"+teacher.uid+"/questionBanks/"+id,{subject,topic,grade,questions:normalized,createdAt:existing?.createdAt||Date.now(),updatedAt:Date.now()});
+    bankDraft=normalized;$("bank-edit-id").value=id;updateBankDraftCount();
+    setStatus("bank-status","Saved "+normalized.length+" questions under "+grade+" → "+topic+".");
+    renderQuestionBanks();
+  }catch(error){setStatus("bank-status",error.message||"Could not save the topic.");}
 });
 $("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
 
 $("bank-draft-preview").addEventListener("input",e=>{
   const field=e.target.closest("[data-draft-index]");if(!field)return;
   const item=bankDraft[Number(field.dataset.draftIndex)];if(!item)return;
-  if(field.dataset.draftAnswer!==undefined){item.a[Number(field.dataset.draftAnswer)]=field.value;}
-  else if(field.dataset.draftField==="correct")item.correct=Number(field.value);
+  if(field.dataset.draftAnswer!==undefined)item.a[Number(field.dataset.draftAnswer)]=field.value;
+  else if(field.dataset.draftField==="correct")item.correct=field.value===""?null:Number(field.value);
   else item[field.dataset.draftField]=field.value;
-  item.approved=false;
-  const approval=$("bank-draft-preview").querySelector('input[data-review-index="'+field.dataset.draftIndex+'"]');
-  if(approval)approval.checked=false;
 });
-$("bank-draft-preview").addEventListener("change",e=>{
-  const box=e.target.closest("input[data-review-index]");if(!box)return;
-  const index=Number(box.dataset.reviewIndex),item=bankDraft[index];if(!item)return;
-  if(box.checked){
-    try{
-      normalizeBankQuestion(item,$("bank-subject").value,$("bank-topic").value);
-      const compact=s=>String(s||"").toLowerCase().replace(/\\s+/g," ").trim();
-      if(!item.sourceQuote||!compact($("docx-source").value).includes(compact(item.sourceQuote)))throw new Error("The source evidence must exactly match the uploaded Word lesson.");
-      if(!item.explanation.trim())throw new Error("Add an explanation before approval.");
-      item.approved=true;setStatus("bank-status","Question "+(index+1)+" approved.");
-    }catch(error){box.checked=false;item.approved=false;setStatus("bank-status","Question "+(index+1)+": "+error.message);}
-  }else{item.approved=false;setStatus("bank-status","Approval removed; this question cannot be saved yet.");}
+$("bank-draft-preview").addEventListener("click",e=>{
+  const button=e.target.closest("[data-draft-remove]");if(!button)return;
+  bankDraft.splice(Number(button.dataset.draftRemove),1);updateBankDraftCount();
 });
 $("docx-extract").addEventListener("click",async()=>{
   const file=$("docx-file").files?.[0];
-  const status=$("docx-status");
-  if(!file){setStatus("docx-status","Please choose a .DOCX Word document first.");return;}
-  if(!/\.docx$/i.test(file.name)){setStatus("docx-status","This file is not a .DOCX document. Save it as Word Document (.docx) and try again.");return;}
-  if(file.size>10*1024*1024){setStatus("docx-status","This Word document is larger than 10 MB. Please use a smaller file.");return;}
-  setStatus("docx-status","Starting Word reader…");
+  if(!file){setStatus("docx-status","Choose a .DOCX Word document first.");return;}
+  if(!/\.docx$/i.test(file.name)){setStatus("docx-status","Please upload a .DOCX Word document.");return;}
+  if(file.size>10*1024*1024){setStatus("docx-status","The document must be 10 MB or smaller.");return;}
+  setStatus("docx-status","Reading Word document…");
   const loadMammoth=()=>new Promise((resolve,reject)=>{
     if(window.mammoth?.extractRawText)return resolve(window.mammoth);
-    const urls=["https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js","https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js","https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"];
-    let index=0;
-    const tryNext=()=>{
-      if(window.mammoth?.extractRawText)return resolve(window.mammoth);
-      if(index>=urls.length)return reject(new Error("The Word-reading library could not load. Check your internet connection, disable script-blocking extensions for this site, then refresh."));
-      const script=document.createElement("script");script.src=urls[index++];script.async=true;
-      script.onload=()=>window.mammoth?.extractRawText?resolve(window.mammoth):tryNext();
-      script.onerror=tryNext;document.head.appendChild(script);
-    };
-    tryNext();
+    const urls=["https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js","https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js","https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"];let index=0;
+    const next=()=>{if(window.mammoth?.extractRawText)return resolve(window.mammoth);if(index>=urls.length)return reject(new Error("Could not load the Word reader. Check your internet connection and refresh."));const script=document.createElement("script");script.src=urls[index++];script.async=true;script.onload=()=>window.mammoth?.extractRawText?resolve(window.mammoth):next();script.onerror=next;document.head.appendChild(script);};next();
   });
   try{
-    if(status)status.textContent="Loading Word document reader…";
     const mammoth=await loadMammoth();
-    if(status)status.textContent="Reading "+file.name+"…";
     const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
     const source=String(result.value||"").replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-    if(source.length<80)throw new Error("Very little readable text was found. Make sure this is a text-based .DOCX file, not a scanned image or legacy .DOC file.");
-    if(source.length>60000)throw new Error("The extracted lesson is longer than 60,000 characters. Split it into smaller Word documents.");
+    if(source.length<20)throw new Error("No readable question text was found. Scanned/image-only Word documents are not supported.");
+    if(source.length>60000)throw new Error("The extracted document exceeds 60,000 characters. Split it into smaller files.");
     $("docx-source").value=source;
     if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
-    setStatus("docx-status","Success: read "+source.length.toLocaleString()+" characters from "+file.name+".");
-  }catch(error){
-    console.error("Word document import failed:",error);
-    setStatus("docx-status","Could not read Word document: "+(error.message||"Unknown error"));
-  }
-});
-$("docx-copy-prompt").addEventListener("click",async()=>{
-  const source=$("docx-source").value.trim();
-  if(!source){setStatus("docx-status","Read a Word document first.");return;}
-  const prompt=`Act as a careful educational assessment writer. Use ONLY the lesson source below. Create 10 multiple-choice questions suitable for the teacher's selected grade. Each question must have 3 or 4 distinct answer choices and exactly one defensible correct answer. Do not use outside facts or invent details. For every question include: q, a (array of choices), correct (A/B/C/D), explanation (brief reason), sourceQuote (an exact verbatim sentence or phrase copied from the source that supports the answer), sourceSection (heading if identifiable), confidence ("high" or "medium"). Avoid ambiguous questions and distractors that could also be correct. If the source does not support enough questions, create fewer rather than guessing. Return ONLY valid JSON in this shape: {"questions":[{"q":"...","a":["...","...","..."],"correct":"A","explanation":"...","sourceQuote":"Exact words from source","sourceSection":"...","confidence":"high"}]}.\n\nLESSON SOURCE:\n${source}`;
-  try{await navigator.clipboard.writeText(prompt);setStatus("docx-status","Prompt copied. Open ChatGPT, paste it, then paste the returned JSON below.");}
-  catch(error){$("docx-json").value=prompt;setStatus("docx-status","Clipboard access was blocked. The prompt has been placed in the JSON box; copy it manually.");}
-});
-$("docx-import-json").addEventListener("click",()=>{
-  const rawInput=$("docx-json").value.trim();
-  const showImportStatus=message=>{
-    setStatus("bank-status",message);
-    setStatus("docx-status",message);
-  };
-  showImportStatus("Checking the generated questions…");
-  try{
-    if(!rawInput)throw new Error("Paste the JSON returned by ChatGPT into the box first. Do not paste the question-generation prompt here.");
-    if(/^Act as a careful educational assessment writer/i.test(rawInput)||rawInput.includes("LESSON SOURCE:")){
-      throw new Error("This is the question-generation prompt, not the generated questions. Copy the prompt, send it in a ChatGPT conversation, then paste ChatGPT's JSON reply into this box.");
-    }
-    const cleaned=rawInput.replace(/^﻿/,"").replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();
-    let parsed;
-    try{parsed=JSON.parse(cleaned);}
-    catch(parseError){throw new Error("The text is not valid JSON. In ChatGPT, ask it to return ONLY valid JSON, then copy its complete reply here. Details: "+parseError.message);}
-    const raw=Array.isArray(parsed)?parsed:parsed.questions;
-    if(!Array.isArray(raw)||!raw.length)throw new Error("The JSON must contain a non-empty questions array.");
-    if(raw.length>50)throw new Error("Import up to 50 generated questions at a time.");
-    const source=$("docx-source").value.trim();
-    if(!source)throw new Error("Read a Word document first so source evidence can be checked.");
-    const compact=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
-    const sourceText=compact(source);
-    const imported=raw.map((item,index)=>{
-      const quote=String(item.sourceQuote||item.source_quote||"").trim();
-      if(!quote||!sourceText.includes(compact(quote)))throw new Error("Question "+(index+1)+": its sourceQuote is missing or is not an exact match in the Word document. Regenerate or correct the quote.");
-      const q=normalizeBankQuestion({...item,reviewRequired:true,approved:false},$("bank-subject").value.trim(),$("bank-topic").value.trim());
-      if(!q.explanation)throw new Error("Question "+(index+1)+": add an explanation before review.");
-      return q;
-    });
-    if(bankDraft.length+imported.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
-    bankDraft.push(...imported);updateBankDraftCount();
-    showImportStatus("Success: added "+imported.length+" questions for teacher review. Check each answer and approve every item before saving.");
+    const parsed=parseDocxQuestions(source);
+    if(!parsed.questions.length)throw new Error("No question blocks with at least two labeled choices (A–D) were detected. Check that each choice starts with A., B., C., or D.");
+    if(bankDraft.length+parsed.questions.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
+    bankDraft.push(...parsed.questions);updateBankDraftCount();
+    let message="Organized "+parsed.questions.length+" questions. Review each item, mark its correct answer, then save.";
+    if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" line(s) could not be organized; check the document formatting.";
+    setStatus("docx-status",message);setStatus("bank-status",message);
+    if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
     $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
-  }catch(error){
-    showImportStatus(error.message||"Could not import generated questions.");
-    console.error("Generated question import failed:",error);
-  }
+  }catch(error){setStatus("docx-status",error.message||"Could not import this Word document.");}
 });
-
 $("bank-list").addEventListener("click",async e=>{
   const button=e.target.closest("button[data-bank-action]");if(!button)return;
   const id=button.closest("[data-bank]").dataset.bank,bank=bankCache.find(b=>b.id===id);if(!bank)return;
   if(button.dataset.bankAction==="load"){
-    $("bank-edit-id").value=id;$("bank-subject").value=bank.subject||"";$("bank-topic").value=bank.topic||"";
-    bankDraft=(bank.questions||[]).map(q=>({...q,a:[...q.a]}));updateBankDraftCount();setStatus("bank-status","Loaded saved set for editing.");
+    $("bank-edit-id").value=id;$("bank-subject").value=bank.subject||"";$("bank-topic").value=bank.topic||"";$("bank-grade").value=getBankGrade(bank);
+    bankDraft=(bank.questions||[]).map(q=>({...q,a:[...q.a]}));updateBankDraftCount();setStatus("bank-status","Loaded saved topic for editing.");
     window.scrollTo({top:$("bank-subject").getBoundingClientRect().top+window.scrollY-100,behavior:"smooth"});
   }else if(confirm("Delete this question set? Existing sessions that already copied it will remain unchanged.")){
     await dbRemove("teacherSessions/"+teacher.uid+"/questionBanks/"+id);
@@ -291,13 +262,14 @@ $("sessions-list").addEventListener("click",async e=>{
   if(button.dataset.action==="rename")await renameSession(s);
   if(button.dataset.action==="delete")await deleteSession(s);
 });
+$("session-grade").addEventListener("change",()=>renderQuestionBanks());
 $("session-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!teacher)return;
   const title=safeName($("session-title").value);if(!title)return;
   setStatus("create-status","Creating session…");
   try{
     const id=dbPush("sessions").key,now=Date.now();
-    const bank=bankCache.find(item=>item.id===$("session-bank").value);const data={teacherId:teacher.uid,title,grade:$("session-grade").value,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||safeName($("session-topic").value)||"General grammar",mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};if(bank)data.questions=bank.questions;
+    const bank=bankCache.find(item=>item.id===$("session-bank").value);const data={teacherId:teacher.uid,title,grade:$("session-grade").value,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||"Built-in Grammar Questions",mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};if(bank)data.questions=bank.questions;
     await dbSet("sessions/"+id+"/public",data);
     await dbSet("teacherSessions/"+teacher.uid+"/"+id,{title,status:"waiting",createdAt:now});
     $("session-title").value="";setStatus("create-status","Session created. Open it below to display the QR code.");
