@@ -49,8 +49,7 @@ function getBankGrade(bank){
 }
 function parseDocxQuestions(source){
   const lines=String(source||"").replace(/\r/g,"\n").split("\n")
-    .map(line=>line.replace(/[\u00a0\t]+/g," ").replace(/\s+/g," ").trim())
-    .filter(Boolean);
+    .map(line=>line.replace(/[\u00a0\t]+/g," ").replace(/\s+/g," ").trim()).filter(Boolean);
   const questions=[],unparsed=[];
   let current=null;
   const cleanQuestion=line=>String(line).replace(/^\s*(?:question\s*)?\d+\s*[.)\]:-]\s*/i,"").replace(/^[-•*]\s*/,"").trim();
@@ -58,15 +57,18 @@ function parseDocxQuestions(source){
   const splitInline=line=>{
     const re=/(?:^|\s)(?:\(([A-D])\)|([A-D])\s*[.)：:]|([A-D])\s+-)\s+/gi;
     const marks=[];let m;
-    while((m=re.exec(line))!==null) marks.push({index:m.index+(m[0].startsWith(" ")?1:0),letter:(m[1]||m[2]||m[3]).toUpperCase(),end:re.lastIndex});
-    if(marks.length<2||line.slice(0,marks[0].index).trim())return null;
-    return marks.map((item,i)=>({letter:item.letter,text:line.slice(item.end,marks[i+1]?.index??line.length).trim()}));
+    while((m=re.exec(line))!==null)marks.push({index:m.index+(m[0].startsWith(" ")?1:0),letter:(m[1]||m[2]||m[3]).toUpperCase(),end:re.lastIndex});
+    if(marks.length<2)return null;
+    return {prefix:line.slice(0,marks[0].index).trim(),choices:marks.map((item,i)=>({letter:item.letter,text:line.slice(item.end,marks[i+1]?.index??line.length).trim()}))};
   };
   const finish=()=>{
     if(!current)return;
-    const choices=current.choices.filter(Boolean);
-    if(current.q.trim()&&choices.length>=2)questions.push({q:current.q.trim(),a:choices,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
-    else unparsed.push("Incomplete question block: "+[current.q,...choices].filter(Boolean).join(" | "));
+    const used=current.choices.map((v,i)=>v?i:-1).filter(i=>i>=0);
+    const last=used.length?Math.max(...used):-1;
+    const ordered=last>=0?current.choices.slice(0,last+1):[];
+    if(current.q.trim()&&ordered.length>=2&&ordered.every(Boolean)){
+      questions.push({q:current.q.trim(),a:ordered,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
+    }else unparsed.push("Incomplete question block: "+[current.q,...ordered].filter(Boolean).join(" | "));
     current=null;
   };
   const addChoice=(letter,value,line)=>{
@@ -78,7 +80,16 @@ function parseDocxQuestions(source){
   for(const raw of lines){
     const line=raw.replace(/^\s*(?:[-•*]\s*)/,"").trim();
     const inline=splitInline(line);
-    if(inline){if(!current)unparsed.push("Choices without a question: "+line);else inline.forEach(x=>addChoice(x.letter,x.text,line));continue;}
+    if(inline){
+      if(inline.prefix){
+        if(current?.choices.some(Boolean)){finish();}
+        if(!current)current={q:cleanQuestion(inline.prefix),choices:[]};
+        else if(!current.choices.some(Boolean))current.q+=" "+inline.prefix;
+      }
+      if(!current)unparsed.push("Choices without a question: "+line);
+      else inline.choices.forEach(x=>addChoice(x.letter,x.text,line));
+      continue;
+    }
     const match=line.match(marker);
     if(match){if(!current){unparsed.push("Choice without a question: "+line);continue;}addChoice((match[1]||match[2]||match[3]).toUpperCase(),match[4],line);continue;}
     if(!current){current={q:cleanQuestion(line),choices:[]};continue;}
