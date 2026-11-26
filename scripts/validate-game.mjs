@@ -210,8 +210,8 @@ assert.ok(battle.includes("Number(saved.baseHealth ?? 100)"), "A zero-health che
 
 // Firebase rules must allow idempotent retries only for the authenticated player's own attempt.
 const attemptWriteRule = databaseRules.rules.sessions.$sessionId.attempts.$attemptId[".write"];
-assert.match(attemptWriteRule, /data\\.child\\('playerId'\\)\\.val\\(\\) === auth\\.uid/, "A student may retry only their own existing question-attempt record.");
-assert.match(attemptWriteRule, /blockedPlayers/, "Blocked students must not be able to submit or retry attempts.");
+assert.ok(attemptWriteRule.includes("data.child('playerId').val() === auth.uid"), "A student may retry only their own existing question-attempt record.");
+assert.ok(attemptWriteRule.includes("blockedPlayers"), "Blocked students must not be able to submit or retry attempts.");
 
 
 // Rejoin must preserve existing players even when late joining is disabled.
