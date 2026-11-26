@@ -168,7 +168,7 @@ assert.match(battle, /this\.bossAscensionActive\) \{\s*this\.lastClockAt = now/,
 assert.match(battle, /this\.elapsedSeconds \+= elapsedWholeSeconds/, "Timer must catch up after delayed browser callbacks.");
 assert.match(battle, /window\.clearInterval\(this\.battleClockInterval\)/, "Session countdown must be cleared at game end and scene shutdown.");
 assert.match(battle, /this\.questionOverlay\?\.destroy\(true\)/, "Ending a session must clean up any active question overlay.");
-assert.match(battle, /const reducedCombatEffects = this\.mobilePerformanceMode[\s\S]*?this\.enemies\.length > 24 \|\| this\.projectiles\.length > 64/, "Phones must activate lightweight combat visuals at a lower load.");
+assert.match(battle, /const reducedCombatEffects = this\.mobilePerformanceMode[\s\S]*?this\.enemies\.length > 6 \|\| this\.projectiles\.length > 18/, "Touch devices must simplify combat visuals at a lower load.");
 assert.match(battle, /hitFeedbackReady && !reducedCombatEffects/, "Dense combat must suppress nonessential per-hit tweens.");
 assert.match(battle, /const denseSpawn = this\.enemies\.length >= \(this\.mobilePerformanceMode \? 6 : 22\) && !isBoss/, "Phone minion spawns must enter lightweight visual mode earlier.");
 assert.match(battle, /e\.details\?\.forEach\(part => part\.setVisible\(!simplifyEnemy\)\)/, "Existing enemies must shed decorative parts under load and restore them afterward.");
@@ -197,7 +197,7 @@ assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y
 assert.ok(html.includes("game.css?v=tablet-stability-9"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
-assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
+assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
 assert.ok(battle.includes("const questionFontSize = phoneQuestionLayout") && battle.includes("question.setFixedSize(780, 76)"), "Phone landscape questions must fit a fixed readable area.");
 assert.ok(battle.includes("handleQuestionPointer(pointer)") && battle.includes("questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + 4 })"), "Question taps must map by Phaser camera coordinates rather than scaled object hit tests.");
 assert.ok(battle.includes("g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72)"), "Five battlefield lanes must have high-contrast row boundaries.");
