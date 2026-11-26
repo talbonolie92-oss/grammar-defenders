@@ -22,7 +22,7 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done
-          node functions/test-capacity.mjs
+          node scripts/test-session-capacity.mjs
       - name: Detect undefined runtime variables
         run: npx --yes eslint@8.57.1 src --no-eslintrc --env browser,es2022 --global Phaser --global QRCode --parser-options '{"sourceType":"module","ecmaVersion":"latest"}' --rule 'no-undef:error'
       - name: Validate question bank data
