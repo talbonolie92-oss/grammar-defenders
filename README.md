@@ -85,12 +85,13 @@ Then open `http://localhost:8000`.
 node scripts/validate-data.mjs
 ```
 
-GitHub Actions also checks JavaScript syntax and question-bank data on pushes to `main`.
+GitHub Actions checks JavaScript syntax, undefined runtime variables, question-bank data, DOCX parsing, question-bank workflows, and core gameplay/layout regressions on pushes to `main`.
 
 ## Technology
 
 - Phaser 3 for combat simulation, input, HUD, and effects
-- Three.js for the lightweight 3D battlefield, structures, terrain, and animated Dark Gate
+- Phaser 3 is the single active gameplay renderer for consistent performance across phones, tablets, and desktop browsers
+- `src/three-world.js` is retained as an experimental optional renderer and is disabled in the stable classroom build
 - JavaScript ES modules
 - Firebase Authentication
 - Firebase Realtime Database
