@@ -15,6 +15,9 @@ for (const value of [0, 1, 2, 3]) {
   assert.ok(html.includes('<option value="' + value + '">' + "ABCD"[value] + "</option>"), "Missing correct-answer option " + "ABCD"[value]);
 }
 assert.match(dashboard, /a:\[\$\("bank-a1"\)\.value,\$\("bank-a2"\)\.value,\$\("bank-a3"\)\.value,\$\("bank-a4"\)\.value\]/, "Manual submission must pass all four choices.");
+assert.ok(dashboard.includes("mammoth.convertToHtml("), "DOCX extraction must preserve manual line breaks through HTML conversion.");
+assert.ok(dashboard.includes(String.raw`.replace(/<br\s*\/?\s*>/gi,"\n")`), "DOCX HTML br elements must become parser-visible newlines.");
+assert.ok(dashboard.includes('docx-question-parser.js?v=docx-break-fix-1'), "Parser module URL must be cache-busted with the DOCX fix.");
 assert.match(dashboard, /const importedQuestions=parsed\.questions\.map/, "DOCX parser output must be normalized into the draft question shape.");
 assert.match(dashboard, /bankDraft\.push\(\.\.\.importedQuestions\)/, "DOCX questions should flow directly into the shared draft.");
 assert.match(dashboard, /bank-draft-preview"\)\.children\.length!==bankDraft\.length/, "DOCX import must verify that every draft question was rendered.");
