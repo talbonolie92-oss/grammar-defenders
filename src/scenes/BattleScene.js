@@ -127,8 +127,9 @@ export function createGameScene() {
       this.createHud();
       // Use Phaser's camera-transformed pointer coordinates for the whole
       // board. This avoids per-object hit-test gaps on scaled mobile canvases.
-      this.input.on("pointerdown", pointer => this.handleBoardPointer(pointer));
-      this.events.on("shutdown", () => {
+      this.handleBoardPointerInput = pointer => this.handleBoardPointer(pointer);
+      this.input.on("pointerdown", this.handleBoardPointerInput);
+      this.events.once("shutdown", () => {
         window.removeEventListener("resize", this.handleViewportChange);
         window.removeEventListener("orientationchange", this.handleViewportChange);
         this.clearTimers();
