@@ -220,6 +220,9 @@ assert.ok(battle.includes("handleQuestionPointer(pointer)") && battle.includes("
 assert.ok(battle.includes("g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72)"), "Five battlefield lanes must have high-contrast row boundaries.");
 assert.ok(battle.includes("phoneQuestionLayout ? 190") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
 assert.ok(main.includes("fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
+assert.ok(main.includes("antialias: true") && main.includes("roundPixels: false"), "All devices must use consistent smooth vector rendering without pixel snapping artifacts.");
+assert.ok(main.includes("isTouchDevice ? 1.15 : 1.5"), "Touch devices must receive a modestly improved render resolution without excessive GPU load.");
+assert.ok(!battle.includes("const speedTrail = this.add.rectangle"), "Enemy runner accessories must not use thin moving rectangles that can stretch into visual streaks on some GPUs.");
 
 
 // Refresh recovery regression checks.
@@ -269,10 +272,10 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats[".read"] === true, "Stud
 assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includes("!data.exists()"), "A seat may only be claimed while it is empty.");
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 
-assert.ok(html.includes("src/main.js?v=free-seat-capacity-1"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(html.includes("src/main.js?v=visual-consistency-1"), "The entry module cache token must refresh after tablet stability changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=stability-audit-16"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=visual-consistency-1"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
