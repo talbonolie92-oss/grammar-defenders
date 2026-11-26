@@ -576,7 +576,7 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
     border:0!important;border-radius:0!important;
   }
   body.playing .game-controls {
-    position:absolute!important;z-index:30!important;top:3px!important;right:4px!important;
+    position:absolute!important;z-index:30!important;top:2px!important;right:4px!important;
     display:flex!important;width:auto!important;height:24px!important;
     min-height:24px!important;flex:0 0 24px!important;margin:0!important;
     gap:4px!important;background:#081a25b8;border:1px solid #b9d6b344;
@@ -610,7 +610,7 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
   body.playing .deck-grid .unit-copy small{font-size:7px!important}
   body.playing .deck-grid .unit-cost{font-size:9px!important}
   body.playing .battle-hud {
-    position:absolute!important;z-index:25!important;top:31px!important;left:3px!important;right:3px!important;
+    position:absolute!important;z-index:25!important;top:2px!important;left:3px!important;right:auto!important;width:58%!important;
     display:flex!important;height:22px!important;min-height:22px!important;flex:0 0 22px!important;
     padding:1px 5px!important;gap:6px!important;border-radius:7px!important;
     background:#081a25b8!important;backdrop-filter:blur(5px);overflow:hidden!important;
@@ -621,3 +621,5 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
   body.playing .energy-track{height:6px!important}
   body.playing .battle-footer{display:none!important}
 }
+
+@media (orientation: landscape) and (max-width: 900px) { body.playing .lane-life-stat { display:none!important; } }
