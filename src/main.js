@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js";
+import { createGameScene } from "./scenes/BattleScene.js?v=topic-bank-link-1";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
