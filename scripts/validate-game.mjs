@@ -105,3 +105,5 @@ assert.equal(new Set(QUESTIONS.map(item => item.q.trim())).size, QUESTIONS.lengt
 assert.equal(new Set(BOSS_QUESTIONS.map(item => item.q.trim())).size, BOSS_QUESTIONS.length, "Boss questions must not contain duplicate prompts.");
 
 console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn slots, lane/tile centers, 3D actor sync, audio hooks, 8 specializations, and 34 validated questions.");
+
+// Final pre-device-test regression rerun marker: keep this workflow exercising the complete suite.
