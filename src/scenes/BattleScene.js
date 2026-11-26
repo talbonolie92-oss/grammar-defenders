@@ -251,6 +251,12 @@ export function createGameScene() {
         this.tweens.add({ targets: mote, y: mote.y - 12, alpha: 0.12, duration: 2400 + i * 90, yoyo: true, repeat: -1, delay: i * 110 });
       }
       // Load the 3D world progressively; retain the original battlefield if WebGL is unavailable.
+      // Phones were creating two simultaneous WebGL renderers (Phaser + Three.js).
+      // Keep the proven Phaser battlefield on small screens to reduce GPU/context
+      // pressure; desktop keeps the optional 3D presentation.
+      const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches ||
+        (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
+      if (mobileDevice) return;
       import("../three-world.js").then(async ({ createThreeWorld }) => {
         if (!this.sys.isActive()) return;
         try {
@@ -1917,25 +1923,25 @@ export function createGameScene() {
       const topic = this.add.text(480, 62, item.topic.toUpperCase(), {
         fontFamily: "Nunito", fontSize: "14px", color: "#ffd779", fontStyle: "900", letterSpacing: 1.4
       }).setOrigin(.5);
-      const questionFontSize = item.q.length > 150 ? 23 : item.q.length > 95 ? 25 : 28;
+      const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32;
       const question = this.add.text(480, 108, item.q, {
         fontFamily: "Nunito", fontSize: questionFontSize + "px", color: "#ffffff", fontStyle: "900",
-        align: "center", wordWrap: { width: 750 }, lineSpacing: 6
+        align: "center", wordWrap: { width: 820 }, lineSpacing: 7
       }).setOrigin(.5);
       const instructionY = Math.max(153, 108 + question.height / 2 + 13);
       const instruction = this.add.text(480, instructionY, "Choose the correct answer to unleash a battle power", {
-        fontFamily: "Nunito", fontSize: "13px", color: "#c8d8e9", fontStyle: "700"
+        fontFamily: "Nunito", fontSize: "15px", color: "#c8d8e9", fontStyle: "700"
       }).setOrigin(.5);
       overlay.add([shade, panel, topGlow, eyebrow, topic, question, instruction]);
       const compactAnswers = item.a.length >= 4;
-      const answerStartY = Math.max(compactAnswers ? 181 : 190, instructionY + 27);
+      const answerStartY = Math.max(compactAnswers ? 180 : 188, instructionY + 25);
       item.a.forEach((answer, index) => {
         // Larger labels and wider buttons improve readability without changing the answer flow.
-        const y = answerStartY + index * (compactAnswers ? 35 : 40);
-        const button = this.add.rectangle(480, y, 720, compactAnswers ? 32 : 36, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
+        const y = answerStartY + index * (compactAnswers ? 36 : 41);
+        const button = this.add.rectangle(480, y, 790, compactAnswers ? 34 : 39, 0x294969, 1).setStrokeStyle(2, 0x587d9b).setInteractive({ useHandCursor: true });
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
-          fontFamily: "Nunito", fontSize: compactAnswers ? "17px" : "18px", color: "#ffffff", fontStyle: "900",
-          align: "center", wordWrap: { width: 680 }
+          fontFamily: "Nunito", fontSize: compactAnswers ? "19px" : "20px", color: "#ffffff", fontStyle: "900",
+          align: "center", wordWrap: { width: 750 }
         }).setOrigin(.5);
         button.on("pointerover", () => button.setFillStyle(0x376477));
         button.on("pointerout", () => button.setFillStyle(0x294969));
