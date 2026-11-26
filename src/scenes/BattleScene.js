@@ -854,6 +854,7 @@ export function createGameScene() {
       this.upgradeChoiceOverlay = null;
       this.upgradeChoiceActive = false;
       this.updateHud();
+      this.saveCheckpoint();
       if (this.pendingBossQuestion && !this.gameOver) {
         this.pendingBossQuestion = false;
         this.showQuestion(true);
@@ -1316,6 +1317,7 @@ export function createGameScene() {
       if (!this.bossAscensionActive) return;
       this.bossAscensionActive = false;
       this.lastAscensionWave = this.wave;
+      this.saveCheckpoint();
       this.bossAscensionOverlay?.destroy(true);
       this.bossAscensionOverlay = null;
       this.message.textContent = defender
@@ -1352,6 +1354,7 @@ export function createGameScene() {
       this.message.textContent = "Wave " + this.wave + " — defend the keep!";
       this.playSound(this.wave % 5 === 0 ? "boss" : "wave");
       this.updateHud();
+      this.saveCheckpoint();
     }
 
     showSunwellEnergy(defender, amount) {
