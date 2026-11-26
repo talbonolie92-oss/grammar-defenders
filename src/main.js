@@ -34,7 +34,89 @@ let stopBlockedWatch = null;
 let resultSaved = false;
 let resultSavePromise = null;
 let pendingResult = null;
+let pendingResultMeta = null;
+let pendingAttempts = [];
+let attemptFlushPromise = null;
+let stopConnectionWatch = null;
 let studentLaunchStarted = false;
+
+function attemptQueueStorageKey() {
+  return "emerald-frontier:pending-attempts:" + sessionId + ":" + studentUid;
+}
+function resultStorageKey() {
+  return "emerald-frontier:pending-result:" + sessionId + ":" + studentUid;
+}
+function loadPendingSaves() {
+  try {
+    const attempts = JSON.parse(localStorage.getItem(attemptQueueStorageKey()) || "[]");
+    pendingAttempts = Array.isArray(attempts) ? attempts : [];
+  } catch (_) { pendingAttempts = []; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(resultStorageKey()) || "null");
+    if (saved?.result && typeof saved.result === "object") {
+      pendingResult = saved.result;
+      pendingResultMeta = saved;
+    }
+  } catch (_) { pendingResult = null; pendingResultMeta = null; }
+}
+function persistPendingAttempts() {
+  try { localStorage.setItem(attemptQueueStorageKey(), JSON.stringify(pendingAttempts)); }
+  catch (error) { console.warn("Could not store pending question attempts locally:", error); }
+}
+async function flushPendingAttempts() {
+  if (!studentUid || !pendingAttempts.length || navigator.onLine === false) return;
+  if (attemptFlushPromise) return attemptFlushPromise;
+  attemptFlushPromise = (async () => {
+    while (pendingAttempts.length && navigator.onLine !== false) {
+      const item = pendingAttempts[0];
+      try {
+        await dbSet("sessions/" + sessionId + "/attempts/" + item.key, item.data);
+        pendingAttempts.shift();
+        persistPendingAttempts();
+      } catch (error) {
+        console.warn("Question attempt remains safely queued for sync:", error);
+        break;
+      }
+    }
+  })();
+  try { await attemptFlushPromise; }
+  finally { attemptFlushPromise = null; }
+}
+async function syncPendingResult() {
+  if (!studentUid || !pendingResult || !pendingResultMeta || navigator.onLine === false) return;
+  if (resultSavePromise) return resultSavePromise;
+  const saved = pendingResultMeta;
+  resultSavePromise = (async () => {
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await dbSet("sessions/" + sessionId + "/results/" + studentUid, {
+          ...saved.result, name: saved.name, classSection: saved.classSection, completedAt: saved.completedAt
+        });
+        await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
+          status: "finished", finishedAt: saved.completedAt, active: false
+        });
+        resultSaved = true;
+        pendingResult = null;
+        pendingResultMeta = null;
+        localStorage.removeItem(resultStorageKey());
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, attempt * 700));
+      }
+    }
+    throw lastError;
+  })();
+  try { await resultSavePromise; }
+  catch (error) {
+    const message = document.getElementById("battle-message");
+    if (message) message.textContent = "Result saved on this device; reconnect to sync it with your teacher.";
+    throw error;
+  } finally {
+    resultSavePromise = null;
+  }
+}
 
 if (sessionId) {
   landingHero?.classList.add("hidden");
@@ -106,6 +188,15 @@ async function initializeStudentJoin() {
     try {
       const user = await studentSignIn();
       studentUid = user.uid;
+      loadPendingSaves();
+      stopConnectionWatch = dbWatch(".info/connected", snap => {
+        const connected = snap.val() === true;
+        document.body.dataset.firebaseConnection = connected ? "connected" : "disconnected";
+        if (connected) {
+          flushPendingAttempts().catch(error => console.warn("Pending question sync will retry:", error));
+          if (pendingResult) syncPendingResult().catch(error => console.warn("Pending result sync will retry:", error));
+        }
+      }, error => console.warn("Firebase connection monitor unavailable:", error));
       const snapshot = await dbGet("sessions/" + sessionId + "/public");
       if (!snapshot.exists()) throw new Error("This session link is invalid or has been removed.");
       studentSession = snapshot.val();
@@ -160,6 +251,18 @@ async function initializeStudentJoin() {
           launchStudentGame(name, classSection);
         }
       }, err => { status.textContent = err.message; });
+      if (pendingResult) {
+        try { await syncPendingResult(); }
+        catch (_) {
+          status.textContent = "Your previous result is saved on this device. Reconnect to sync it before starting another game.";
+          return;
+        }
+        if (resultSaved) {
+          document.getElementById("student-waiting").innerHTML = "<b>Result safely synced!</b><p>Your previous game result has been delivered to your teacher.</p>";
+          return;
+        }
+      }
+      flushPendingAttempts().catch(error => console.warn("Pending question sync will retry:", error));
       if (studentSession.status === "running") launchStudentGame(name, classSection);
     } catch (error) { status.textContent = error.message || "Unable to join this session."; }
   });
@@ -179,7 +282,7 @@ async function initializeStudentJoin() {
 }
 
 async function launchStudentGame(name, classSection) {
-  if (studentLaunchStarted || window.GRAMMAR_DEFENDERS_CONFIG?.studentLaunch) return;
+  if (studentLaunchStarted || resultSaved || pendingResult || window.GRAMMAR_DEFENDERS_CONFIG?.studentLaunch) return;
   studentLaunchStarted = true;
   const settings = {
     mode: studentSession.mode || "endless",
@@ -229,41 +332,23 @@ async function launchStudentGame(name, classSection) {
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
     const key = dbPush("sessions/" + sessionId + "/attempts").key;
-    await dbSet("sessions/" + sessionId + "/attempts/" + key, { ...attempt, playerId: studentUid, playerName: name, classSection, createdAt: Date.now() });
+    pendingAttempts.push({
+      key,
+      data: { ...attempt, playerId: studentUid, playerName: name, classSection, createdAt: Date.now() }
+    });
+    persistPendingAttempts();
+    await flushPendingAttempts();
   };
   window.GD_SAVE_RESULT = async result => {
     if (!studentUid || resultSaved) return;
     pendingResult = result;
-    if (resultSavePromise) return resultSavePromise;
-    resultSavePromise = (async () => {
-      const completedAt = Date.now();
-      let lastError;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          await dbSet("sessions/" + sessionId + "/results/" + studentUid, {
-            ...result, name, classSection, completedAt
-          });
-          await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
-            status: "finished", finishedAt: completedAt, active: false
-          });
-          resultSaved = true;
-          pendingResult = null;
-          return;
-        } catch (error) {
-          lastError = error;
-          if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, attempt * 700));
-        }
-      }
-      throw lastError;
-    })();
+    pendingResultMeta = { result, name, classSection, completedAt: Date.now() };
     try {
-      await resultSavePromise;
+      localStorage.setItem(resultStorageKey(), JSON.stringify(pendingResultMeta));
     } catch (error) {
-      resultSavePromise = null;
-      const message = document.getElementById("battle-message");
-      if (message) message.textContent = "Result not synced yet. Keep this page open and reconnect before leaving.";
-      throw error;
+      console.warn("Could not persist the pending result locally:", error);
     }
+    await syncPendingResult();
   };
 }
 
@@ -275,9 +360,8 @@ document.addEventListener("visibilitychange", () => {
   } else game.loop.wake();
 });
 window.addEventListener("online", () => {
-  if (pendingResult && !resultSaved && typeof window.GD_SAVE_RESULT === "function") {
-    window.GD_SAVE_RESULT(pendingResult).catch(error => console.warn("Result sync will retry when the connection returns:", error));
-  }
+  flushPendingAttempts().catch(error => console.warn("Question attempts will retry when the connection returns:", error));
+  if (pendingResult) syncPendingResult().catch(error => console.warn("Result sync will retry when the connection returns:", error));
 });
 window.addEventListener("pagehide", () => {
   game.scene.getScene("BattleScene")?.saveCheckpoint?.();
@@ -286,5 +370,6 @@ window.addEventListener("beforeunload", () => {
   if (stopSessionWatch) stopSessionWatch();
   if (stopPlayerWatch) stopPlayerWatch();
   if (stopBlockedWatch) stopBlockedWatch();
+  if (stopConnectionWatch) stopConnectionWatch();
   game.destroy(true);
 }, { once: true });
