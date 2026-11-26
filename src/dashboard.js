@@ -6,9 +6,9 @@ const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$
 let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0;
 function docxHtmlToText(html){
   const marked=String(html??"")
-    .replace(/<br\\s*\\/?\\s*>/gi,"\\n")
-    .replace(/<\\/(?:p|li|h[1-6]|tr)\\s*>/gi,"\\n")
-    .replace(/<\\/(?:td|th)\\s*>/gi,"\\t");
+    .replace(/<br\s*\/?\s*>/gi,"\n")
+    .replace(/<\/(?:p|li|h[1-6]|tr)\s*>/gi,"\n")
+    .replace(/<\/(?:td|th)\s*>/gi,"\t");
   const parsed=new DOMParser().parseFromString(marked,"text/html");
   return parsed.body.textContent||"";
 }
@@ -152,8 +152,14 @@ $("docx-extract").addEventListener("click",async()=>{
   });
   try{
     const mammoth=await loadMammoth();
-    const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
-    const source=String(result.value||"").replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+    const result=await mammoth.convertToHtml({arrayBuffer:await file.arrayBuffer()});
+    const source=docxHtmlToText(result.value)
+      .replace(/\r/g,"")
+      .replace(/[\u00a0\u2007\u202f]/g," ")
+      .replace(/[ \t]+\n/g,"\n")
+      .replace(/[ \t]{2,}/g," ")
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
     if(source.length<20)throw new Error("No readable question text was found. Scanned/image-only Word documents are not supported.");
     if(source.length>60000)throw new Error("The extracted document exceeds 60,000 characters. Split it into smaller files.");
     if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
