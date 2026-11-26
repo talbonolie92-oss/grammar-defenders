@@ -218,7 +218,7 @@ assert.ok(!battle.includes('import("../three-world.js")'), "The game must use on
 assert.ok(battle.includes("const questionFontSize = phoneQuestionLayout") && battle.includes("question.setFixedSize(780, 76)"), "Phone landscape questions must fit a fixed readable area.");
 assert.ok(battle.includes("handleQuestionPointer(pointer)") && battle.includes("questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + (phoneQuestionLayout ? 6 : 4) })"), "Question taps must map by Phaser camera coordinates rather than scaled object hit tests.");
 assert.ok(battle.includes("g.lineStyle(3, lane % 2 ? 0xd0efaa : 0xffe4a0, 0.72)"), "Five battlefield lanes must have high-contrast row boundaries.");
-assert.ok(battle.includes("phoneQuestionLayout ? 198") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
+assert.ok(battle.includes("phoneQuestionLayout ? 190") && battle.includes('phoneQuestionLayout ? "15px"'), "Phone answers must use compact sizing and remain visible.");
 assert.ok(main.includes("fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
 
 
