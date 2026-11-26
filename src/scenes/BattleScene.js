@@ -1115,8 +1115,11 @@ export function createGameScene() {
         // Runner: swept-back horns and a light, aerodynamic silhouette.
         details.push(this.add.triangle(-10, -radius + 2, -7, 12, 8, 7, -2, palette.light));
         details.push(this.add.triangle(9, -radius + 2, -8, 7, 8, 12, 2, palette.light));
-        const speedTrail = this.add.rectangle(-radius - 4, 6, 10, 3, palette.light, .8).setRotation(-.2);
-        details.push(speedTrail);
+        // Use compact rounded accents rather than thin rectangles. Some mobile
+        // GPU/browser combinations stretch sub-pixel rectangles into visible
+        // streaks when containers move between fractional coordinates.
+        details.push(this.add.circle(-radius - 5, 4, 2.2, palette.light, .82));
+        details.push(this.add.circle(-radius - 10, 7, 1.4, palette.light, .58));
       } else {
         // Brute: oversized shoulder armor and a heavy brow.
         details.push(this.add.ellipse(-radius * .83, -2, 19, 25, palette.dark).setStrokeStyle(2, palette.light));
