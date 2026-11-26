@@ -146,7 +146,7 @@ export function createGameScene() {
         : this.difficulty === "easy" ? QUESTIONS.filter(q => q.grade === "7–9")
         : this.difficulty === "hard" ? QUESTIONS.filter(q => q.grade === "10–12") : QUESTIONS;
       this.questionDeck = this.shuffleQuestionDeck(regularPool);
-      this.bossQuestionDeck = this.shuffleQuestionDeck(BOSS_QUESTIONS);
+      this.bossQuestionDeck = this.shuffleQuestionDeck(this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS);
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
@@ -1898,7 +1898,7 @@ export function createGameScene() {
       this.questionAnswered = false;
       if (this.spawnTimer) this.spawnTimer.paused = true;
       if (this.questionTimer && isBoss) this.questionTimer.paused = true;
-      const fallbackPool = isBoss ? BOSS_QUESTIONS : (this.customQuestions.length ? this.customQuestions : QUESTIONS);
+      const fallbackPool = this.customQuestions.length ? this.customQuestions : (isBoss ? BOSS_QUESTIONS : QUESTIONS);
       let deck = isBoss ? this.bossQuestionDeck : this.questionDeck;
       if (!Array.isArray(deck) || deck.length === 0) deck = this.shuffleQuestionDeck(fallbackPool);
       const counter = isBoss ? this.bossQuestionIndex++ : this.questionIndex++;
