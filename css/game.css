@@ -550,3 +550,74 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
   body.playing .deck-grid .unit-card{height:38px!important;min-height:38px!important}
   body.playing .deck-grid .unit-icon{width:22px!important;height:22px!important;flex-basis:22px!important;font-size:13px!important;border-radius:6px!important}
 }
+
+
+/* PHONE GAMEPLAY V2 — use the full handset display for the battlefield.
+   Deck, controls and HUD float over the playfield instead of shrinking it. */
+@media (orientation: landscape) and (max-width: 900px) {
+  body.playing #game-layout,
+  body.playing #game-layout:not(.hidden) {
+    position:relative!important;
+    display:block!important;
+    width:100vw!important;height:100dvh!important;min-height:0!important;
+    padding:0!important;margin:0!important;overflow:hidden!important;
+  }
+  body.playing .battle-panel {
+    position:absolute!important;inset:0!important;
+    display:block!important;width:100%!important;height:100%!important;
+    min-height:0!important;padding:0!important;margin:0!important;
+    border:0!important;border-radius:0!important;overflow:hidden!important;
+    background:transparent!important;box-shadow:none!important;
+  }
+  body.playing #game-container {
+    position:absolute!important;inset:0!important;
+    width:100%!important;height:100%!important;min-height:0!important;
+    max-height:none!important;aspect-ratio:auto!important;
+    border:0!important;border-radius:0!important;
+  }
+  body.playing .game-controls {
+    position:absolute!important;z-index:30!important;top:3px!important;right:4px!important;
+    display:flex!important;width:auto!important;height:24px!important;
+    min-height:24px!important;flex:0 0 24px!important;margin:0!important;
+    gap:4px!important;background:#081a25b8;border:1px solid #b9d6b344;
+    border-radius:9px;padding:1px 3px!important;backdrop-filter:blur(5px);
+  }
+  body.playing .game-controls .icon-button,
+  body.playing .game-controls .secondary-button,
+  body.playing .game-controls .remove-mode-button {
+    min-height:20px!important;height:20px!important;padding:1px 6px!important;
+    font-size:8px!important;border-radius:6px!important;
+  }
+  body.playing .side-panel {
+    position:absolute!important;z-index:30!important;left:3px!important;right:3px!important;
+    bottom:3px!important;width:auto!important;height:43px!important;min-height:43px!important;
+    flex:none!important;padding:2px 3px!important;margin:0!important;
+    border-radius:9px!important;background:#0b1c2bdc!important;
+    border:1px solid #9cc7a966!important;backdrop-filter:blur(6px);
+  }
+  body.playing .panel-heading,body.playing .deck-tip{display:none!important}
+  body.playing .deck-grid {
+    display:flex!important;align-items:center!important;width:100%!important;height:100%!important;
+    gap:4px!important;padding:0 2px!important;overflow-x:auto!important;overflow-y:hidden!important;
+  }
+  body.playing .deck-grid .unit-card {
+    display:flex!important;flex:0 0 105px!important;width:105px!important;min-width:105px!important;
+    height:36px!important;min-height:36px!important;margin:0!important;padding:2px 5px!important;
+    gap:5px!important;border-radius:7px!important;
+  }
+  body.playing .deck-grid .unit-icon{width:25px!important;height:25px!important;flex-basis:25px!important;font-size:14px!important}
+  body.playing .deck-grid .unit-copy strong{font-size:9px!important}
+  body.playing .deck-grid .unit-copy small{font-size:7px!important}
+  body.playing .deck-grid .unit-cost{font-size:9px!important}
+  body.playing .battle-hud {
+    position:absolute!important;z-index:25!important;top:31px!important;left:3px!important;right:3px!important;
+    display:flex!important;height:22px!important;min-height:22px!important;flex:0 0 22px!important;
+    padding:1px 5px!important;gap:6px!important;border-radius:7px!important;
+    background:#081a25b8!important;backdrop-filter:blur(5px);overflow:hidden!important;
+  }
+  body.playing .hud-label{font-size:7px!important}
+  body.playing .hud-stat{gap:3px!important}
+  body.playing .hud-stat strong{font-size:10px!important}
+  body.playing .energy-track{height:6px!important}
+  body.playing .battle-footer{display:none!important}
+}
