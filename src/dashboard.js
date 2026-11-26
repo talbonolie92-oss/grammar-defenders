@@ -94,11 +94,10 @@ function updateSessionBankStatus(){
   status.textContent=count?count+" saved question set(s) available for "+grade+". Choose one above to use its questions in this game.":(bankCache.length?"No saved question sets for "+grade+". Your saved sets may belong to another grade.":"No saved question sets yet. Save a set in the Question Bank section below.");
 }
 function renderQuestionBanks(){
-  const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
-  const visibleBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12"].includes(getBankGrade(b)));
-  const eligible=visibleBanks.filter(b=>getBankGrade(b)===grade);
-  select.innerHTML='<option value="">Built-in questions (default)</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
-  if(eligible.some(b=>b.id===current))select.value=current;
+  const select=$("session-bank"),current=select.value;
+  const availableBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12","Mixed"].includes(getBankGrade(b)));
+  select.innerHTML='<option value="">Built-in questions (default)</option>'+availableBanks.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml("["+getBankGrade(b)+"] "+(b.topic||"Untitled topic")+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
+  if(availableBanks.some(b=>b.id===current))select.value=current;
   updateSessionBankStatus();
   const groups={};
   bankCache.forEach(b=>{const raw=getBankGrade(b);const g=["Grade 10","Grade 11","Grade 12"].includes(raw)?raw:"Other / mixed grade";(groups[g]??=[]).push(b);});
@@ -270,7 +269,7 @@ $("sessions-list").addEventListener("click",async e=>{
   if(button.dataset.action==="delete")await deleteSession(s);
 });
 $("session-grade").addEventListener("change",()=>renderQuestionBanks());
-$("session-bank").addEventListener("change",updateSessionBankStatus);
+$("session-bank").addEventListener("change",()=>{const bank=bankCache.find(item=>item.id===$("session-bank").value);const bankGrade=bank?getBankGrade(bank):"";if(["Grade 10","Grade 11","Grade 12"].includes(bankGrade))$("session-grade").value=bankGrade;updateSessionBankStatus();});
 $("session-form").addEventListener("submit",async e=>{
   e.preventDefault();if(!teacher)return;
   const title=safeName($("session-title").value);if(!title)return;
@@ -279,7 +278,7 @@ $("session-form").addEventListener("submit",async e=>{
     const id=dbPush("sessions").key,now=Date.now(),grade=$("session-grade").value,bankId=$("session-bank").value;
     const bank=bankId?bankCache.find(item=>item.id===bankId):null;
     if(bankId&&!bank)throw new Error("That saved question set is no longer available. Refresh the dashboard and select it again.");
-    if(bank&&getBankGrade(bank)!==grade)throw new Error("Choose a question set saved for "+grade+". Change the session grade or save the set under the matching grade.");
+    if(bank&&getBankGrade(bank)!=="Mixed"&&getBankGrade(bank)!==grade)throw new Error("Choose a question set saved for "+grade+".");
     if(bank&&(!Array.isArray(bank.questions)||!bank.questions.length))throw new Error("The selected question set has no questions. Edit and save it before creating a game.");
     const data={teacherId:teacher.uid,title,grade,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||"Built-in Grammar Questions",questionBankId:bank?.id||"",questionCount:bank?.questions?.length||0,mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};
     if(bank)data.questions=bank.questions.map(q=>({...q,a:[...q.a]}));
