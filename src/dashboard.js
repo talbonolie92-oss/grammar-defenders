@@ -53,7 +53,7 @@ function normalizeBankQuestion(raw, subject, topic){
     correct=/^[A-D]$/.test(value)?value.charCodeAt(0)-65:/^[1-4]$/.test(value)?Number(value)-1:Number(value);
   }
   if(!q||a.length<2||a.length>4||!Number.isInteger(Number(correct))||Number(correct)<0||Number(correct)>=a.length)throw new Error("Each question needs text, 2–4 answers, and a valid correct answer.");
-  return {topic:String(raw.topic||topic||subject||"General").trim(),grade:String(raw.grade||"Mixed"),q,a,correct:Number(correct),effect:String(raw.effect||"GRAMMAR POWER!").trim()};
+  return {topic:String(raw.topic||topic||subject||"General").trim(),grade:String(raw.grade||"Mixed"),q,a,correct:Number(correct),effect:String(raw.effect||"GRAMMAR POWER!").trim(),explanation:String(raw.explanation||"").trim(),sourceQuote:String(raw.sourceQuote||raw.source_quote||"").trim(),sourceSection:String(raw.sourceSection||raw.source_section||"").trim(),confidence:String(raw.confidence||"").trim(),reviewRequired:Boolean(raw.reviewRequired),approved:Boolean(raw.approved)};
 }
 function parseQuestionCsv(source){
   source=String(source).replace(/^\uFEFF/,"");
@@ -67,7 +67,16 @@ function parseQuestionCsv(source){
   if(new Set(headers).size!==headers.length)throw new Error("CSV contains duplicate column headers. Rename each header so it is unique.");
   return rows.map(values=>Object.fromEntries(headers.map((key,i)=>[key,values[i]??""])));
 }
-function updateBankDraftCount(){setStatus("bank-draft-count",bankDraft.length+" questions in draft");const preview=$("bank-draft-preview");if(preview)preview.innerHTML=bankDraft.slice(0,8).map((q,i)=>`<div class="draft-question"><b>${i+1}. ${escapeHtml(q.q)}</b><small>${escapeHtml(q.topic)} • Correct: ${escapeHtml(q.a[q.correct])}</small></div>`).join("")+(bankDraft.length>8?`<small class="muted">and ${bankDraft.length-8} more questions…</small>`:"");}
+function updateBankDraftCount(){
+  setStatus("bank-draft-count",bankDraft.length+" questions in draft");
+  const preview=$("bank-draft-preview");
+  if(!preview)return;
+  preview.innerHTML=bankDraft.map((q,i)=>`<article class="draft-question">
+    <b>${i+1}. ${escapeHtml(q.q)}</b>
+    <small>Correct answer: ${escapeHtml(q.a[q.correct])}</small>
+    ${q.reviewRequired?`<p><b>Explanation:</b> ${escapeHtml(q.explanation||"No explanation supplied.")}</p><p><b>Source evidence:</b> ${escapeHtml(q.sourceQuote||"Missing source quote.")}</p><p><b>Section:</b> ${escapeHtml(q.sourceSection||"Not specified")}</p><label class="review-check"><input type="checkbox" data-review-index="${i}" ${q.approved?"checked":""}> I verified this answer against the lesson and approve this question.</label>`:q.explanation?`<small>${escapeHtml(q.explanation)}</small>`:""}
+  </article>`).join("");
+}
 function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value;
   select.innerHTML='<option value="">Built-in Grammar Questions</option>'+bankCache.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.subject+" • "+b.topic+" ("+(b.questions?.length||0)+")")+'</option>').join("");
@@ -99,6 +108,8 @@ $("bank-save").addEventListener("click",async()=>{
   if(!teacher)return;
   const subject=$("bank-subject").value.trim(),topic=$("bank-topic").value.trim();
   if(!subject||!topic||!bankDraft.length){setStatus("bank-status","Enter a subject, topic, and at least one question.");return;}
+  const pendingReview=bankDraft.filter(q=>q.reviewRequired&&!q.approved).length;
+  if(pendingReview){setStatus("bank-status","Please approve all "+pendingReview+" source-based questions before saving.");return;}
   if(bankDraft.length>300){setStatus("bank-status","A question set can contain up to 300 questions.");return;}
   const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
   const existing=bankCache.find(b=>b.id===id);
@@ -108,6 +119,60 @@ $("bank-save").addEventListener("click",async()=>{
   }catch(error){setStatus("bank-status",error.message||"Could not save the question set.");}
 });
 $("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
+
+$("bank-draft-preview").addEventListener("change",e=>{
+  const box=e.target.closest("input[data-review-index]");if(!box)return;
+  const item=bankDraft[Number(box.dataset.reviewIndex)];if(!item)return;
+  item.approved=box.checked;
+  setStatus("bank-status",box.checked?"Question approved.":"Approval removed; this question cannot be saved yet.");
+});
+$("docx-extract").addEventListener("click",async()=>{
+  const file=$("docx-file").files?.[0];
+  if(!file){setStatus("docx-status","Choose a .DOCX Word document first.");return;}
+  if(!window.mammoth){setStatus("docx-status","The Word reader could not load. Check your internet connection and refresh the dashboard.");return;}
+  if(file.size>10*1024*1024){setStatus("docx-status","This Word document is larger than 10 MB. Please use a smaller file.");return;}
+  try{
+    setStatus("docx-status","Reading Word document…");
+    const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
+    const source=String(result.value||"").replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+    if(source.length<80)throw new Error("Very little readable text was found. Make sure this is a text-based .DOCX file, not a scanned image.");
+    if(source.length>60000)throw new Error("The extracted lesson is longer than 60,000 characters. Split it into smaller Word documents.");
+    $("docx-source").value=source;
+    if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
+    setStatus("docx-status","Read "+source.length.toLocaleString()+" characters from "+file.name+".");
+  }catch(error){setStatus("docx-status",error.message||"Could not read this Word document.");}
+});
+$("docx-copy-prompt").addEventListener("click",async()=>{
+  const source=$("docx-source").value.trim();
+  if(!source){setStatus("docx-status","Read a Word document first.");return;}
+  const prompt=`Act as a careful educational assessment writer. Use ONLY the lesson source below. Create 10 multiple-choice questions suitable for the teacher's selected grade. Each question must have 3 or 4 distinct answer choices and exactly one defensible correct answer. Do not use outside facts or invent details. For every question include: q, a (array of choices), correct (A/B/C/D), explanation (brief reason), sourceQuote (an exact verbatim sentence or phrase copied from the source that supports the answer), sourceSection (heading if identifiable), confidence ("high" or "medium"). Avoid ambiguous questions and distractors that could also be correct. If the source does not support enough questions, create fewer rather than guessing. Return ONLY valid JSON in this shape: {"questions":[{"q":"...","a":["...","...","..."],"correct":"A","explanation":"...","sourceQuote":"Exact words from source","sourceSection":"...","confidence":"high"}]}.\n\nLESSON SOURCE:\n${source}`;
+  try{await navigator.clipboard.writeText(prompt);setStatus("docx-status","Prompt copied. Open ChatGPT, paste it, then paste the returned JSON below.");}
+  catch(error){$("docx-json").value=prompt;setStatus("docx-status","Clipboard access was blocked. The prompt has been placed in the JSON box; copy it manually.");}
+});
+$("docx-import-json").addEventListener("click",()=>{
+  try{
+    const parsed=JSON.parse($("docx-json").value.trim());
+    const raw=Array.isArray(parsed)?parsed:parsed.questions;
+    if(!Array.isArray(raw)||!raw.length)throw new Error("The JSON must contain a non-empty questions array.");
+    if(raw.length>50)throw new Error("Import up to 50 generated questions at a time.");
+    const source=$("docx-source").value.trim();
+    if(!source)throw new Error("Read a Word document first so source evidence can be checked.");
+    const compact=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
+    const sourceText=compact(source);
+    const imported=raw.map((item,index)=>{
+      const quote=String(item.sourceQuote||item.source_quote||"").trim();
+      if(!quote||!sourceText.includes(compact(quote)))throw new Error("Question "+(index+1)+": its sourceQuote is missing or is not an exact match in the Word document. Regenerate or correct the quote.");
+      const q=normalizeBankQuestion({...item,reviewRequired:true,approved:false},$("bank-subject").value.trim(),$("bank-topic").value.trim());
+      if(!q.explanation)throw new Error("Question "+(index+1)+": add an explanation before review.");
+      return q;
+    });
+    if(bankDraft.length+imported.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
+    bankDraft.push(...imported);updateBankDraftCount();
+    setStatus("bank-status","Added "+imported.length+" questions for teacher review. Verify each correct answer and approve every item before saving.");
+    $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(error){setStatus("bank-status",error.message||"Could not import generated questions.");}
+});
+
 $("bank-list").addEventListener("click",async e=>{
   const button=e.target.closest("button[data-bank-action]");if(!button)return;
   const id=button.closest("[data-bank]").dataset.bank,bank=bankCache.find(b=>b.id===id);if(!bank)return;
