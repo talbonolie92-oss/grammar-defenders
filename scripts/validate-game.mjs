@@ -21,12 +21,12 @@ assert.doesNotMatch(battle, /removeModeButton\?\.setAttribute\("aria-pressed", "
 assert.match(battle, /this\.enemies\.push\(enemy\)/, "Enemy spawning must register attackers.");
 assert.match(battle, /const dt = Math\.min\(delta \/ 1000, 0\.35\);/, "Combat delta time must be declared as executable code.");
 const damageEnemyStart = battle.indexOf("damageEnemy(enemy, amount");
-const damageBaseStart = battle.indexOf("\\n    damageBase(", damageEnemyStart);
+const damageBaseStart = battle.indexOf("\n    damageBase(", damageEnemyStart);
 const damageEnemyBlock = battle.slice(damageEnemyStart, damageBaseStart);
-assert.match(damageEnemyBlock, /const reducedCombatEffects = this\\.mobilePerformanceMode/, "Damage feedback must declare its own performance flag rather than referencing update() local state.");
-assert.match(battle, /enemiesSpawnedThisWave: this\\.enemiesSpawnedThisWave/, "Refresh checkpoints must preserve progress through the current wave.");
-assert.match(battle, /stats: \\{[\\s\\S]*?energyInterval: item\\.stats\\.energyInterval/, "Refresh checkpoints must preserve evolved defender combat stats.");
-assert.match(battle, /defender\\.upgradePaths = Array\\.isArray\\(item\\.upgradePaths\\)/, "Refresh checkpoints must preserve defender specialization choices.");
+assert.match(damageEnemyBlock, /const reducedCombatEffects = this\.mobilePerformanceMode/, "Damage feedback must declare its own performance flag rather than referencing update() local state.");
+assert.match(battle, /enemiesSpawnedThisWave: this\.enemiesSpawnedThisWave/, "Refresh checkpoints must preserve progress through the current wave.");
+assert.match(battle, /stats: \{[\s\S]*?energyInterval: item\.stats\.energyInterval/, "Refresh checkpoints must preserve evolved defender combat stats.");
+assert.match(battle, /defender\.upgradePaths = Array\.isArray\(item\.upgradePaths\)/, "Refresh checkpoints must preserve defender specialization choices.");
 assert.ok(firebase.includes("studentSignInPromise") && firebase.includes("auth.currentUser?.isAnonymous"), "Student sign-in must be serialized and use anonymous player identity.");
 assert.ok(css.includes("aspect-ratio:16/7") && !css.includes("aspect-ratio:48/17"), "No stale 48:17 canvas sizing rule may override the 960:420 game canvas.");
 
