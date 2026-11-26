@@ -39,7 +39,7 @@ assert.match(world, /const normalFrameInterval = isSmallScreen \? 42 : 32/, "3D 
 assert.match(world, /renderer\.render\(scene, camera\);\n  raf = requestAnimationFrame\(render\);/, "3D renderer must complete its first frame before activation.");
 assert.doesNotMatch(world, /projectile\.setVisible\?\.\(false\)/, "Phaser projectile fallback must remain visible.");
 assert.match(battle, /group\.setActive\(true\)\.setVisible\(true\)\.setAlpha\(1\)/, "Deployed actors must remain visible.");
-assert.match(battle, /keeping the classic battlefield/, "Classic battlefield fallback must remain available.");
+assert.ok(!battle.includes('import("../three-world.js")'), "The classroom build must use one Phaser renderer for stable touch-device performance.");
 assert.match(css, /PHONE LANDSCAPE/, "Mobile landscape layout rules must remain present.");
 assert.match(css, /body\.playing #game-container/, "Active mobile battlefield must use available screen height.");
 assert.match(css, /overflow-x:auto!important/, "Defender deck must remain horizontally scrollable on phones.");
