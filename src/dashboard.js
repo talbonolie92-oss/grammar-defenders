@@ -153,19 +153,39 @@ $("bank-draft-preview").addEventListener("change",e=>{
 });
 $("docx-extract").addEventListener("click",async()=>{
   const file=$("docx-file").files?.[0];
-  if(!file){setStatus("docx-status","Choose a .DOCX Word document first.");return;}
-  if(!window.mammoth){setStatus("docx-status","The Word reader could not load. Check your internet connection and refresh the dashboard.");return;}
+  const status=$("docx-status");
+  if(!file){setStatus("docx-status","Please choose a .DOCX Word document first.");return;}
+  if(!/\.docx$/i.test(file.name)){setStatus("docx-status","This file is not a .DOCX document. Save it as Word Document (.docx) and try again.");return;}
   if(file.size>10*1024*1024){setStatus("docx-status","This Word document is larger than 10 MB. Please use a smaller file.");return;}
+  setStatus("docx-status","Starting Word reader…");
+  const loadMammoth=()=>new Promise((resolve,reject)=>{
+    if(window.mammoth?.extractRawText)return resolve(window.mammoth);
+    const urls=["https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js","https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js","https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"];
+    let index=0;
+    const tryNext=()=>{
+      if(window.mammoth?.extractRawText)return resolve(window.mammoth);
+      if(index>=urls.length)return reject(new Error("The Word-reading library could not load. Check your internet connection, disable script-blocking extensions for this site, then refresh."));
+      const script=document.createElement("script");script.src=urls[index++];script.async=true;
+      script.onload=()=>window.mammoth?.extractRawText?resolve(window.mammoth):tryNext();
+      script.onerror=tryNext;document.head.appendChild(script);
+    };
+    tryNext();
+  });
   try{
-    setStatus("docx-status","Reading Word document…");
-    const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
+    if(status)status.textContent="Loading Word document reader…";
+    const mammoth=await loadMammoth();
+    if(status)status.textContent="Reading "+file.name+"…";
+    const result=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
     const source=String(result.value||"").replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-    if(source.length<80)throw new Error("Very little readable text was found. Make sure this is a text-based .DOCX file, not a scanned image.");
+    if(source.length<80)throw new Error("Very little readable text was found. Make sure this is a text-based .DOCX file, not a scanned image or legacy .DOC file.");
     if(source.length>60000)throw new Error("The extracted lesson is longer than 60,000 characters. Split it into smaller Word documents.");
     $("docx-source").value=source;
     if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
-    setStatus("docx-status","Read "+source.length.toLocaleString()+" characters from "+file.name+".");
-  }catch(error){setStatus("docx-status",error.message||"Could not read this Word document.");}
+    setStatus("docx-status","Success: read "+source.length.toLocaleString()+" characters from "+file.name+".");
+  }catch(error){
+    console.error("Word document import failed:",error);
+    setStatus("docx-status","Could not read Word document: "+(error.message||"Unknown error"));
+  }
 });
 $("docx-copy-prompt").addEventListener("click",async()=>{
   const source=$("docx-source").value.trim();
