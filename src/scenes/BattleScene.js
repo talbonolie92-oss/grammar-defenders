@@ -1970,7 +1970,7 @@ export function createGameScene() {
       this.questionAnswerTargets = [];
       item.a.forEach((answer, index) => {
         // Phone landscape uses a fixed compact question area so every answer remains visible.
-        const y = answerStartY + index * (phoneQuestionLayout ? (compactAnswers ? 35 : 40) : (compactAnswers ? 40 : 44));
+        const y = answerStartY + index * (phoneQuestionLayout ? 40 : (compactAnswers ? 40 : 44));
         const buttonHeight = phoneQuestionLayout ? 33 : (compactAnswers ? 42 : 46);
         const button = this.add.rectangle(480, y, 790, buttonHeight, 0x294969, 1).setStrokeStyle(2, 0x587d9b);
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
