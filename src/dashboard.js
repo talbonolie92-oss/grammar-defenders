@@ -115,7 +115,7 @@ function updateBankDraftCount(){
 }
 function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
-  const eligible=bankCache.filter(b=>getBankGrade(b)===grade||getBankGrade(b)==="Mixed");
+  const eligible=bankCache.filter(b=>grade==="Mixed"||getBankGrade(b)===grade);
   select.innerHTML='<option value="">Built-in Grammar Questions</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
   if(eligible.some(b=>b.id===current))select.value=current;
   const groups={};
