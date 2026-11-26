@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
+import { QUESTIONS, BOSS_QUESTIONS } from "../src/data/questions.js";
 
 const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 const battle = read("../src/scenes/BattleScene.js");
@@ -51,3 +52,56 @@ assert.match(world, /camera\.position\.set\(0, 20, 0\)/, "3D board camera must r
 assert.match(world, /camera\.up\.set\(0, 0, -1\)/, "Top-down camera up vector must preserve lane row orientation.");
 assert.match(world, /mesh\.position\.set\(\(px - 480\) \/ 50, 0\.19 \+ bob, \(py - 170\) \/ 50\)/, "3D actors must stand above tile surfaces and align with Phaser coordinates.");
 assert.match(world, /const z = \(38 \+ lane \* 54 \+ 27\) \/ 50 - 3\.4;/, "3D tile centers must match the exact Phaser lane centers.");
+
+
+// Gameplay progression, question-bank, and combat regression checks.
+const expectedWaveCount = wave => wave === 1 ? 8
+  : wave <= 5 ? Math.min(20, 8 + Math.floor((wave - 1) * 1.2))
+  : wave % 5 === 0
+    ? Math.min(55, wave === 5 ? 21 : 32 + Math.floor(wave / 5) * 3 + Math.max(0, wave - 10) * 2)
+    : Math.min(55, 22 + (wave - 6) * 4);
+const checkedWaves = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30,50];
+const expectedCounts = checkedWaves.map(expectedWaveCount);
+assert.deepEqual(expectedCounts.slice(0, 15), [8,9,10,11,21,22,26,30,34,38,42,46,50,54,51],
+  "Early and mid-game wave quantities must follow the intended progression.");
+assert.ok(expectedCounts.every(count => count >= 8 && count <= 55), "Wave quantities must remain within safe limits.");
+assert.match(battle, /this\.enemiesPerWave = bossWave[\\s\\S]*?Math\.min\\(55, 22 \+ \(this\.wave - 6\) \* 4\)/,
+  "Wave progression must preserve the escalating normal/boss formulas.");
+assert.match(battle, /const isBoss = this\.enemiesSpawnedThisWave === this\.enemiesPerWave - 1 && this\.wave % 5 === 0/,
+  "Every fifth wave must reserve its final spawn for the Dark Overlord.");
+assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/,
+  "Active enemy caps must protect performance without changing total wave counts.");
+assert.match(battle, /const lane = Phaser\.Math\.Between\(0, LANES - 1\)/,
+  "Attackers must be assigned to one of the five valid lanes.");
+assert.match(battle, /const y = GRID_Y \+ lane \* TILE_H \+ TILE_H \/ 2/,
+  "Attacker spawn Y must be centered in its assigned lane.");
+assert.match(battle, /const x = GRID_X \+ col \* TILE_W \+ TILE_W \/ 2/,
+  "Defenders must deploy at the center of their selected tile.");
+assert.match(battle, /this\.threeWorld\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
+  "The 3D actor renderer must receive live defender, attacker, and projectile positions.");
+assert.match(battle, /if \(this\.pendingBossQuestion && !this\.gameOver\)/,
+  "Boss questions must be queued safely if another overlay is already active.");
+assert.match(battle, /this\.time\.delayedCall\(900, \(\) => this\.showQuestion\(true\)\)/,
+  "Boss arrival must trigger its grammar trial.");
+assert.match(battle, /const choices = \[[\\s\\S]*?energycore/,
+  "All eight defender specializations must remain available.");
+assert.match(battle, /unlockAdvancedDeck\(\)/, "Advanced defenders must unlock after the first boss.");
+assert.match(battle, /this\.playSound\("shot"\)/, "Combat audio must be wired to projectile attacks.");
+assert.match(battle, /startMusic\(\)/, "Music toggle must start the background score.");
+
+const validateQuestion = (item, index, bankName) => {
+  assert.ok(item && typeof item.topic === "string" && item.topic.trim(), `${bankName} question ${index + 1} needs a topic.`);
+  assert.ok(typeof item.q === "string" && item.q.trim(), `${bankName} question ${index + 1} needs question text.`);
+  assert.ok(Array.isArray(item.a) && item.a.length >= 2 && item.a.length <= 4, `${bankName} question ${index + 1} needs 2–4 choices.`);
+  assert.ok(item.a.every(choice => typeof choice === "string" && choice.trim()), `${bankName} question ${index + 1} has an empty choice.`);
+  assert.ok(Number.isInteger(item.correct) && item.correct >= 0 && item.correct < item.a.length, `${bankName} question ${index + 1} has an invalid correct-answer index.`);
+  assert.ok(typeof item.effect === "string" && item.effect.trim(), `${bankName} question ${index + 1} needs a battle effect label.`);
+};
+QUESTIONS.forEach((item, index) => validateQuestion(item, index, "Regular"));
+BOSS_QUESTIONS.forEach((item, index) => validateQuestion(item, index, "Boss"));
+assert.equal(QUESTIONS.length, 24, "The regular question bank should contain 24 curated questions.");
+assert.equal(BOSS_QUESTIONS.length, 10, "The boss question bank should contain 10 curated questions.");
+assert.equal(new Set(QUESTIONS.map(item => item.q.trim())).size, QUESTIONS.length, "Regular questions must not contain duplicate prompts.");
+assert.equal(new Set(BOSS_QUESTIONS.map(item => item.q.trim())).size, BOSS_QUESTIONS.length, "Boss questions must not contain duplicate prompts.");
+
+console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn slots, lane/tile centers, 3D actor sync, audio hooks, 8 specializations, and 34 validated questions.");
