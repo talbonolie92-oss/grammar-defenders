@@ -140,7 +140,8 @@ $("manual-question-form").addEventListener("submit",e=>{
   e.preventDefault();
   if(bankDraft.length>=300){setStatus("bank-status","A question set can contain up to 300 questions. Save this set or clear the draft before adding more.");return;}
   try{
-    const item=normalizeBankQuestion({q:$("bank-q").value,a:[$("bank-a1").value,$("bank-a2").value,$("bank-a3").value],correct:Number($("bank-correct").value),grade:$("bank-grade").value},$("bank-subject").value,$("bank-topic").value);
+    if($("bank-correct").value==="")throw new Error("Choose the correct answer before adding this question.");
+    const item=normalizeBankQuestion({q:$("bank-q").value,a:[$("bank-a1").value,$("bank-a2").value,$("bank-a3").value],correct:Number($("bank-correct").value),grade:selectedBankGrade()},$("bank-subject").value,$("bank-topic").value);
     bankDraft.push(item);updateBankDraftCount();$("manual-question-form").reset();setStatus("bank-status","Question added to draft.");
   }catch(error){setStatus("bank-status",error.message);}
 });
@@ -192,7 +193,6 @@ $("docx-extract").addEventListener("click",async()=>{
     const source=String(result.value||"").replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
     if(source.length<20)throw new Error("No readable question text was found. Scanned/image-only Word documents are not supported.");
     if(source.length>60000)throw new Error("The extracted document exceeds 60,000 characters. Split it into smaller files.");
-    $("docx-source").value=source;
     if(!$("bank-topic").value.trim())$("bank-topic").value=file.name.replace(/\.docx$/i,"").replace(/[_-]+/g," ");
     const parsed=parseDocxQuestions(source);
     if(!parsed.questions.length)throw new Error("No question blocks with at least two labeled choices (A–D) were detected. Check that each choice starts with A., B., C., or D.");
