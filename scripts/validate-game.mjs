@@ -212,3 +212,9 @@ assert.ok(battle.includes("Number(saved.baseHealth ?? 100)"), "A zero-health che
 const attemptWriteRule = databaseRules.rules.sessions.$sessionId.attempts.$attemptId[".write"];
 assert.match(attemptWriteRule, /data\\.child\\('playerId'\\)\\.val\\(\\) === auth\\.uid/, "A student may retry only their own existing question-attempt record.");
 assert.match(attemptWriteRule, /blockedPlayers/, "Blocked students must not be able to submit or retry attempts.");
+
+
+// Rejoin must preserve existing players even when late joining is disabled.
+assert.ok(main.includes('!studentSession.allowLateJoin && !existingPlayer.exists()'), "Late-join restrictions must not block an existing student from reconnecting.");
+assert.ok(main.includes('localStorage.getItem("emerald-frontier:pending-attempts:" + sessionId + ":" + user.uid)'), "A finished player's unsynced attempts must trigger a rejoin for recovery.");
+assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendingSaves'), "A completed student must not accidentally start a second attempt without pending data.");
