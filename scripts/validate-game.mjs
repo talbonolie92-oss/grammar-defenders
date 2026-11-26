@@ -192,3 +192,16 @@ assert.ok(battle.includes("delay: 3500, loop: true, callback: () => this.saveChe
 assert.ok(battle.includes("emerald-frontier:"), "Checkpoints must be scoped to a session and player.");
 assert.ok(main.includes("form.requestSubmit()"), "A returning student must be able to rejoin automatically after refresh.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
+
+
+// Offline-safe Firebase synchronization regression checks.
+assert.ok(main.includes("emerald-frontier:pending-attempts:"), "Unsent question attempts must have a device-local queue.");
+assert.ok(main.includes("localStorage.setItem(attemptQueueStorageKey()"), "Question attempts must be persisted before network sync.");
+assert.ok(main.includes('dbSet("sessions/" + sessionId + "/attempts/" + item.key, item.data)'), "Queued question attempts must sync with stable Firebase keys.");
+assert.ok(main.includes("emerald-frontier:pending-result:"), "Unsent final results must survive a page refresh.");
+assert.ok(main.includes("localStorage.setItem(resultStorageKey(), JSON.stringify(pendingResultMeta))"), "The final score must be persisted locally before Firebase sync.");
+assert.ok(main.includes('window.addEventListener("online"'), "Pending attempts and results must retry when the browser reconnects.");
+assert.ok(main.includes('dbWatch(".info/connected"'), "Firebase connectivity must be monitored independently of browser online state.");
+assert.ok(main.includes("if (navigator.onLine === false) throw new Error"), "Offline final results must remain pending instead of being reported as synced.");
+assert.ok(battle.includes("Number(saved.energy ?? 150)"), "A zero-energy checkpoint must restore as zero, not reset to the starting energy.");
+assert.ok(battle.includes("Number(saved.baseHealth ?? 100)"), "A zero-health checkpoint must restore as zero, not reset to full health.");
