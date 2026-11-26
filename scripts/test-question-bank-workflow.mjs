@@ -42,6 +42,7 @@ assert.ok(html.includes('id="session-bank-status"'), "The session selector must 
 assert.ok(html.includes("Saved question sets"), "The dashboard must clearly label the saved question bank list.");
 assert.ok(dashboard.includes('Other / mixed grade'), "Saved banks outside the current grade groups must remain visible rather than disappearing.");
 assert.ok(dashboard.includes('questionBankId:bank?.id||""') && dashboard.includes('questionCount:bank?.questions?.length||0'), "New sessions must record the selected question bank and its question count.");
+assert.ok(dashboard.includes("updateSessionBankStatus") && dashboard.includes("regular and boss challenges"), "The selected topic and its gameplay scope must be explicit in the session form.");
 assert.ok(dashboard.includes('if(bank)data.questions=bank.questions.map'), "The selected saved question set must be copied into the session payload.");
 assert.ok(main.includes('questions: Array.isArray(studentSession.questions) ? studentSession.questions : []'), "Student launch must pass the session questions into gameplay.");
 assert.ok(battle.includes('this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS'), "Boss challenges must use selected lesson questions when a custom bank is active.");
