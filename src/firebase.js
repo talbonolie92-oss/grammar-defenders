@@ -16,13 +16,25 @@ export const firebaseAuth = auth;
 export const firebaseDb = db;
 export const timestamp = () => serverTimestamp();
 export const teacherSignIn = async (email, password) => { needFirebase(); return signInWithEmailAndPassword(auth, email, password); };
-export const studentSignIn = async () => {
+let studentSignInPromise = null;
+export const studentSignIn = () => {
   needFirebase();
-  // Wait until Firebase restores the browser's persisted anonymous identity.
-  // Otherwise a fast page refresh can create a new UID and lose the student's
-  // existing player record and local checkpoint association.
-  if (typeof auth.authStateReady === "function") await auth.authStateReady();
-  return auth.currentUser || (await signInAnonymously(auth)).user;
+  // Serialize automatic resume and manual join so simultaneous calls cannot
+  // race two anonymous sign-in operations and produce mismatched player IDs.
+  if (studentSignInPromise) return studentSignInPromise;
+  const pending = (async () => {
+    if (typeof auth.authStateReady === "function") await auth.authStateReady();
+    if (auth.currentUser?.isAnonymous) return auth.currentUser;
+    // A teacher account in this browser must not become the student's player ID.
+    if (auth.currentUser) await signOut(auth);
+    return (await signInAnonymously(auth)).user;
+  })();
+  studentSignInPromise = pending;
+  pending.then(
+    () => { if (studentSignInPromise === pending) studentSignInPromise = null; },
+    () => { if (studentSignInPromise === pending) studentSignInPromise = null; }
+  );
+  return pending;
 };
 export const teacherSignOut = async () => { needFirebase(); return signOut(auth); };
 export const watchAuth = callback => { needFirebase(); return onAuthStateChanged(auth, callback); };
