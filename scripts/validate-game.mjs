@@ -168,9 +168,9 @@ assert.match(battle, /this\.bossAscensionActive\) \{\s*this\.lastClockAt = now/,
 assert.match(battle, /this\.elapsedSeconds \+= elapsedWholeSeconds/, "Timer must catch up after delayed browser callbacks.");
 assert.match(battle, /window\.clearInterval\(this\.battleClockInterval\)/, "Session countdown must be cleared at game end and scene shutdown.");
 assert.match(battle, /this\.questionOverlay\?\.destroy\(true\)/, "Ending a session must clean up any active question overlay.");
-assert.match(battle, /const reducedCombatEffects = this\.enemies\.length > 24 \|\| this\.projectiles\.length > 64/, "Crowded battles must activate lightweight combat visuals.");
-assert.match(battle, /hitFeedbackReady && this\.enemies\.length <= 24 && this\.projectiles\.length <= 64/, "Dense combat must suppress nonessential per-hit tweens.");
-assert.match(battle, /const denseSpawn = this\.enemies\.length >= 22 && !isBoss/, "Crowded minion spawns must enter lightweight visual mode.");
+assert.match(battle, /const reducedCombatEffects = this\.mobilePerformanceMode[\s\S]*?this\.enemies\.length > 24 \|\| this\.projectiles\.length > 64/, "Phones must activate lightweight combat visuals at a lower load.");
+assert.match(battle, /hitFeedbackReady && !reducedCombatEffects/, "Dense combat must suppress nonessential per-hit tweens.");
+assert.match(battle, /const denseSpawn = this\.enemies\.length >= \(this\.mobilePerformanceMode \? 12 : 22\) && !isBoss/, "Phone minion spawns must enter lightweight visual mode earlier.");
 assert.match(battle, /e\.details\?\.forEach\(part => part\.setVisible\(!simplifyEnemy\)\)/, "Existing enemies must shed decorative parts under load and restore them afterward.");
 assert.match(battle, /else if \(!denseSpawn\)/, "Dense minion spawns must skip portal particles and repeated scale tweens.");
 assert.match(battle, /details,\s*reducedVisuals: denseSpawn/, "Enemy visual mode state must be tracked for safe transitions.");
