@@ -1104,6 +1104,13 @@ export function createGameScene() {
         details.push(this.add.circle(radius * .72, -radius * .42, 5 + armorLevel, 0x6f829b).setStrokeStyle(1, 0xdce8f4));
       }
       // Keep enemy visuals in a single visible container above the battlefield.
+      // Dense waves keep the core silhouette but temporarily hide decorative
+      // armor/accessories and feet to reduce Phaser draw calls on mobile.
+      const denseSpawn = this.enemies.length >= 22 && !isBoss;
+      if (denseSpawn) {
+        details.forEach(part => part.setVisible(false));
+        feet.forEach(part => part.setVisible(false));
+      }
       const enemyParts = [shadow, aura, frostRing, feet[0], feet[1], belly, body, ...details, ...eyeParts];
       group.add(enemyParts);
       group.iterate(child => {
@@ -1145,19 +1152,24 @@ export function createGameScene() {
         chargeRemaining: 0,
         charging: false,
         chargeBodyColor: palette.body,
-        chargeBodyStroke: palette.dark
+        chargeBodyStroke: palette.dark,
+        details,
+        reducedVisuals: denseSpawn
       };
       this.enemies.push(enemy);
       this.enemiesSpawnedThisWave++;
 
-      this.tweens.add({ targets: group, scale: { from: .72, to: 1 }, duration: isBoss ? 420 : 240, ease: "Back.Out" });
-      // Static aura avoids an additional infinite tween for every active enemy.
+      // Keep the boss entrance cinematic; skip repeated minion spawn tweens
+      // and portal particles once the battlefield is already crowded.
+      if (isBoss || !denseSpawn) {
+        this.tweens.add({ targets: group, scale: { from: .72, to: 1 }, duration: isBoss ? 420 : 240, ease: "Back.Out" });
+      }
       if (isBoss) {
         this.message.textContent = "BOSS APPROACHING!";
         this.cameras.main.flash(180, 110, 35, 70, false);
         this.playSound("boss");
         this.time.delayedCall(900, () => this.showQuestion(true));
-      } else {
+      } else if (!denseSpawn) {
         const portal = this.add.circle(x, y, 8, palette.light, .55);
         this.tweens.add({ targets: portal, scale: 2.7, alpha: 0, duration: 260, onComplete: () => portal.destroy() });
       }
@@ -1535,6 +1547,12 @@ export function createGameScene() {
       const reducedCombatEffects = this.enemies.length > 24 || this.projectiles.length > 64;
       for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex--) {
         const e = this.enemies[enemyIndex];
+        const simplifyEnemy = reducedCombatEffects && !e.isBoss;
+        if (e.reducedVisuals !== simplifyEnemy) {
+          e.reducedVisuals = simplifyEnemy;
+          e.details?.forEach(part => part.setVisible(!simplifyEnemy));
+          e.feet?.forEach(part => part.setVisible(!simplifyEnemy));
+        }
         if (!e.group.active) {
           this.enemies.splice(enemyIndex, 1);
           continue;
