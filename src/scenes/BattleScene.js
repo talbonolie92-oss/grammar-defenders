@@ -2043,9 +2043,9 @@ export function createGameScene() {
           return;
         }
         this.wave = Math.max(1, Math.floor(Number(saved.wave) || 1));
-        this.energy = Phaser.Math.Clamp(Number(saved.energy) || 150, 0, this.maxEnergy);
-        this.baseHealth = Phaser.Math.Clamp(Number(saved.baseHealth) || 100, 0, 100);
-        this.baseShield = Phaser.Math.Clamp(Number(saved.baseShield) || 0, 0, 60);
+        this.energy = Phaser.Math.Clamp(Number(saved.energy ?? 150), 0, this.maxEnergy);
+        this.baseHealth = Phaser.Math.Clamp(Number(saved.baseHealth ?? 100), 0, 100);
+        this.baseShield = Phaser.Math.Clamp(Number(saved.baseShield ?? 0), 0, 60);
         this.laneLives = Array.isArray(saved.laneLives) && saved.laneLives.length === 5
           ? saved.laneLives.map(value => Phaser.Math.Clamp(Math.floor(Number(value) || 0), 0, 3)) : [3, 3, 3, 3, 3];
         this.kills = Math.max(0, Math.floor(Number(saved.kills) || 0));
@@ -2053,7 +2053,7 @@ export function createGameScene() {
         this.correctAnswers = Math.max(0, Math.floor(Number(saved.correctAnswers) || 0));
         this.incorrectAnswers = Math.max(0, Math.floor(Number(saved.incorrectAnswers) || 0));
         this.elapsedSeconds = Math.max(0, Math.floor(Number(saved.elapsedSeconds) || 0));
-        this.remainingSeconds = Phaser.Math.Clamp(Math.floor(Number(saved.remainingSeconds) || this.remainingSeconds), 1, this.timeLimitMinutes * 60);
+        this.remainingSeconds = Phaser.Math.Clamp(Math.floor(Number(saved.remainingSeconds ?? this.remainingSeconds)), 0, this.timeLimitMinutes * 60);
         this.questionIndex = Math.max(0, Math.floor(Number(saved.questionIndex) || 0));
         this.bossQuestionIndex = Math.max(0, Math.floor(Number(saved.bossQuestionIndex) || 0));
         this.lastAscensionWave = Math.max(0, Math.floor(Number(saved.lastAscensionWave) || 0));
