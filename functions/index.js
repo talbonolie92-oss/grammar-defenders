@@ -30,6 +30,10 @@ export const reserveSessionSeat = onCall(
     if (session.status === "ended") throw new HttpsError("failed-precondition", "This classroom session has already ended.");
 
     const playersRef = sessionRef.child("players");
+    const existingPlayerSnapshot = await playersRef.child(uid).get();
+    if (session.status === "running" && !session.allowLateJoin && !existingPlayerSnapshot.exists()) {
+      throw new HttpsError("failed-precondition", "Your teacher has disabled late joining.");
+    }
     const transaction = await playersRef.transaction(current => {
       const result = createSeatReservation(current, uid, {
         name,
@@ -52,7 +56,7 @@ export const reserveSessionSeat = onCall(
     const savedPlayers = transaction.snapshot.val() || {};
     return {
       ok: true,
-      existing: !Object.prototype.hasOwnProperty.call(savedPlayers, uid) || savedPlayers[uid]?.joinedAt !== undefined,
+      existing: existingPlayerSnapshot.exists(),
       playerCount: Object.keys(savedPlayers).length,
       capacity: MAX_SESSION_PLAYERS
     };
