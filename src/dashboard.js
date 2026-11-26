@@ -3,7 +3,7 @@ import { parseDocxQuestions } from "./docx-question-parser.js?v=docx-break-fix-1
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
-let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0;
+let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0, importingDocx=false, savingBank=false;
 function docxHtmlToText(html){
   const marked=String(html??"")
     .replace(/<br\s*\/?\s*>/gi,"\n")
@@ -106,10 +106,11 @@ $("manual-question-form").addEventListener("submit",e=>{
   }catch(error){setStatus("bank-status",error.message);}
 });
 $("bank-save").addEventListener("click",async()=>{
-  if(!teacher)return;
+  if(!teacher||savingBank)return;
   const subject=$("bank-subject").value.trim()||"English",topic=$("bank-topic").value.trim(),grade=selectedBankGrade();
   if(!topic||!bankDraft.length){setStatus("bank-status","Enter a topic and add at least one question.");return;}
   if(bankDraft.length>300){setStatus("bank-status","A topic can contain up to 300 questions.");return;}
+  savingBank=true;$("bank-save").disabled=true;
   try{
     const normalized=bankDraft.map((q,i)=>{
       if(q.correct===null||q.correct===undefined||q.correct==="")throw new Error("Question "+(i+1)+": mark its correct answer before saving.");
@@ -122,6 +123,7 @@ $("bank-save").addEventListener("click",async()=>{
     setStatus("bank-status","Saved "+normalized.length+" questions under "+grade+" → "+topic+".");
     renderQuestionBanks();
   }catch(error){setStatus("bank-status",error.message||"Could not save the topic.");}
+  finally{savingBank=false;$("bank-save").disabled=false;}
 });
 $("bank-clear").addEventListener("click",()=>{bankDraft=[];$("bank-edit-id").value="";updateBankDraftCount();setStatus("bank-status","Draft cleared.");});
 
@@ -139,10 +141,12 @@ $("bank-draft-preview").addEventListener("click",e=>{
   bankDraft.splice(Number(button.dataset.draftRemove),1);updateBankDraftCount();
 });
 $("docx-extract").addEventListener("click",async()=>{
+  if(importingDocx)return;
   const file=$("docx-file").files?.[0];
   if(!file){setStatus("docx-status","Choose a .DOCX Word document first.");return;}
   if(!/\.docx$/i.test(file.name)){setStatus("docx-status","Please upload a .DOCX Word document.");return;}
   if(file.size>10*1024*1024){setStatus("docx-status","The document must be 10 MB or smaller.");return;}
+  importingDocx=true;$("docx-extract").disabled=true;
   setStatus("docx-status","Reading Word document…");
   $("docx-debug")?.classList.add("hidden");
   const loadMammoth=()=>new Promise((resolve,reject)=>{
@@ -195,6 +199,7 @@ $("docx-extract").addEventListener("click",async()=>{
     if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
     $("bank-draft-area").scrollIntoView({behavior:"smooth",block:"start"});
   }catch(error){setStatus("docx-status",error.message||"Could not import this Word document.");}
+  finally{importingDocx=false;$("docx-extract").disabled=false;}
 });
 $("bank-list").addEventListener("click",async e=>{
   const button=e.target.closest("button[data-bank-action]");if(!button)return;
