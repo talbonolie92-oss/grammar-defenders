@@ -180,6 +180,11 @@ assert.match(battle, /bossWave \? 30 : \(this\.wave > 5 \? 24 : 20\)/, "Mobile e
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
 
 
+// Preserve the 960:340 game canvas aspect ratio on narrow landscape screens.
+assert.match(gameCss, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
+assert.ok(gameCss.includes("aspect-ratio:48/17"), "The game container must retain the battlefield's native aspect ratio.");
+assert.ok(indexHtml.includes("game.css?v=aspect-ratio-contain-2"), "The corrected canvas sizing stylesheet must be cache-busted.");
+
 // Mobile rendering and question readability regression checks.
 assert.ok(battle.includes('const mobileDevice = window.matchMedia?.("(max-width: 900px)").matches'), "Small-screen devices must skip the second WebGL renderer to protect touch responsiveness.");
 assert.ok(battle.includes("const questionFontSize = item.q.length > 190 ? 25 : item.q.length > 120 ? 28 : 32"), "Question text must use larger readable sizes with a long-question fallback.");
