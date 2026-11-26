@@ -144,3 +144,15 @@ assert.match(world, /enemies\.length > 22 \|\| projectiles\.length > 48/, "Crowd
 assert.match(world, /if \(!performanceMode\) syncList\(enemies, true\)/, "High-load mode must retain lightweight Phaser enemy sprites instead of expensive 3D enemy rigs.");
 assert.match(world, /performanceMode \? \(isSmallScreen \? 100 : 66\)/, "3D rendering cadence must reduce under heavy combat load.");
 assert.match(battle, /Math\.min\(delta \/ 1000, 0\.35\)/, "Combat simulation must tolerate larger late-wave frame intervals.");
+
+// Final gameplay-session stress regressions: wall-clock timer, overlay pauses, cleanup, and load shedding.
+assert.match(battle, /window\.setInterval\(\(\) => this\.tickBattleClock\(\), 250\)/, "Session countdown must use a wall-clock interval independent of Phaser frame rate.");
+assert.match(battle, /this\.bossAscensionActive\) \{\s*this\.lastClockAt = now/, "Boss Ascension selection must pause the session clock.");
+assert.match(battle, /this\.elapsedSeconds \+= elapsedWholeSeconds/, "Timer must catch up after delayed browser callbacks.");
+assert.match(battle, /window\.clearInterval\(this\.battleClockInterval\)/, "Session countdown must be cleared at game end and scene shutdown.");
+assert.match(battle, /this\.questionOverlay\?\.destroy\(true\)/, "Ending a session must clean up any active question overlay.");
+assert.match(battle, /const reducedCombatEffects = this\.enemies\.length > 24 \|\| this\.projectiles\.length > 64/, "Crowded battles must activate lightweight combat visuals.");
+assert.match(battle, /hitFeedbackReady && this\.enemies\.length <= 24 && this\.projectiles\.length <= 64/, "Dense combat must suppress nonessential per-hit tweens.");
+assert.match(battle, /if \(e\.feet && !reducedCombatEffects\)/, "Dense combat must skip per-enemy decorative foot animation.");
+assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/, "Enemy active-count limits must remain enforced during stress waves.");
+assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
