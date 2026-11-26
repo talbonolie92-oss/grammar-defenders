@@ -182,7 +182,7 @@ button{font:inherit}
 .deck-grid .unit-copy small{font-size:8px}
 .deck-grid .unit-cost{font-size:9px}
 .deck-tip{display:none}
-#game-container{width:100%;aspect-ratio:48/17;max-height:none}
+#game-container{width:100%;aspect-ratio:16/7;max-height:none}
 @media(orientation:landscape) and (max-height:600px){
   body{height:100dvh;min-height:100dvh;overflow:hidden;padding:3px 6px}
   .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
