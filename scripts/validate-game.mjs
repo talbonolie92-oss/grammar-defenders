@@ -67,6 +67,9 @@ assert.ok(expectedCounts.every(count => count >= 25), "Every wave must contain a
 assert.ok(battle.includes("this.enemiesPerWave = getWaveEnemyCount(this.wave)") &&
   battle.includes("return regularCount + (safeWave % 5 === 0 ? 50 : 0)"),
   "The live game must use the escalating wave-count formula and boss bonus.");
+assert.match(battle, /Math\.min\(2\.8, 1 \+ \(this\.wave - 1\) \* 0\.055 \+ Math\.max\(0, this\.wave - 5\) \* 0\.025\)/, "Enemy attack damage must scale gradually and have a hard cap.");
+assert.match(battle, /speed: isBoss \? Math\.min\(30, 10 \+ this\.wave \* 0\.55\)/, "Boss movement speed must not become excessive in endless late waves.");
+assert.match(battle, /Math\.min\(24, 8 \+ Math\.floor\(this\.wave \/ 5\) \* 2 \+ \(e\.phase - 1\) \* 3\)/, "Boss lane-pulse damage must remain capped.");
 assert.ok(battle.includes("Math.min(1.8, (this.wave - 1) * 0.08)"),
   "Enemy health growth must remain gradual and capped as army size increases.");
 assert.ok(battle.includes("Math.max(300, 600 - Math.floor(this.wave / 5) * 30)") &&
