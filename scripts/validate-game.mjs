@@ -77,7 +77,7 @@ assert.match(battle, /const y = GRID_Y \+ lane \* TILE_H \+ TILE_H \/ 2/,
   "Attacker spawn Y must be centered in its assigned lane.");
 assert.match(battle, /const x = GRID_X \+ col \* TILE_W \+ TILE_W \/ 2/,
   "Defenders must deploy at the center of their selected tile.");
-assert.match(battle, /this\.threeWorld\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
+assert.match(battle, /this\.world\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
   "The 3D actor renderer must receive live defender, attacker, and projectile positions.");
 assert.match(battle, /if \(this\.pendingBossQuestion && !this\.gameOver\)/,
   "Boss questions must be queued safely if another overlay is already active.");
@@ -139,8 +139,8 @@ assert.match(battle, /this\.questionActive \|\| this\.upgradeChoiceActive \|\| t
 assert.match(battle, /this\.bossAscensionFinal[\s\S]*?this\.endGame\(true\)/, "The final fixed-mode boss must still grant its Ascension reward before victory.");
 
 // Late-wave adaptive rendering keeps combat responsive on mobile devices.
-assert.match(threeWorld, /let performanceMode = false/, "3D renderer must support adaptive high-load mode.");
-assert.match(threeWorld, /enemies\.length > 22 \|\| projectiles\.length > 48/, "Crowded late waves must trigger reduced 3D detail.");
-assert.match(threeWorld, /if \(!performanceMode\) syncList\(enemies, true\)/, "High-load mode must retain lightweight Phaser enemy sprites instead of expensive 3D enemy rigs.");
-assert.match(threeWorld, /performanceMode \? \(isSmallScreen \? 100 : 66\)/, "3D rendering cadence must reduce under heavy combat load.");
+assert.match(world, /let performanceMode = false/, "3D renderer must support adaptive high-load mode.");
+assert.match(world, /enemies\.length > 22 \|\| projectiles\.length > 48/, "Crowded late waves must trigger reduced 3D detail.");
+assert.match(world, /if \(!performanceMode\) syncList\(enemies, true\)/, "High-load mode must retain lightweight Phaser enemy sprites instead of expensive 3D enemy rigs.");
+assert.match(world, /performanceMode \? \(isSmallScreen \? 100 : 66\)/, "3D rendering cadence must reduce under heavy combat load.");
 assert.match(battle, /Math\.min\(delta \/ 1000, 0\.35\)/, "Combat simulation must tolerate larger late-wave frame intervals.");
