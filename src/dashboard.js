@@ -1,4 +1,5 @@
 import { firebaseReady, watchAuth, teacherSignIn, teacherSignOut, dbRef, dbGet, dbSet, dbUpdate, dbRemove, dbPush, dbWatch, timestamp } from "./firebase.js";
+import { parseDocxQuestions } from "./docx-question-parser.js";
 
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
@@ -46,58 +47,6 @@ function getBankGrade(bank){
   const grades=[...new Set((bank.questions||[]).map(q=>String(q.grade||"").trim()).filter(Boolean))];
   if(grades.length===1&&/^Grade\s*(7|8|9|10|11|12)$/i.test(grades[0]))return grades[0].replace(/\s+/g," ");
   return "Mixed";
-}
-function parseDocxQuestions(source){
-  const lines=String(source||"").replace(/\r/g,"\n").split("\n")
-    .map(line=>line.replace(/[\u00a0\t]+/g," ").replace(/\s+/g," ").trim()).filter(Boolean);
-  const questions=[],unparsed=[];
-  let current=null;
-  const cleanQuestion=line=>String(line).replace(/^\s*(?:question\s*)?\d+\s*[.)\]:-]\s*/i,"").replace(/^[-•*]\s*/,"").trim();
-  const marker=/^\s*(?:\(([A-D])\)|([A-D])\s*[.)：:]|([A-D])\s+-)\s*(.*?)\s*$/i;
-  const splitInline=line=>{
-    const re=/(?:^|\s)(?:\(([A-D])\)|([A-D])\s*[.)：:]|([A-D])\s+-)\s+/gi;
-    const marks=[];let m;
-    while((m=re.exec(line))!==null)marks.push({index:m.index+(m[0].startsWith(" ")?1:0),letter:(m[1]||m[2]||m[3]).toUpperCase(),end:re.lastIndex});
-    if(marks.length<2)return null;
-    return {prefix:line.slice(0,marks[0].index).trim(),choices:marks.map((item,i)=>({letter:item.letter,text:line.slice(item.end,marks[i+1]?.index??line.length).trim()}))};
-  };
-  const finish=()=>{
-    if(!current)return;
-    const used=current.choices.map((v,i)=>v?i:-1).filter(i=>i>=0);
-    const last=used.length?Math.max(...used):-1;
-    const ordered=last>=0?current.choices.slice(0,last+1):[];
-    if(current.q.trim()&&ordered.length>=2&&ordered.every(Boolean)){
-      questions.push({q:current.q.trim(),a:ordered,correct:null,grade:selectedBankGrade(),topic:$("bank-topic").value.trim(),effect:"GRAMMAR POWER!"});
-    }else unparsed.push("Incomplete question block: "+[current.q,...ordered].filter(Boolean).join(" | "));
-    current=null;
-  };
-  const addChoice=(letter,value,line)=>{
-    const index=letter.charCodeAt(0)-65;
-    if(index<0||index>3||!value.trim()){unparsed.push("Unrecognized choice: "+line);return;}
-    if(!current){unparsed.push("Choice without a question: "+line);return;}
-    current.choices[index]=value.trim();
-  };
-  for(const raw of lines){
-    const line=raw.replace(/^\s*(?:[-•*]\s*)/,"").trim();
-    const inline=splitInline(line);
-    if(inline){
-      if(inline.prefix){
-        if(current?.choices.some(Boolean)){finish();}
-        if(!current)current={q:cleanQuestion(inline.prefix),choices:[]};
-        else if(!current.choices.some(Boolean))current.q+=" "+inline.prefix;
-      }
-      if(!current)unparsed.push("Choices without a question: "+line);
-      else inline.choices.forEach(x=>addChoice(x.letter,x.text,line));
-      continue;
-    }
-    const match=line.match(marker);
-    if(match){if(!current){unparsed.push("Choice without a question: "+line);continue;}addChoice((match[1]||match[2]||match[3]).toUpperCase(),match[4],line);continue;}
-    if(!current){current={q:cleanQuestion(line),choices:[]};continue;}
-    if(current.choices.some(Boolean)){finish();current={q:cleanQuestion(line),choices:[]};}
-    else current.q+=" "+line;
-  }
-  finish();
-  return {questions,unparsed};
 }
 function normalizeBankQuestion(raw, subject, topic){
   const q=String(raw.q??raw.question??"").trim();
@@ -200,12 +149,12 @@ $("docx-extract").addEventListener("click",async()=>{
     const preview=$("docx-debug"),previewText=$("docx-extracted-preview");
     if(previewText)previewText.textContent=source;
     if(preview)preview.classList.remove("hidden");
-    const parsed=parseDocxQuestions(source);
-    if(!parsed.questions.length)throw new Error("The Word text was read, but the question layout was not recognized. Open “View text extracted from Word” below and send me a screenshot or attach the DOCX so I can match its exact format.");
+    const parsed=parseDocxQuestions(source,{grade:selectedBankGrade(),topic:$("bank-topic").value.trim()});
+    if(!parsed.questions.length){const sample=parsed.unparsed.slice(0,4).join(" | ");throw new Error("Word text was extracted, but no complete question was recognized. Check the extracted text below. "+sample);}
     if(bankDraft.length+parsed.questions.length>300)throw new Error("The draft limit is 300 questions. Save or clear some questions first.");
     bankDraft.push(...parsed.questions);updateBankDraftCount();
     let message="Organized "+parsed.questions.length+" questions. Review each item, mark its correct answer, then save.";
-    if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" line(s) need checking: "+parsed.unparsed.slice(0,3).join(" | ")+(parsed.unparsed.length>3?" …":"");
+    if(parsed.unparsed.length)message+=" "+parsed.unparsed.length+" incomplete or unrecognized block(s) were skipped; check the extracted text and source document before saving.";
     setStatus("docx-status",message);setStatus("bank-status",message);
     if(parsed.unparsed.length)console.warn("Unparsed DOCX lines:",parsed.unparsed);
     $("bank-draft-preview").scrollIntoView({behavior:"smooth",block:"start"});
