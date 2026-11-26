@@ -1173,7 +1173,7 @@ export function createGameScene() {
       group.add(enemyParts);
       group.iterate(child => {
         child.setActive(true);
-        child.setVisible(true);
+        // Preserve intentional visibility culling for dense mobile waves.
         child.setAlpha(1);
         child.setDepth(0);
       });
