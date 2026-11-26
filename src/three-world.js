@@ -24,10 +24,10 @@ export async function createThreeWorld(container) {
     depth: true,
     stencil: false
   });
-  const isSmallScreen = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 || window.matchMedia?.("(max-width: 900px)").matches);
+  const isSmallScreen = window.matchMedia?.("(max-width: 900px)").matches || false;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1 : 1.25));
   renderer.setClearColor(0x000000, 0);
-  renderer.setSize(960, 420, false);
+  renderer.setSize(960, 340, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
