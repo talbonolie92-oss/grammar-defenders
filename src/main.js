@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=visual-consistency-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=visual-consistency-2";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
