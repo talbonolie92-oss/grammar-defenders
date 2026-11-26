@@ -117,3 +117,11 @@ assert.match(battle, /GLACIAL BURST!/, "Tier III Frost Mage must apply its lane-
 assert.match(battle, /PLAY AGAIN  •  BACK TO SETUP/, "The end-of-session overlay must provide a visible in-game restart action.");
 assert.match(battle, /restartButton\.on\("pointerdown", \(\) => window\.location\.reload\(\)\)/, "The end-of-session restart action must return to setup.");
 assert.match(css, /cinematic 3D-era landing refresh/, "Homepage must use the refreshed 3D-era visual design.");
+
+
+// Question answer recovery: explicit continue action, browser timer cleanup, and update-loop watchdog.
+assert.match(battle, /CONTINUE BATTLE/, "Answered grammar questions must offer a manual continue action.");
+assert.match(battle, /questionResolutionTimer = window\.setTimeout/, "Question close must have a browser-level fallback timer.");
+assert.match(battle, /questionAnsweredAt = Date\.now\(\)/, "Question answers must timestamp the recovery watchdog.");
+assert.match(battle, /Date\.now\(\) - this\.questionAnsweredAt >= 2600/, "The battle update loop must recover a stuck answered question.");
+assert.match(battle, /window\.clearTimeout\(this\.questionResolutionTimer\)/, "Question finish must clear its browser fallback timer.");
