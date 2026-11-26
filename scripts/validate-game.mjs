@@ -198,7 +198,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=stability-audit-15"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=stability-audit-16"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -211,7 +211,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=stability-audit-15"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=stability-audit-16"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
@@ -262,10 +262,10 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
-assert.ok(html.includes("src/main.js?v=stability-audit-15"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(html.includes("src/main.js?v=stability-audit-16"), "The entry module cache token must refresh after tablet stability changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=stability-audit-15"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=stability-audit-16"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
@@ -274,7 +274,7 @@ assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveC
 assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=stability-audit-15"), "The BattleScene cache token must refresh after phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=stability-audit-16"), "The BattleScene cache token must refresh after phone question layout changes.");
 
 
 // 960x420 overlay geometry and phone answer-control regression checks.
@@ -291,3 +291,9 @@ assert.ok(battle.includes('this.events.once("shutdown"') && battle.includes('thi
 assert.ok(battle.includes("window.clearTimeout(this.questionResolutionTimer)") && battle.includes("this.questionResolutionToken++;"), "Browser question timers must be cancelled when the scene shuts down.");
 assert.ok(main.includes("function scheduleAttemptRetry()") && main.includes("function scheduleResultRetry()"), "Failed classroom saves must schedule automatic retries.");
 assert.ok(main.includes("Math.min(30000, attemptRetryDelay * 2)") && main.includes("Math.min(30000, resultRetryDelay * 2)"), "Automatic save retries must use bounded exponential backoff.");
+
+
+// Phone upgrade and answer overlay fit checks.
+assert.ok(battle.includes('this.phoneLandscape ? 820 : 940') && battle.includes('this.phoneLandscape ? 390 : 360'), "Phone tier-upgrade panels must fit inside the zoomed phone viewport.");
+assert.ok(battle.includes('const x = phoneLayout ? (col === 0 ? 260 : 700) : 125 + col * 237;') && battle.includes('const y = phoneLayout ? 125 + row * 65'), "All eight tier choices must remain visible and tappable in a two-column phone layout.");
+assert.ok(battle.includes('const answerStartY = phoneQuestionLayout ? 190 :') && battle.includes('const continueY = this.phoneLandscape ? 394 : 365;'), "Four phone answers and the Continue control must occupy separate vertical space.");
