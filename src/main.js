@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-14";
+import { createGameScene } from "./scenes/BattleScene.js?v=stability-audit-15";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush } from "./firebase.js";
 
 const params = new URLSearchParams(window.location.search);
