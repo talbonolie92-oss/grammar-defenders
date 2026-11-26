@@ -234,10 +234,10 @@ assert.ok(main.includes('existingPlayer.val().status === "finished" && !hasPendi
 // Firebase Realtime Database rule compatibility and cache-refresh guards.
 assert.ok(!JSON.stringify(databaseRules).includes("numChildren("), "Realtime Database rules must not use the unsupported numChildren() method.");
 assert.ok(databaseRules.rules.sessions.$sessionId.players.$uid[".write"].includes("auth.uid === $uid"), "A student must only write their own player record.");
-assert.ok(html.includes("src/main.js?v=reconnect-sync-3"), "The entry module cache token must refresh after reconnect and recovery changes.");
+assert.ok(html.includes("src/main.js?v=phone-fit-canvas-4"), "The entry module cache token must refresh after phone layout changes.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=reconnect-sync-5"), "The BattleScene module cache token must refresh checkpoint and touch fixes.");
+assert.ok(main.includes("BattleScene.js?v=phone-readability-6"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
