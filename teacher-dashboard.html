@@ -73,9 +73,9 @@
           <h3>Add a question manually</h3>
           <label class="wide">Question<input id="bank-q" maxlength="500" required placeholder="Type the question"></label>
           <div class="bank-answer-grid">
-            <label>Answer A<input id="bank-a1" maxlength="200" required></label><label>Answer B<input id="bank-a2" maxlength="200" required></label><label>Answer C<input id="bank-a3" maxlength="200" required></label>
+            <label>Answer A<input id="bank-a1" maxlength="200" required></label><label>Answer B<input id="bank-a2" maxlength="200" required></label><label>Answer C<input id="bank-a3" maxlength="200" required></label><label>Answer D (optional)<input id="bank-a4" maxlength="200" placeholder="Optional fourth choice"></label>
           </div>
-          <div class="bank-manual-actions"><label>Correct answer<select id="bank-correct"><option value="">Choose answer</option><option value="0">A</option><option value="1">B</option><option value="2">C</option></select></label><button class="button ghost" type="submit">Add to draft</button></div>
+          <div class="bank-manual-actions"><label>Correct answer<select id="bank-correct"><option value="">Choose answer</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></label><button class="button ghost" type="submit">Add to draft</button></div>
         </form>
         <div class="bank-save-row"><span id="bank-draft-count" class="muted">0 questions in draft</span><button id="bank-save" class="button primary" type="button">Save question set</button><button id="bank-clear" class="button ghost" type="button">Clear draft</button></div>
         <div id="bank-draft-preview" class="bank-draft-preview"></div><p id="bank-status" class="status" role="status"></p>
