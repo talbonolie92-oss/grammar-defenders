@@ -1197,7 +1197,14 @@ export function createGameScene() {
     }
 
     update(time, delta) {
-      if (!this.battleStarted || this.gameOver || this.questionActive || this.upgradeChoiceActive) return;
+      if (!this.battleStarted || this.gameOver) return;
+      // Last-resort recovery: if an answered question overlay survives a timer interruption, release it.
+      if (this.questionActive && this.questionAnswered && this.questionAnsweredAt &&
+          Date.now() - this.questionAnsweredAt >= 2600) {
+        this.finishQuestion(this.questionResolutionToken);
+        return;
+      }
+      if (this.questionActive || this.upgradeChoiceActive) return;
       // Preserve real-time combat speed through brief frame drops; cap only extreme tab-resume spikes.
       const dt = Math.min(delta / 1000, 0.25);
       const energyDt = Math.min(delta / 1000, 1);
@@ -1773,6 +1780,7 @@ export function createGameScene() {
     answerQuestion(index, item, button, label) {
       if (!this.questionActive || this.questionAnswered) return;
       this.questionAnswered = true;
+      this.questionAnsweredAt = Date.now();
       const correct = index === item.correct;
       this.questionsAnswered++;
       if (correct) this.correctAnswers++; else this.incorrectAnswers++;
@@ -1802,16 +1810,31 @@ export function createGameScene() {
         fontFamily: "Nunito", fontSize: "13px", color: correct ? "#9cf0bf" : "#ffb4b4", fontStyle: "900", letterSpacing: 1
       }).setOrigin(.5);
       this.questionOverlay.add(feedback);
+      // Give players an explicit way to resume if the automatic close timer is delayed on mobile.
+      const continueButton = this.add.rectangle(480, 287, 250, 34, 0x8be6b6, 1)
+        .setStrokeStyle(2, 0xe4ffe9).setInteractive({ useHandCursor: true });
+      const continueLabel = this.add.text(480, 287, "CONTINUE BATTLE  ▶", {
+        fontFamily: "Nunito", fontSize: "13px", color: "#123b35", fontStyle: "1000"
+      }).setOrigin(.5);
+      continueButton.on("pointerover", () => continueButton.setFillStyle(0xb4f5cc));
+      continueButton.on("pointerout", () => continueButton.setFillStyle(0x8be6b6));
       const resolutionToken = ++this.questionResolutionToken;
-      // Browser timer is a fallback in case the Phaser clock is interrupted on a busy boss wave.
-      this.time.delayedCall(1050, () => this.finishQuestion(resolutionToken));
-      window.setTimeout(() => this.finishQuestion(resolutionToken), 1800);
+      continueButton.on("pointerdown", () => this.finishQuestion(resolutionToken));
+      this.questionOverlay.add([continueButton, continueLabel]);
+      // Keep auto-advance as the default; explicit Continue and the update watchdog are recovery paths.
+      this.time.delayedCall(1500, () => this.finishQuestion(resolutionToken));
+      this.questionResolutionTimer = window.setTimeout(() => this.finishQuestion(resolutionToken), 2200);
     }
 
     finishQuestion(resolutionToken) {
       if (resolutionToken !== this.questionResolutionToken || !this.questionActive) return;
       // Invalidate the Phaser/browser timer pair before a queued boss question can open.
       this.questionResolutionToken++;
+      if (this.questionResolutionTimer) {
+        window.clearTimeout(this.questionResolutionTimer);
+        this.questionResolutionTimer = null;
+      }
+      this.questionAnsweredAt = 0;
       if (this.questionOverlay?.active) this.questionOverlay.destroy(true);
       this.questionOverlay = null;
       this.questionActive = false;
