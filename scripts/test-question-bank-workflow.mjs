@@ -44,6 +44,8 @@ assert.ok(dashboard.includes('Other / mixed grade'), "Saved banks outside the cu
 assert.ok(dashboard.includes('questionBankId:bank?.id||""') && dashboard.includes('questionCount:bank?.questions?.length||0'), "New sessions must record the selected question bank and its question count.");
 assert.ok(dashboard.includes("updateSessionBankStatus") && dashboard.includes("regular and boss challenges"), "The selected topic and its gameplay scope must be explicit in the session form.");
 assert.ok(dashboard.includes('if(bank)data.questions=bank.questions.map'), "The selected saved question set must be copied into the session payload.");
+assert.ok(dashboard.includes('normalizeBankQuestion({...q,grade,topic},subject,topic)'), "Every imported question must display the saved topic selected by the teacher.");
+assert.ok(dashboard.includes('s.questionCount?s.questionCount+" questions":""'), "Session details must show how many saved questions were loaded.");
 assert.ok(main.includes('questions: Array.isArray(studentSession.questions) ? studentSession.questions : []'), "Student launch must pass the session questions into gameplay.");
 assert.ok(battle.includes('this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS'), "Boss challenges must use selected lesson questions when a custom bank is active.");
 assert.ok(css.includes(".session-topic-picker{") && css.includes(".saved-bank-section{"), "Topic selector and saved question list must be visually prominent.");
