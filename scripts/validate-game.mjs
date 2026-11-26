@@ -180,6 +180,11 @@ assert.match(battle, /bossWave \? 30 : \(this\.wave > 5 \? 24 : 20\)/, "Mobile e
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
 
 
+assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield without distorting its coordinate system.");
+assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
+assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
+assert.ok(html.includes("game.css?v=phaser-fit-canvas-3"), "Phaser canvas sizing correction must be cache-busted.");
+
 // Preserve the 960:340 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
 assert.ok(css.includes("aspect-ratio:48/17"), "The game container must retain the battlefield's native aspect ratio.");
