@@ -175,7 +175,8 @@ assert.match(battle, /e\.details\?\.forEach\(part => part\.setVisible\(!simplify
 assert.match(battle, /else if \(!denseSpawn\)/, "Dense minion spawns must skip portal particles and repeated scale tweens.");
 assert.match(battle, /details,\s*reducedVisuals: denseSpawn/, "Enemy visual mode state must be tracked for safe transitions.");
 assert.match(battle, /if \(e\.feet && !reducedCombatEffects\)/, "Dense combat must skip per-enemy decorative foot animation.");
-assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/, "Enemy active-count limits must remain enforced during stress waves.");
+assert.match(battle, /const activeEnemyCap = this\.mobilePerformanceMode[\s\S]*?\(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/, "Phones and desktops must use bounded active-enemy budgets during stress waves.");
+assert.match(battle, /bossWave \? 30 : \(this\.wave > 5 \? 24 : 20\)/, "Mobile enemy concurrency must be capped at 20–30 while preserving the full wave spawn count.");
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
 
 
