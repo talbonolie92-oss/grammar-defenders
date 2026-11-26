@@ -26,6 +26,9 @@ const gameReady = new Promise(resolve => {
   if (game.isBooted) resolve();
   else game.events.once("ready", resolve);
 });
+// The Phaser scene is constructed once, but it must not render continuously
+// behind the join/setup screens while students wait for the teacher.
+gameReady.then(() => game.loop.sleep());
 let studentSession = null;
 let studentUid = null;
 let stopSessionWatch = null;
@@ -135,7 +138,7 @@ if (sessionId) {
 function startSoloSetup() {
   document.getElementById("start-game")?.addEventListener("click", async () => {
     const initialScene = game.scene.getScene("BattleScene");
-    initialScene?.enableMusic?.();
+    initialScene?.prepareAudio?.();
     if (initialScene) initialScene.soundOn = true;
     const soundToggle = document.getElementById("sound-toggle");
     if (soundToggle) soundToggle.textContent = "SFX: On";
@@ -150,6 +153,7 @@ function startSoloSetup() {
     try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
     try {
       await gameReady;
+      game.loop.wake();
       const battleScene = game.scene.getScene("BattleScene");
       if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
       setupScreen?.classList.add("hidden");
@@ -305,6 +309,7 @@ async function launchStudentGame(name, classSection) {
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
   try {
     await gameReady;
+    game.loop.wake();
     const battleScene = game.scene.getScene("BattleScene");
     if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
     await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
@@ -322,7 +327,7 @@ async function launchStudentGame(name, classSection) {
   landingHero?.classList.add("hidden");
   document.body.classList.add("playing");
   gameLayout?.classList.remove("hidden");
-  game.scene.getScene("BattleScene")?.enableMusic?.();
+  // Background music stays off by default; students can enable it manually.
   try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
   try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
   requestAnimationFrame(() => {
@@ -363,10 +368,11 @@ async function launchStudentGame(name, classSection) {
 
 document.addEventListener("visibilitychange", () => {
   if (!game || !game.scene) return;
+  const scene = game.scene.getScene("BattleScene");
   if (document.hidden) {
-    game.scene.getScene("BattleScene")?.saveCheckpoint?.();
+    scene?.saveCheckpoint?.();
     game.loop.sleep();
-  } else game.loop.wake();
+  } else if (scene?.battleStarted) game.loop.wake();
 });
 window.addEventListener("online", () => {
   flushPendingAttempts().catch(error => console.warn("Question attempts will retry when the connection returns:", error));
