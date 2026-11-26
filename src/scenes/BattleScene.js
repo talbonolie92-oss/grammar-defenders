@@ -147,6 +147,9 @@ export function createGameScene() {
         : this.difficulty === "hard" ? QUESTIONS.filter(q => q.grade === "10–12") : QUESTIONS;
       this.questionDeck = this.shuffleQuestionDeck(regularPool);
       this.bossQuestionDeck = this.shuffleQuestionDeck(this.customQuestions.length ? this.customQuestions : BOSS_QUESTIONS);
+      this.checkpointKey = config.sessionId && config.playerId
+        ? "emerald-frontier:" + config.sessionId + ":" + config.playerId : null;
+      this.restoreCheckpoint();
       this.battleStarted = true;
       if (this.modeText) this.modeText.textContent = this.endlessMode ? "ENDLESS SURVIVAL" : "FIXED WAVES";
       this.message.textContent = this.endlessMode ? "Endless Survival begins! Defend the keep!" : "Fixed Waves begins! Clear every wave!";
@@ -158,6 +161,9 @@ export function createGameScene() {
         callback: () => this.spawnEnemySafely()
       });
       this.questionTimer = this.time.addEvent({ delay: this.questionIntervalSeconds * 1000, loop: true, callback: () => this.showQuestion(false) });
+      if (this.checkpointKey) {
+        this.checkpointTimer = this.time.addEvent({ delay: 3500, loop: true, callback: () => this.saveCheckpoint() });
+      }
       // Keep the session countdown independent from Phaser's frame clock.
       // A busy late wave must not make the 10-minute session timer run in slow motion.
       if (this.battleClockInterval) window.clearInterval(this.battleClockInterval);
@@ -621,14 +627,16 @@ export function createGameScene() {
       group.add(healthBar);
       healthBar.setVisible(true).setAlpha(1).setDepth(0);
       this.drawGuardianHealth(healthBar, maxHp, maxHp);
-      this.defenders.push({
+      const defender = {
         lane, col, x, y, group, cooldown: Phaser.Math.FloatBetween(0, .35),
         unitType, stats, hp: maxHp, maxHp, level: 1, levelBadge, evolutionMark,
         healthBar, attackCooldown: 0, legs, upgradePaths: [], damageReduction: 0,
         counterDamageMultiplier: 1
-      });
+      };
+      this.defenders.push(defender);
       this.message.textContent = stats.name + " deployed! Upgrade it later to unlock stronger abilities.";
       this.playSound("deploy");
+      return defender;
     }
 
 
@@ -2024,6 +2032,72 @@ export function createGameScene() {
       if (!this.gameOver && this.questionTimer) this.questionTimer.paused = false;
     }
 
+    restoreCheckpoint() {
+      if (!this.checkpointKey) return;
+      try {
+        const raw = localStorage.getItem(this.checkpointKey);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (!saved || saved.version !== 1 || Date.now() - Number(saved.savedAt || 0) > 4 * 60 * 60 * 1000) {
+          localStorage.removeItem(this.checkpointKey);
+          return;
+        }
+        this.wave = Math.max(1, Math.floor(Number(saved.wave) || 1));
+        this.energy = Phaser.Math.Clamp(Number(saved.energy) || 150, 0, this.maxEnergy);
+        this.baseHealth = Phaser.Math.Clamp(Number(saved.baseHealth) || 100, 0, 100);
+        this.baseShield = Phaser.Math.Clamp(Number(saved.baseShield) || 0, 0, 60);
+        this.laneLives = Array.isArray(saved.laneLives) && saved.laneLives.length === 5
+          ? saved.laneLives.map(value => Phaser.Math.Clamp(Math.floor(Number(value) || 0), 0, 3)) : [3, 3, 3, 3, 3];
+        this.kills = Math.max(0, Math.floor(Number(saved.kills) || 0));
+        this.questionsAnswered = Math.max(0, Math.floor(Number(saved.questionsAnswered) || 0));
+        this.correctAnswers = Math.max(0, Math.floor(Number(saved.correctAnswers) || 0));
+        this.incorrectAnswers = Math.max(0, Math.floor(Number(saved.incorrectAnswers) || 0));
+        this.elapsedSeconds = Math.max(0, Math.floor(Number(saved.elapsedSeconds) || 0));
+        this.remainingSeconds = Phaser.Math.Clamp(Math.floor(Number(saved.remainingSeconds) || this.remainingSeconds), 1, this.timeLimitMinutes * 60);
+        this.questionIndex = Math.max(0, Math.floor(Number(saved.questionIndex) || 0));
+        this.bossQuestionIndex = Math.max(0, Math.floor(Number(saved.bossQuestionIndex) || 0));
+        this.lastAscensionWave = Math.max(0, Math.floor(Number(saved.lastAscensionWave) || 0));
+        (Array.isArray(saved.defenders) ? saved.defenders : []).slice(0, 35).forEach(item => {
+          if (!item || !this.unitStats[item.unitType] || !Number.isInteger(item.lane) || !Number.isInteger(item.col)) return;
+          if (item.lane < 0 || item.lane >= LANES || item.col < 0 || item.col >= 7) return;
+          const defender = this.deployDefender(item.lane, item.col, item.unitType);
+          if (defender && Number(item.level) >= 2) {
+            defender.level = Phaser.Math.Clamp(Math.floor(Number(item.level)), 1, 3);
+            defender.levelBadge?.setText(["I", "II", "III"][defender.level - 1]);
+          }
+        });
+        this.message.textContent = "Battle restored from your last checkpoint. Your current wave and defenders are back!";
+      } catch (error) {
+        console.warn("Could not restore the local battle checkpoint:", error);
+      }
+    }
+
+    saveCheckpoint() {
+      if (!this.checkpointKey || !this.battleStarted || this.gameOver) return;
+      try {
+        const checkpoint = {
+          version: 1, savedAt: Date.now(), wave: this.wave, energy: this.energy,
+          baseHealth: this.baseHealth, baseShield: this.baseShield, laneLives: this.laneLives,
+          kills: this.kills, questionsAnswered: this.questionsAnswered,
+          correctAnswers: this.correctAnswers, incorrectAnswers: this.incorrectAnswers,
+          elapsedSeconds: this.elapsedSeconds, remainingSeconds: this.remainingSeconds,
+          questionIndex: this.questionIndex, bossQuestionIndex: this.bossQuestionIndex,
+          lastAscensionWave: this.lastAscensionWave,
+          defenders: this.defenders.filter(item => item.group?.active).map(item => ({
+            lane: item.lane, col: item.col, unitType: item.unitType, level: item.level
+          }))
+        };
+        localStorage.setItem(this.checkpointKey, JSON.stringify(checkpoint));
+      } catch (error) {
+        console.warn("Could not save the local battle checkpoint:", error);
+      }
+    }
+
+    clearCheckpoint() {
+      if (!this.checkpointKey) return;
+      try { localStorage.removeItem(this.checkpointKey); } catch (_) {}
+    }
+
     shuffleQuestionDeck(pool) {
       const deck = Array.isArray(pool) ? pool.slice() : [];
       for (let i = deck.length - 1; i > 0; i--) {
@@ -2179,6 +2253,11 @@ export function createGameScene() {
     endGame(won, customTitle = "") {
       if (this.gameOver) return;
       this.gameOver = true;
+      this.clearCheckpoint();
+      if (this.checkpointTimer) {
+        this.checkpointTimer.remove(false);
+        this.checkpointTimer = null;
+      }
       if (this.battleClockInterval) {
         window.clearInterval(this.battleClockInterval);
         this.battleClockInterval = null;
