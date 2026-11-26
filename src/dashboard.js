@@ -89,12 +89,14 @@ function renderQuestionBanks(){
   const select=$("session-bank"),current=select.value,grade=$("session-grade").value;
   const visibleBanks=bankCache.filter(b=>["Grade 10","Grade 11","Grade 12"].includes(getBankGrade(b)));
   const eligible=visibleBanks.filter(b=>getBankGrade(b)===grade);
-  select.innerHTML='<option value="">Built-in Grammar Questions</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
+  select.innerHTML='<option value="">Built-in questions (default)</option>'+eligible.map(b=>'<option value="'+escapeHtml(b.id)+'">'+escapeHtml(b.topic+" • "+(b.questions?.length||0)+" questions")+'</option>').join("");
   if(eligible.some(b=>b.id===current))select.value=current;
+  const status=$("session-bank-status");
+  if(status)status.textContent=eligible.length?eligible.length+" saved question set(s) available for "+grade+". Select one to use its questions in this game.":(bankCache.length?"No saved question sets for "+grade+". Your saved sets may belong to another grade.":"No saved question sets yet. Save a set in the Question Bank section below.");
   const groups={};
-  visibleBanks.forEach(b=>{const g=getBankGrade(b);(groups[g]??=[]).push(b);});
-  const order=["Grade 10","Grade 11","Grade 12"];
-  $("bank-list").innerHTML=bankCache.length?order.filter(g=>groups[g]?.length).map(g=>'<section class="bank-grade-group"><h3>'+escapeHtml(g)+'</h3>'+groups[g].map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+escapeHtml(b.subject||"English")+' • '+(b.questions?.length||0)+' questions</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join("")+'</section>').join(""):'<div class="empty">No saved topics yet. Add a topic and questions above.</div>';
+  bankCache.forEach(b=>{const raw=getBankGrade(b);const g=["Grade 10","Grade 11","Grade 12"].includes(raw)?raw:"Other / mixed grade";(groups[g]??=[]).push(b);});
+  const order=["Grade 10","Grade 11","Grade 12","Other / mixed grade"];
+  $("bank-list").innerHTML=bankCache.length?order.filter(g=>groups[g]?.length).map(g=>'<section class="bank-grade-group"><h3>'+escapeHtml(g)+'</h3>'+groups[g].map(b=>'<div class="bank-row" data-bank="'+escapeHtml(b.id)+'"><div><b>'+escapeHtml(b.topic||"Untitled topic")+'</b><small>'+escapeHtml(b.subject||"English")+' • '+(b.questions?.length||0)+' questions • '+escapeHtml(getBankGrade(b))+'</small></div><div><button class="button ghost" data-bank-action="load">Edit</button><button class="button ghost" data-bank-action="delete">Delete</button></div></div>').join("")+'</section>').join(""):'<div class="empty">No saved question sets yet. Save a reviewed topic above; it will appear here and in the session topic selector.</div>';
 }
 $("manual-question-form").addEventListener("submit",e=>{
   e.preventDefault();
@@ -118,10 +120,12 @@ $("bank-save").addEventListener("click",async()=>{
     });
     const id=$("bank-edit-id").value||dbPush("teacherSessions/"+teacher.uid+"/questionBanks").key;
     const existing=bankCache.find(b=>b.id===id);
-    await dbSet("teacherSessions/"+teacher.uid+"/questionBanks/"+id,{subject,topic,grade,questions:normalized,createdAt:existing?.createdAt||Date.now(),updatedAt:Date.now()});
+    const savedAt=Date.now(),savedBank={id,subject,topic,grade,questions:normalized,createdAt:existing?.createdAt||savedAt,updatedAt:savedAt};
+    await dbSet("teacherSessions/"+teacher.uid+"/questionBanks/"+id,{subject,topic,grade,questions:normalized,createdAt:savedBank.createdAt,updatedAt:savedAt});
+    bankCache=[savedBank,...bankCache.filter(item=>item.id!==id)];
     bankDraft=normalized;$("bank-edit-id").value=id;updateBankDraftCount();
-    setStatus("bank-status","Saved "+normalized.length+" questions under "+grade+" → "+topic+".");
     renderQuestionBanks();
+    setStatus("bank-status","Saved "+normalized.length+" questions under "+grade+" → "+topic+". It is now listed below and available in the session topic selector.");
   }catch(error){setStatus("bank-status",error.message||"Could not save the topic.");}
   finally{savingBank=false;$("bank-save").disabled=false;}
 });
@@ -264,10 +268,15 @@ $("session-form").addEventListener("submit",async e=>{
   const title=safeName($("session-title").value);if(!title)return;
   setStatus("create-status","Creating session…");
   try{
-    const id=dbPush("sessions").key,now=Date.now();
-    const bank=bankCache.find(item=>item.id===$("session-bank").value);const data={teacherId:teacher.uid,title,grade:$("session-grade").value,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||"Built-in Grammar Questions",mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};if(bank)data.questions=bank.questions;
+    const id=dbPush("sessions").key,now=Date.now(),grade=$("session-grade").value,bankId=$("session-bank").value;
+    const bank=bankId?bankCache.find(item=>item.id===bankId):null;
+    if(bankId&&!bank)throw new Error("That saved question set is no longer available. Refresh the dashboard and select it again.");
+    if(bank&&getBankGrade(bank)!==grade)throw new Error("Choose a question set saved for "+grade+". Change the session grade or save the set under the matching grade.");
+    if(bank&&(!Array.isArray(bank.questions)||!bank.questions.length))throw new Error("The selected question set has no questions. Edit and save it before creating a game.");
+    const data={teacherId:teacher.uid,title,grade,section:safeName($("session-section").value),subject:bank?.subject||"",topic:bank?.topic||"Built-in Grammar Questions",questionBankId:bank?.id||"",questionCount:bank?.questions?.length||0,mode:$("session-mode").value,timeLimitMinutes:Number($("session-minutes").value),questionIntervalSeconds:Number($("session-interval").value),difficulty:$("session-difficulty").value,allowLateJoin:$("session-late-join").checked,status:"waiting",createdAt:now,updatedAt:now,joinCode:Math.random().toString(36).slice(2,8).toUpperCase()};
+    if(bank)data.questions=bank.questions.map(q=>({...q,a:[...q.a]}));
     await dbSet("sessions/"+id+"/public",data);
-    await dbSet("teacherSessions/"+teacher.uid+"/"+id,{title,status:"waiting",createdAt:now});
+    await dbSet("teacherSessions/"+teacher.uid+"/"+id,{title,status:"waiting",grade,topic:data.topic,questionBankId:data.questionBankId,questionCount:data.questionCount,createdAt:now});
     $("session-title").value="";setStatus("create-status","Session created. Open it below to display the QR code.");
     openSession({id,...data});
   }catch(err){setStatus("create-status",err.message||"Could not create session.");}
