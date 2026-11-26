@@ -189,6 +189,9 @@ assert.match(battle, /const activeEnemyCap = this\.mobilePerformanceMode[\s\S]*?
 assert.match(battle, /delay: this\.mobilePerformanceMode \? 1050 : 815/, "Phone enemy arrivals must be spaced to reduce mobile frame spikes.");
 assert.match(battle, /bossWave \? 12 : \(this\.wave > 5 \? 10 : 8\)/, "Touch-device enemy concurrency must stay low enough to avoid stacked crowds.");
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
+assert.match(battle, /const projectileCap = this\.mobilePerformanceMode \? 72 : 180/, "Active projectiles must be bounded on touch devices and desktop.");
+assert.match(battle, /phoneQuestionLayout \? 48/, "Phone answer rows must have enough separation for reliable taps.");
+assert.match(battle, /hitHeight: buttonHeight \+ \(phoneQuestionLayout \? 6 : 4\)/, "Phone answers must use enlarged camera-mapped hit targets.");
 
 
 assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield without distorting its coordinate system.");
