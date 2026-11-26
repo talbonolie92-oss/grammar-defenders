@@ -177,7 +177,7 @@ assert.match(battle, /details,\s*reducedVisuals: denseSpawn/, "Enemy visual mode
 assert.match(battle, /if \(e\.feet && !reducedCombatEffects\)/, "Dense combat must skip per-enemy decorative foot animation.");
 assert.match(battle, /const activeEnemyCap = this\.mobilePerformanceMode[\s\S]*?\(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/, "Phones and desktops must use bounded active-enemy budgets during stress waves.");
 assert.match(battle, /delay: this\.mobilePerformanceMode \? 1050 : 815/, "Phone enemy arrivals must be spaced to reduce mobile frame spikes.");
-assert.match(battle, /bossWave \? 30 : \(this\.wave > 5 \? 24 : 20\)/, "Mobile enemy concurrency must be capped at 20–30 while preserving the full wave spawn count.");
+assert.match(battle, /bossWave \? 12 : \(this\.wave > 5 \? 10 : 8\)/, "Touch-device enemy concurrency must stay low enough to avoid stacked crowds.");
 assert.match(battle, /this\.projectilePool\.length < 180/, "Projectile reuse pool must remain capped to prevent unbounded retention.");
 
 
