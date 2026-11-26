@@ -65,7 +65,8 @@ const expectedCounts = checkedWaves.map(expectedWaveCount);
 assert.deepEqual(expectedCounts.slice(0, 15), [8,9,10,11,21,22,26,30,34,38,42,46,50,54,51],
   "Early and mid-game wave quantities must follow the intended progression.");
 assert.ok(expectedCounts.every(count => count >= 8 && count <= 55), "Wave quantities must remain within safe limits.");
-assert.match(battle, /this\.enemiesPerWave = bossWave[\s\S]*?Math\.min\(55, 22 \+ \(this\.wave - 6\) \* 4\)/,
+assert.ok(battle.includes("this.enemiesPerWave = bossWave") && battle.includes("Math.min(55, 22 + (this.wave - 6) * 4)"),
+  "Wave progression must preserve the escalating normal/boss formulas.");
 assert.match(battle, /const isBoss = this\.enemiesSpawnedThisWave === this\.enemiesPerWave - 1 && this\.wave % 5 === 0/,
   "Every fifth wave must reserve its final spawn for the Dark Overlord.");
 assert.match(battle, /this\.enemies\.length >= \(bossWave \? 46 : \(this\.wave > 5 \? 40 : 20\)\)/,
@@ -82,7 +83,7 @@ assert.match(battle, /if \(this\.pendingBossQuestion && !this\.gameOver\)/,
   "Boss questions must be queued safely if another overlay is already active.");
 assert.match(battle, /this\.time\.delayedCall\(900, \(\) => this\.showQuestion\(true\)\)/,
   "Boss arrival must trigger its grammar trial.");
-assert.match(battle, /const choices = \[[\s\S]*?energycore/,
+assert.ok(battle.includes("const choices = [") && battle.includes('{ id: "energycore"'),
   "All eight defender specializations must remain available.");
 assert.match(battle, /unlockAdvancedDeck\(\)/, "Advanced defenders must unlock after the first boss.");
 assert.match(battle, /this\.playSound\("shot"\)/, "Combat audio must be wired to projectile attacks.");
