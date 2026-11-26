@@ -1788,6 +1788,10 @@ export function createGameScene() {
     }
 
     fireProjectile(defender, target, damageMultiplier = 1, bonusShot = false, yOffset = 0) {
+      // Bound active projectile work on every device; excess shots are skipped
+      // rather than allowing a late-wave firing loop to grow without limit.
+      const projectileCap = this.mobilePerformanceMode ? 72 : 180;
+      if (this.projectiles.length >= projectileCap) return;
       const stats = defender.stats;
       const projectileStyle = {
         archer: [0xffe4a5, 4], mage: [0xb9f4ff, 7],
@@ -1974,14 +1978,14 @@ export function createGameScene() {
       this.questionAnswerTargets = [];
       item.a.forEach((answer, index) => {
         // Phone landscape uses a fixed compact question area so every answer remains visible.
-        const y = answerStartY + index * (phoneQuestionLayout ? 40 : (compactAnswers ? 40 : 44));
-        const buttonHeight = phoneQuestionLayout ? 33 : (compactAnswers ? 42 : 46);
+        const y = answerStartY + index * (phoneQuestionLayout ? 48 : (compactAnswers ? 40 : 44));
+        const buttonHeight = phoneQuestionLayout ? 40 : (compactAnswers ? 42 : 46);
         const button = this.add.rectangle(480, y, 790, buttonHeight, 0x294969, 1).setStrokeStyle(2, 0x587d9b);
         const label = this.add.text(480, y, (index + 1) + ".  " + answer, {
           fontFamily: "Nunito", fontSize: phoneQuestionLayout ? "15px" : (compactAnswers ? "19px" : "20px"), color: "#ffffff", fontStyle: "900",
           align: "center", wordWrap: { width: 750 }
         }).setOrigin(.5);
-        this.questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + 4 });
+        this.questionAnswerTargets.push({ index, item, button, label, y, hitHeight: buttonHeight + (phoneQuestionLayout ? 6 : 4) });
         overlay.add([button, label]);
       });
       this.tweens.add({ targets: overlay, alpha: { from: 0, to: 1 }, duration: 180, ease: "Quad.Out" });
