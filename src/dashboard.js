@@ -135,6 +135,8 @@ $("bank-draft-preview").addEventListener("input",e=>{
   else if(field.dataset.draftField==="correct")item.correct=Number(field.value);
   else item[field.dataset.draftField]=field.value;
   item.approved=false;
+  const approval=$("bank-draft-preview").querySelector('input[data-review-index="'+field.dataset.draftIndex+'"]');
+  if(approval)approval.checked=false;
 });
 $("bank-draft-preview").addEventListener("change",e=>{
   const box=e.target.closest("input[data-review-index]");if(!box)return;
