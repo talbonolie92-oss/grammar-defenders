@@ -23,7 +23,7 @@
       <p class="eyebrow">TEACHER ACCESS</p><h1>Welcome back, Teacher</h1>
       <p>Sign in to create sessions, display joining QR codes, monitor students, and review results.</p>
       <form id="login-form">
-        <label>Email address<input id="login-email" type="email" autocomplete="username" required></label>
+        <label>Username or email<input id="login-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. Sarasas" required></label>
         <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
         <button class="button primary" type="submit">Sign in</button>
         <p id="login-status" class="status" role="status"></p>
@@ -98,6 +98,6 @@
       </section>
     </section>
   </main>
-  <script type="module" src="src/dashboard.js?v=teacher-allowlist-1"></script>
+  <script type="module" src="src/dashboard.js?v=teacher-username-login-1"></script>
 </body>
 </html>
