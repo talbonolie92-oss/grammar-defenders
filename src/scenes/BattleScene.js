@@ -1779,9 +1779,13 @@ export function createGameScene() {
             }
           }
         }
-        e.group.x = e.x;
-        e.group.y = reducedCombatEffects ? e.baseY
+        const renderY = reducedCombatEffects ? e.baseY
           : e.baseY + Math.sin(this.time.now * 0.003 + e.bobOffset) * (e.isBoss ? 2.2 : 1.5);
+        // Snap moving enemy containers to whole logical pixels on touch GPUs.
+        // Fractional container transforms can leave stretched WebGL edge trails
+        // on some iPad and Android browser/GPU combinations.
+        e.group.x = this.mobilePerformanceMode ? Math.round(e.x) : e.x;
+        e.group.y = this.mobilePerformanceMode ? Math.round(renderY) : renderY;
         const frostActive = Boolean(e.slowUntil && this.time.now < e.slowUntil);
         if (e.frostRing) {
           e.frostRing.setVisible(frostActive);
