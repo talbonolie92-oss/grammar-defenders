@@ -283,6 +283,7 @@ assert.ok(databaseRules.rules.sessions.$sessionId.public[".write"].includes("all
 assert.ok(databaseRules.rules.sessions.$sessionId[".write"].includes("allowedTeachers"), "Only allowlisted teachers may delete or manage an entire classroom session.");
 assert.ok(databaseRules.rules.teacherSessions.$uid[".read"].includes("allowedTeachers") && databaseRules.rules.teacherSessions.$uid[".write"].includes("allowedTeachers"), "Teacher question banks and session indexes must require an explicit allowlist entry.");
 assert.ok(dashboard.includes('dbGet("allowedTeachers/"+user.uid)') && dashboard.includes("await teacherSignOut()"), "The dashboard must reject and sign out accounts that are not explicitly allowlisted.");
+assert.ok(read("../teacher-dashboard.html").includes("src/dashboard.js?v=teacher-allowlist-1"), "The teacher dashboard must bypass stale cached authorization code.");
 assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includes("!data.exists()"), "A seat may only be claimed while it is empty.");
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
