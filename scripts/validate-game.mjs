@@ -9,6 +9,7 @@ const firebase = read("../src/firebase.js");
 const dashboard = read("../src/dashboard.js");
 const world = read("../src/three-world.js");
 const html = read("../index.html");
+const practice = read("../practice.html");
 const css = read("../css/game.css");
 const databaseRules = JSON.parse(read("../database.rules.json"));
 
@@ -276,6 +277,7 @@ assert.ok(main.includes("This classroom session is full (30 students)."), "The j
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
 assert.ok(html.includes("src/main.js?v=mobile-render-stability-1"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(practice.includes("src/main.js?v=mobile-render-stability-1"), "Standalone practice must load the same mobile rendering fixes as the homepage.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=mobile-render-stability-1"), "The BattleScene module cache token must refresh phone question layout changes.");
