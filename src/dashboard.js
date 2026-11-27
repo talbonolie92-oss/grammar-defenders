@@ -357,7 +357,7 @@ function renderDetail(){
   $("session-share").classList.toggle("hidden",s.status==="ended");
   $("detail-qr").innerHTML="";if(window.QRCode&&s.status!=="ended")new QRCode($("detail-qr"),{text:link,width:150,height:150,colorDark:"#10243c",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
   const actions=[];
-  if(s.status==="waiting")actions.push('<button class="button primary" data-detail-action="start">Start session</button>','<button class="button ghost" data-detail-action="edit">Edit settings</button>');
+  if(s.status==="waiting")actions.push('<button class="button primary" data-detail-action="start">Start Game for All Students</button>','<button class="button ghost" data-detail-action="edit">Edit settings</button>');
   if(s.status==="running")actions.push('<button class="button primary" data-detail-action="end">End session</button>');
   actions.push('<button class="button ghost" data-detail-action="copy">Copy student link</button>');
   $("detail-actions").innerHTML=actions.join("");
