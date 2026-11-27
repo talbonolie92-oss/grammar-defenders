@@ -324,3 +324,12 @@ assert.ok(main.includes("Math.min(30000, attemptRetryDelay * 2)") && main.includ
 assert.ok(battle.includes('this.phoneLandscape ? 820 : 940') && battle.includes('this.phoneLandscape ? 390 : 360'), "Phone tier-upgrade panels must fit inside the zoomed phone viewport.");
 assert.ok(battle.includes('const x = phoneLayout ? (col === 0 ? 260 : 700) : 125 + col * 237;') && battle.includes('const y = phoneLayout ? 125 + row * 65'), "All eight tier choices must remain visible and tappable in a two-column phone layout.");
 assert.ok(battle.includes('const answerStartY = phoneQuestionLayout ? 190 :') && battle.includes('const continueY = this.phoneLandscape ? 394 : 365;'), "Four phone answers and the Continue control must occupy separate vertical space.");
+
+
+// Teacher username login maps public usernames to Firebase's internal synthetic email identifiers.
+assert.match(read("../teacher-dashboard.html"), /Username or email/);
+assert.match(read("../teacher-dashboard.html"), /teacher-username-login-1/);
+assert.match(dashboard, /username\s*=\s*identifier\.toLowerCase\(\)/);
+assert.match(dashboard, /username\+"@teachers\.grammar-defenders\.invalid"/);
+assert.match(dashboard, /Use a username with 3–32 letters/);
+assert.match(dashboard, /Teacher: \"\+user\.email\.split\("@"\)\[0\]/);
