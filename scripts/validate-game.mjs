@@ -213,7 +213,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=student-qr-only-1"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=single-public-home-1"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
@@ -288,8 +288,8 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includ
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
-assert.ok(html.includes("src/main.js?v=student-qr-only-1"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("src/main.js?v=student-qr-only-1"), "Standalone practice must load the same mobile rendering fixes as the homepage.");
+assert.ok(html.includes("src/main.js?v=single-public-home-1"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(practice.includes("src/main.js?v=single-public-home-1"), "Standalone practice must load the same mobile rendering fixes as the homepage.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=mobile-render-stability-1"), "The BattleScene module cache token must refresh phone question layout changes.");
