@@ -341,3 +341,15 @@ assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-
 assert.match(css, /body\.student-session-join #student-join-screen/);
 assert.match(html, /css\/game\.css\?v=student-qr-only-1/);
 assert.match(html, /src\/main\.js\?v=student-qr-only-1/);
+
+
+// One public entry point: the homepage introduces the game and provides teacher login.
+// Students enter through the session-specific QR/link generated inside the dashboard.
+const publicHome = read("../index.html");
+assert.match(publicHome, /id="landing-hero"/, "The shared public link must open the Emerald Frontier game homepage.");
+assert.match(publicHome, /id="teacher-access"/, "Teacher login must be displayed below the game homepage.");
+assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
+assert.match(publicHome, /teachers\\.grammar-defenders\\.invalid/, "Homepage username login must map to the same internal teacher account format.");
+assert.doesNotMatch(publicHome, /id="homepage-entry"|play-game-button|Teacher Dashboard<\\/a>/, "The public homepage must not advertise a separate student practice entry or dashboard link.");
+assert.match(publicHome, /css\\/game\\.css\\?v=single-public-home-1/, "The homepage stylesheet cache must refresh for the unified entry point.");
+assert.match(publicHome, /src\\/main\\.js\\?v=single-public-home-1/, "The homepage game module cache must refresh for the unified entry point.");
