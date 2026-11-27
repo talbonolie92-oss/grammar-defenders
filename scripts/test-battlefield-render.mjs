@@ -192,6 +192,17 @@ try {
   assert.equal(battleState.started, true, "Battle must enter the started state.");
   assert.ok(battleState.enemyCount > 0, "At least one attacker must spawn when the battle starts.");
   assert.equal(battleState.wave, 1, "The first battle must begin on wave one.");
+
+  await page.evaluate(() => {
+    const battle = window.__game.scene.getScene("BattleScene");
+    battle.selectedUnit = "sunwell";
+    battle.handleTileTap(0, 0);
+  });
+  const deployment = await page.evaluate(() => {
+    const battle = window.__game.scene.getScene("BattleScene");
+    return { count: battle.defenders.length, lane: battle.defenders[0]?.lane, col: battle.defenders[0]?.col };
+  });
+  assert.deepEqual(deployment, { count: 1, lane: 0, col: 0 }, "A defender must deploy on a classroom battlefield tile after the QR transition.");
   assert.deepEqual(runtimeErrors, [], `Browser runtime errors: ${runtimeErrors.join("; ")}`);
   console.log("Mobile battlefield browser smoke test passed:", JSON.stringify({ scene, battleState }));
   await context.close();
