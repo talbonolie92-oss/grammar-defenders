@@ -15,6 +15,10 @@ assert.equal(databaseRules.rules.sessions.$sessionId.seats[".read"], "auth != nu
   "Seat ledger must not expose anonymous student UIDs to unauthenticated visitors.");
 assert.ok(dashboard.includes("function scheduleReportRender()") && dashboard.includes("reportRenderTimer=setTimeout") && dashboard.includes("},120);"),
   "Dashboard report redraws must be coalesced during bursts of classroom updates.");
+assert.ok(dashboard.includes("function schedulePlayerRender()") && dashboard.includes("playerRenderTimer=setTimeout"),
+  "Dashboard roster redraws must be coalesced during simultaneous joins.");
+assert.ok(main.includes('getElementById("firebase-connection-status")?.classList.toggle("hidden", connected)') && read("../index.html").includes('id="firebase-connection-status"'),
+  "Students must see a reconnect notice when Firebase connectivity is interrupted.");
 
 assert.match(battle, /const LANES = 5;/, "Battlefield must contain exactly five lanes.");
 assert.match(battle, /const TILE_W = 108;/, "Seven-column tile width must remain defined.");
