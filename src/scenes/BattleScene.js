@@ -643,9 +643,15 @@ export function createGameScene() {
       });
       group.setActive(true).setVisible(true).setAlpha(1).setDepth(20);
       this.children.bringToTop(group);
-      this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
-      // Keep the aura static: one infinite tween per deployed defender adds up on mobile.
-      if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+      // Fractional container scaling and perpetual bobbing can leave stretched
+      // Canvas/GPU compositing trails on some classroom phones. Keep deployed
+      // actors transform-stable on touch devices; desktop retains the entrance.
+      if (this.mobilePerformanceMode) {
+        group.setScale(1);
+      } else {
+        this.tweens.add({ targets: group, scale: { from: .25, to: 1 }, duration: 320, ease: "Back.Out" });
+        if (!stats.health) this.tweens.add({ targets: group, y: y - 3, duration: 1250 + col * 30, yoyo: true, repeat: -1, ease: "Sine.InOut" });
+      }
 
       // Every deployed unit is a physical target: attackers can be damaged and destroyed too.
       const unitHealth = {
