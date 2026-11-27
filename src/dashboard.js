@@ -27,14 +27,42 @@ else{
     catch(err){setStatus("login-status",err.message||"Unable to sign in.");}
   });
   $("logout-button").addEventListener("click",()=>teacherSignOut());
-  watchAuth(user=>{
-    teacher=user;
-    const isTeacher=Boolean(user&&!user.isAnonymous);
-    loginPanel.classList.toggle("hidden",isTeacher);
-    dashboardPanel.classList.toggle("hidden",!isTeacher);
-    $("logout-button").classList.toggle("hidden",!isTeacher);
-    $("teacher-email").textContent=isTeacher?user.email:"";
-    if(isTeacher){watchSessions();watchQuestionBanks();}else stopWatching();
+  let authCheckVersion=0;
+  watchAuth(async user=>{
+    const checkVersion=++authCheckVersion;
+    const isSignedInTeacher=Boolean(user&&!user.isAnonymous);
+    if(isSignedInTeacher){
+      try{
+        const access=await dbGet("allowedTeachers/"+user.uid);
+        if(checkVersion!==authCheckVersion)return;
+        if(!access.exists()||access.val()!==true){
+          teacher=null;
+          loginPanel.classList.remove("hidden");
+          dashboardPanel.classList.add("hidden");
+          $("logout-button").classList.add("hidden");
+          $("teacher-email").textContent="";
+          setStatus("login-status","This account is not authorized for the teacher dashboard. Ask the administrator to add its Firebase UID to the allowedTeachers list.");
+          await teacherSignOut();
+          return;
+        }
+      }catch(error){
+        if(checkVersion!==authCheckVersion)return;
+        teacher=null;
+        loginPanel.classList.remove("hidden");
+        dashboardPanel.classList.add("hidden");
+        $("logout-button").classList.add("hidden");
+        $("teacher-email").textContent="";
+        setStatus("login-status","Teacher access could not be verified. Check the Firebase allowedTeachers rule and try again.");
+        await teacherSignOut();
+        return;
+      }
+    }
+    teacher=isSignedInTeacher?user:null;
+    loginPanel.classList.toggle("hidden",isSignedInTeacher);
+    dashboardPanel.classList.toggle("hidden",!isSignedInTeacher);
+    $("logout-button").classList.toggle("hidden",!isSignedInTeacher);
+    $("teacher-email").textContent=isSignedInTeacher?user.email:"";
+    if(isSignedInTeacher){watchSessions();watchQuestionBanks();}else stopWatching();
   });
 }
 
