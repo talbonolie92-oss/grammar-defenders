@@ -66,12 +66,17 @@ else{
         return;
       }
     }
-    teacher=isSignedInTeacher?user:null;
-    loginPanel.classList.toggle("hidden",isSignedInTeacher);
-    dashboardPanel.classList.toggle("hidden",!isSignedInTeacher);
-    $("logout-button").classList.toggle("hidden",!isSignedInTeacher);
-    $("teacher-email").textContent=isSignedInTeacher?(user.email?.endsWith("@teachers.grammar-defenders.invalid")?"Teacher: "+user.email.split("@")[0].replace(/^./,c=>c.toUpperCase()):user.email):"";
-    if(isSignedInTeacher){watchSessions();watchQuestionBanks();}else stopWatching();
+    if(!isSignedInTeacher){
+      // The public homepage is the only teacher sign-in entry point.
+      window.location.replace("./#teacher-access");
+      return;
+    }
+    teacher=user;
+    loginPanel.classList.add("hidden");
+    dashboardPanel.classList.remove("hidden");
+    $("logout-button").classList.remove("hidden");
+    $("teacher-email").textContent=(user.email?.endsWith("@teachers.grammar-defenders.invalid")?"Teacher: "+user.email.split("@")[0].replace(/^./,c=>c.toUpperCase()):user.email);
+    watchSessions();watchQuestionBanks();
   });
 }
 
