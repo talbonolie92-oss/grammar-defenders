@@ -627,6 +627,6 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
 
 /* Homepage entry actions: independent practice and protected teacher dashboard. */
 .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:22px;max-width:430px}
-.hero-actions .start-button{width:auto;min-width:175px;flex:1}
+.hero-actions .start-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;width:auto;min-width:175px;flex:1}
 .hero-actions .link-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:52px}
 @media(max-width:480px){.hero-actions{display:grid;grid-template-columns:1fr;width:100%}.hero-actions .start-button,.hero-actions .link-button{width:100%;box-sizing:border-box}}
