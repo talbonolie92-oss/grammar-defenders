@@ -690,7 +690,7 @@ body:not(.playing) .teacher-access-section{padding:10px 0 34px;scroll-margin-top
 
 
 /* QR classroom entry: students see only the session join card. */
-body.student-session-join .app-shell > :not(#student-join-screen) {
+body.student-session-join:not(.playing) .app-shell > :not(#student-join-screen) {
   display: none !important;
 }
 body.student-session-join {
