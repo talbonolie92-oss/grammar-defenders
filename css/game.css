@@ -630,3 +630,32 @@ body:not(.playing) .start-button{background:linear-gradient(110deg,#f1d99b,#c3e5
 .hero-actions .start-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;width:auto;min-width:175px;flex:1}
 .hero-actions .link-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:52px}
 @media(max-width:480px){.hero-actions{display:grid;grid-template-columns:1fr;width:100%}.hero-actions .start-button,.hero-actions .link-button{width:100%;box-sizing:border-box}}
+
+
+/* HOMEPAGE ENTRY PANEL — actions appear below the hero on the same page. */
+body:not(.playing) .homepage-entry{
+  display:flex;align-items:center;justify-content:space-between;gap:28px;
+  margin:0 0 28px;padding:clamp(22px,3.5vw,38px);
+  border:1px solid #c5a76a88;border-radius:22px;
+  background:linear-gradient(120deg,#173b3beF,#102a36f2 62%,#182d3bf2);
+  box-shadow:0 18px 48px #0007,inset 0 1px #fff2;
+}
+.homepage-entry-copy{max-width:620px}
+.homepage-entry-copy .entry-kicker{margin:0 0 8px;color:#f2d38d;font-size:10px;font-weight:1000;letter-spacing:2.2px}
+.homepage-entry-copy h2{margin:0 0 8px;color:#ffedc2;font:700 clamp(25px,3.5vw,36px) Georgia,serif}
+.homepage-entry-copy p:last-child{margin:0;color:#c9ded8;font-size:13px;line-height:1.65}
+.homepage-entry-actions{display:flex;flex:0 0 min(390px,42%);align-items:stretch;gap:12px}
+.homepage-entry-actions .start-button,.homepage-entry-actions .link-button{
+  display:inline-flex;flex:1;align-items:center;justify-content:center;min-height:52px;
+  padding:12px 17px;border-radius:13px;text-align:center;text-decoration:none;
+  font:900 12px Nunito,sans-serif;white-space:normal;cursor:pointer;
+}
+.homepage-entry-actions .link-button{
+  border:1px solid #d7bd71;background:linear-gradient(145deg,#57472f,#34362f);
+  color:#ffe9b7;box-shadow:inset 0 1px #fff3;
+}
+.homepage-entry-actions .link-button:hover{filter:brightness(1.15)}
+@media(max-width:760px){
+  body:not(.playing) .homepage-entry{display:block;padding:22px;margin-bottom:20px}
+  .homepage-entry-actions{display:grid;grid-template-columns:1fr;width:100%;margin-top:18px}
+}
