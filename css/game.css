@@ -706,3 +706,33 @@ body.student-session-join #student-join-screen {
 body.student-session-join .student-join-card {
   width: min(520px, 100%);
 }
+
+
+/* PUBLIC HOMEPAGE: keep teacher sign-in immediately visible beneath the hero. */
+body:not(.playing) .landing-hero{
+  min-height:270px;
+  height:270px;
+  margin-bottom:14px;
+  padding:26px 34px;
+}
+body:not(.playing) .hero-copy h2{font-size:clamp(38px,4.8vw,58px)}
+body:not(.playing) .hero-copy p{margin:10px 0 14px}
+body:not(.playing) .teacher-access-section{padding:0 0 18px}
+body:not(.playing) .teacher-access-card{padding:22px 28px}
+body:not(.playing) .teacher-access-card>p:not(.teacher-access-kicker){margin-bottom:14px}
+body:not(.playing) .homepage-teacher-login{gap:10px}
+body:not(.playing) .homepage-teacher-login input{min-height:42px}
+@media(max-width:760px){
+  body:not(.playing) .landing-hero{
+    min-height:245px;
+    height:245px;
+    padding:18px 20px;
+    margin-bottom:12px;
+  }
+  body:not(.playing) .hero-art{object-position:60% 45%;opacity:.42}
+  body:not(.playing) .hero-copy h2{font-size:clamp(34px,8vw,46px)}
+  body:not(.playing) .hero-copy p{font-size:12px;line-height:1.5;margin:8px 0 10px}
+  body:not(.playing) .hero-pills{gap:5px}
+  body:not(.playing) .hero-pills span{font-size:8px;padding:5px 7px}
+  body:not(.playing) .teacher-access-card{padding:20px}
+}
