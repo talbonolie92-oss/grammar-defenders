@@ -42,7 +42,8 @@ assert.match(battle, /upgradeDefender\(defender\)/, "Defender evolution handler 
 assert.match(battle, /defender\.level >= 3/, "Defenders must have a Tier III cap.");
 assert.match(battle, /showUpgradeChoices\(defender, nextLevel\)/, "Evolution must offer specialization choices.");
 
-assert.match(main, /transparent: true/, "Phaser canvas must support transparency.");
+assert.match(main, /transparent: false/ , "The battlefield canvas must be opaque to avoid transparent-frame compositing trails.");
+assert.match(main, /clearBeforeRender: true/, "Phaser must clear the full canvas before every frame.");
 assert.match(main, /type: isTouchDevice \? Phaser\.CANVAS : Phaser\.AUTO/, "Touch devices must use the single Phaser Canvas renderer.");
 assert.match(battle, /this\.drawWorld\(\)/, "BattleScene must draw its battlefield during scene creation.");
 assert.match(battle, /const g = this\.add\.graphics\(\)/, "The battlefield must use Phaser Graphics.");
