@@ -31,10 +31,22 @@ jobs:
         run: node scripts/test-docx-parser.mjs
       - name: Test question-bank workflow
         run: node scripts/test-question-bank-workflow.mjs
-      - name: Install browser smoke-test dependencies
-        run: |
-          npm install --no-save --no-package-lock phaser@3.80.1 playwright@1.56.1
-          npx playwright install --with-deps chromium
+      - name: Cache browser smoke-test dependencies
+        uses: actions/cache@v4
+        id: browser-test-cache
+        with:
+          path: |
+            node_modules
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-phaser-3.80.1-playwright-1.56.1-chromium-v1
+      - name: Install browser smoke-test packages
+        if: steps.browser-test-cache.outputs.cache-hit != 'true'
+        run: npm install --no-save --no-package-lock phaser@3.80.1 playwright@1.56.1
+      - name: Install Chromium system dependencies
+        run: npx playwright install-deps chromium
+      - name: Install Chromium browser
+        if: steps.browser-test-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
       - name: Test real mobile battlefield rendering
         run: node scripts/test-battlefield-render.mjs
       - name: Validate core game structure and mobile layout
