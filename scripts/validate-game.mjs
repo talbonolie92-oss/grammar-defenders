@@ -234,7 +234,7 @@ assert.ok(main.includes("const scene = await waitForBattleSceneReady();") && mai
 assert.ok(!main.slice(main.indexOf("async function launchStudentGame"), main.indexOf("window.GD_SAVE_ATTEMPT", main.indexOf("async function launchStudentGame"))).includes("requestFullscreen") &&
   !main.slice(main.indexOf("async function launchStudentGame"), main.indexOf("window.GD_SAVE_ATTEMPT", main.indexOf("async function launchStudentGame"))).includes("orientation.lock"),
   "Classroom launch must not request fullscreen or orientation from a background Firebase callback.");
-assert.ok(main.includes("await waitForAnimationFrame();\n  await waitForAnimationFrame();\n  game.scale.refresh();"), "The game canvas must be measured only after its hidden parent becomes visible.");
+assert.ok(main.includes("await waitForAnimationFrame();\n  await waitForAnimationFrame();\n  game.scale.resize(960, 420);\n  game.scale.refresh();"), "The game canvas must be measured only after its hidden parent becomes visible.");
 assert.ok(main.includes('waiting.innerHTML = "<b>Game could not start</b>'), "A failed classroom launch must show a visible recovery message instead of leaving a blank screen.");
 assert.ok(main.includes("await revealBattlefield(battleScene);\n      battleScene.startBattle(settings);"), "Solo practice must use the same verified canvas startup path as classroom play.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
