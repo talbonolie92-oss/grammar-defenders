@@ -352,13 +352,13 @@ assert.match(publicHome, /id="teacher-access"/, "Teacher login must be displayed
 assert.ok(!publicHome.includes('id="teacher-access" class="teacher-access-section hidden"'), "Teacher login must not be hidden on the public homepage.");
 assert.match(css, /body:not\(\.playing\) \.teacher-access-section/, "Teacher login must remain visible outside active gameplay.");
 assert.match(css, /#teacher-access\.teacher-access-section\{display:block!important/, "Teacher login must be explicitly visible on the public homepage.");
-assert.match(css, /height:190px!important/, "Desktop homepage hero must be compact enough to reveal teacher login.");
-assert.match(css, /height:170px!important/, "Mobile homepage hero must be compact enough to reveal teacher login.");
+assert.match(css, /height:230px!important/, "Desktop homepage hero must be compact enough to reveal teacher login.");
+assert.match(css, /height:210px!important/, "Mobile homepage hero must be compact enough to reveal teacher login.");
 assert.match(css, /body\.playing\{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px\}/, "Short-landscape viewport locking must be limited to active gameplay.");
 assert.match(css, /body\.playing \.app-shell\{height:100%;max-width:none;display:flex;flex-direction:column\}/, "Short-landscape app-shell sizing must not clip the public homepage.");
 assert.doesNotMatch(css, /html, body \{ width:100%; height:100%; min-height:0; overflow:hidden; \}/, "Public homepage must retain vertical scrolling on landscape touch devices.");
 assert.ok(html.includes('id="homepage-teacher-email"') && html.includes('id="homepage-teacher-password"'), "Public homepage must expose both teacher login fields.");
-assert.match(css, /body:not\(\.playing\) \.landing-hero\{min-height:190px!important;height:190px!important/, "The public hero must be compact enough to reveal teacher login beneath it.");
+assert.match(css, /body:not\(\.playing\) \.landing-hero\{min-height:230px!important;height:230px!important/, "The public hero must be compact enough to reveal teacher login beneath it.");
 assert.match(css, /#teacher-access \.teacher-access-card\{display:block!important;visibility:visible!important;opacity:1!important;width:min\(650px,100%\)!important;margin:0 auto!important;padding:18px 24px!important\}/, "The teacher login card must remain visible with compact homepage spacing.");
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
