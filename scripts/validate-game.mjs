@@ -294,7 +294,7 @@ assert.ok(html.includes("src/main.js?v=opaque-canvas-trail-fix-1"), "The entry m
 assert.ok(practice.includes("css/game.css?v=phone-deck-safe-area-1") && practice.includes("src/main.js?v=opaque-canvas-trail-fix-1"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=phone-deploy-render-stability-1"), "The BattleScene module cache token must refresh mobile defender rendering changes.");
+assert.ok(main.includes("BattleScene.js?v=mobile-projectile-pixel-snap-1"), "The BattleScene module cache token must refresh mobile defender rendering changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
@@ -303,7 +303,7 @@ assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveC
 assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=phone-deploy-render-stability-1"), "The BattleScene cache token must refresh after mobile defender rendering changes.");
+assert.ok(main.includes("BattleScene.js?v=mobile-projectile-pixel-snap-1"), "The BattleScene cache token must refresh after mobile defender rendering changes.");
 
 
 // 960x420 overlay geometry and phone answer-control regression checks.
