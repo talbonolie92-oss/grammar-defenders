@@ -112,6 +112,7 @@ try {
   const runtimeErrors = [];
   page.on("pageerror", error => runtimeErrors.push(error.message));
   await page.goto(`http://127.0.0.1:${address.port}/harness.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => Boolean(window.__battleReady), { timeout: 15000 });
   const scene = await page.evaluate(async () => {
     const battle = await window.__battleReady;
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
