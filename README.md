@@ -57,17 +57,19 @@ The teacher dashboard, student lobby, live roster, and saved reports are connect
 1. Create a Firebase project for Grammar Defenders.
 2. In **Authentication → Sign-in method**, enable **Email/Password** and **Anonymous**.
 3. In **Authentication → Users**, add the teacher account email and password. Do not put the teacher password in this repository.
-4. Create a **Realtime Database**.
-5. Register a Firebase **Web app** in Project settings and copy its web configuration into `src/firebase-config.js`.
-6. Use the exact `databaseURL` shown for your Realtime Database (it may include a regional hostname).
-7. In Realtime Database → Rules, paste and publish the rules from `database.rules.json`.
-8. Open `teacher-dashboard.html` and sign in with the teacher account.
+4. Copy the teacher account's Firebase **UID**. In Realtime Database, add `allowedTeachers/{teacherUid}: true` for that exact UID. Only allowlisted UIDs can access teacher session data.
+5. Create a **Realtime Database**.
+6. Register a Firebase **Web app** in Project settings and copy its web configuration into `src/firebase-config.js`.
+7. Use the exact `databaseURL` shown for your Realtime Database (it may include a regional hostname).
+8. In Realtime Database → Rules, paste and publish the rules from `database.rules.json`.
+9. Open `teacher-dashboard.html` and sign in with the allowlisted teacher account.
 
 The Firebase web configuration is intended to be included in a browser app. Never put a Firebase service-account private key or Admin SDK credentials in this repository.
 
 ## Database layout
 
 ```
+allowedTeachers/{teacherUid}
 teacherSessions/{teacherUid}/{sessionId}
 sessions/{sessionId}/public
 sessions/{sessionId}/seats/{seatId}
@@ -76,7 +78,7 @@ sessions/{sessionId}/attempts/{attemptId}
 sessions/{sessionId}/results/{studentUid}
 ```
 
-Rules keep teacher session indexes and private rosters/results scoped to the authenticated teacher. Students use anonymous authentication and can write only their own player/result records. The 30-seat ledger prevents ordinary over-capacity classroom joins. Final result records are validated for required score fields and data types. Session settings are readable by the joining game so it can load the teacher's configuration.
+Rules keep teacher session indexes and private rosters/results scoped to explicitly allowlisted teacher UIDs. Students use anonymous authentication and can write only their own player/result records. The 30-seat ledger prevents ordinary over-capacity classroom joins. Final result records are validated for required score fields and data types. Session settings are readable by the joining game so it can load the teacher's configuration.
 
 ## Local development
 
