@@ -752,3 +752,14 @@ body:not(.playing) .homepage-play-section{position:relative;z-index:6;display:fl
 .homepage-play-copy{display:grid;gap:4px;min-width:0}.homepage-play-copy strong{color:#ffedc2;font:700 17px Georgia,serif}.homepage-play-copy span{color:#c6dbd7;font-size:11px;line-height:1.45}
 .homepage-play-button{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 230px;width:230px!important;min-height:48px!important;padding:12px 20px!important;border-radius:12px!important;font-size:14px!important;white-space:nowrap}
 @media(max-width:760px){body:not(.playing) .homepage-play-section{flex-direction:column;align-items:stretch;gap:11px;margin:0 auto 14px!important;padding:14px!important}.homepage-play-copy{text-align:center}.homepage-play-copy strong{font-size:16px}.homepage-play-button{flex:0 0 auto;width:100%!important;min-height:48px!important}}
+
+
+/* Phone landscape safe area: keep the complete fifth lane above the defender deck. */
+@media (orientation: landscape) and (max-width: 900px) {
+  body.playing .battle-panel #game-container {
+    inset: 0 0 49px 0 !important;
+    width: 100% !important;
+    height: calc(100% - 49px) !important;
+    min-height: 0 !important;
+  }
+}
