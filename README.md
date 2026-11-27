@@ -57,8 +57,8 @@ The teacher dashboard, student lobby, live roster, and saved reports are connect
 1. Create a Firebase project for Grammar Defenders.
 2. In **Authentication → Sign-in method**, enable **Email/Password** and **Anonymous**.
 3. In **Authentication → Users**, add the teacher account email and password. Do not put the teacher password in this repository.
-4. Copy the teacher account's Firebase **UID**. In Realtime Database, add `allowedTeachers/{teacherUid}: true` for that exact UID. Only allowlisted UIDs can access teacher session data.
-5. Create a **Realtime Database**.
+4. Create a **Realtime Database**.
+5. Copy the teacher account's Firebase **UID**. In Realtime Database → Data, add `allowedTeachers/{teacherUid}: true` for that exact UID. Only allowlisted UIDs can access teacher session data.
 6. Register a Firebase **Web app** in Project settings and copy its web configuration into `src/firebase-config.js`.
 7. Use the exact `databaseURL` shown for your Realtime Database (it may include a regional hostname).
 8. In Realtime Database → Rules, paste and publish the rules from `database.rules.json`.
