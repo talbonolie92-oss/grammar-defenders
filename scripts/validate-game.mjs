@@ -349,7 +349,7 @@ assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/, "Student session links must remove teacher access from the join page.");
 assert.match(css, /body\.student-session-join:not\(\.playing\) \.app-shell > :not\(#student-join-screen\)/, "The QR join-only layout must stop hiding the game once gameplay begins.");
 assert.match(css, /body\.student-session-join #student-join-screen/);
-assert.match(html, /css\/game\.css\?v=homepage-play-button-fix-2/);
+assert.match(html, /css\/game\.css\?v=student-game-layout-fix-4/);
 assert.match(html, /src\/main\.js\?v=classroom-canvas-reveal-3/);
 
 
