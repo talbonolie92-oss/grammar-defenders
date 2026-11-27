@@ -7,7 +7,6 @@ const battle = read("../src/scenes/BattleScene.js");
 const main = read("../src/main.js");
 const firebase = read("../src/firebase.js");
 const dashboard = read("../src/dashboard.js");
-const world = read("../src/three-world.js");
 const html = read("../index.html");
 const practice = read("../practice.html");
 const css = read("../css/game.css");
@@ -44,27 +43,22 @@ assert.match(battle, /defender\.level >= 3/, "Defenders must have a Tier III cap
 assert.match(battle, /showUpgradeChoices\(defender, nextLevel\)/, "Evolution must offer specialization choices.");
 
 assert.match(main, /transparent: true/, "Phaser canvas must support transparency.");
-assert.match(world, /scene\.background = null/, "Three.js background must remain transparent.");
-assert.match(world, /setClearColor\(0x000000, 0\)/, "Three.js canvas must clear with alpha zero.");
-assert.match(css, /three-world-canvas.*z-index:2/, "3D battlefield must render below the Phaser gameplay canvas.");
-assert.match(css, /canvas:not.*three-world-canvas.*z-index:3/, "Phaser defender and attacker sprites must remain on the top visual layer.");
-assert.match(world, /const normalFrameInterval = isSmallScreen \? 42 : 32/, "3D render loop must remain frame-throttled at normal load.");
-assert.match(world, /renderer\.render\(scene, camera\);\n  raf = requestAnimationFrame\(render\);/, "3D renderer must complete its first frame before activation.");
-assert.doesNotMatch(world, /projectile\.setVisible\?\.\(false\)/, "Phaser projectile fallback must remain visible.");
+assert.match(main, /type: isTouchDevice \\? Phaser\\.CANVAS : Phaser\\.AUTO/, "Touch devices must use the single Phaser Canvas renderer.");
+assert.match(battle, /this\\.drawWorld\\(\\)/, "BattleScene must draw its battlefield during scene creation.");
+assert.match(battle, /const g = this\\.add\\.graphics\\(\\)/, "The battlefield must use Phaser Graphics.");
+assert.match(battle, /for \\(let lane = 0; lane < LANES; lane\\+\\+\\)/, "The battlefield renderer must draw all five lanes.");
+assert.match(battle, /g\\.fillRoundedRect\\(GRID_X, y, GRID_W, TILE_H - 3, 8\\)/, "Each lane must have a visible filled tile row.");
+assert.match(css, /canvas:not.*z-index:3/, "The Phaser gameplay canvas must remain on the top visual layer.");
 assert.match(battle, /group\.setActive\(true\)\.setVisible\(true\)\.setAlpha\(1\)/, "Deployed actors must remain visible.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The classroom build must use one Phaser renderer for stable touch-device performance.");
 assert.match(css, /PHONE LANDSCAPE/, "Mobile landscape layout rules must remain present.");
 assert.match(css, /body\.playing #game-container/, "Active mobile battlefield must use available screen height.");
 assert.match(css, /overflow-x:auto!important/, "Defender deck must remain horizontally scrollable on phones.");
 
-console.log("Game structure checks passed: 5 lanes, 7 columns, 12 defender cards, Tier III upgrades, transparent hybrid renderer, and mobile landscape layout.");
+console.log("Game structure checks passed: 5 lanes, 7 columns, 12 defender cards, Tier III upgrades, single Phaser renderer, and mobile landscape layout.");
 
 // Lane/actor alignment regression guards.
 assert.match(battle, /const x = GRID_X \+ GRID_W - 38;/, "Attackers must spawn inside the final battlefield tile.");
-assert.match(world, /camera\.position\.set\(0, 20, 0\)/, "3D board camera must remain top-down for exact Phaser coordinate alignment.");
-assert.match(world, /camera\.up\.set\(0, 0, -1\)/, "Top-down camera up vector must preserve lane row orientation.");
-assert.match(world, /mesh\.position\.set\(\(px - 480\) \/ 50, 0\.19 \+ bob, \(py - 170\) \/ 50\)/, "3D actors must stand above tile surfaces and align with Phaser coordinates.");
-assert.match(world, /const z = \(38 \+ lane \* 54 \+ 27\) \/ 50 - 3\.4;/, "3D tile centers must match the exact Phaser lane centers.");
 
 
 // Gameplay progression, question-bank, and combat regression checks.
@@ -98,8 +92,7 @@ assert.match(battle, /const y = GRID_Y \+ lane \* TILE_H \+ TILE_H \/ 2/,
   "Attacker spawn Y must be centered in its assigned lane.");
 assert.match(battle, /const x = GRID_X \+ col \* TILE_W \+ TILE_W \/ 2/,
   "Defenders must deploy at the center of their selected tile.");
-assert.match(battle, /this\.threeWorld\?\.syncActors\(this\.defenders, this\.enemies, this\.projectiles, time\)/,
-  "The 3D actor renderer must receive live defender, attacker, and projectile positions.");
+  "The Phaser scene must keep defender, attacker, and projectile actors synchronized.");
 assert.match(battle, /if \(this\.pendingBossQuestion && !this\.gameOver\)/,
   "Boss questions must be queued safely if another overlay is already active.");
 assert.match(battle, /this\.time\.delayedCall\(900, \(\) => this\.showQuestion\(true\)\)/,
@@ -133,7 +126,7 @@ assert.equal(BOSS_QUESTIONS.length, 10, "The boss question bank should contain 1
 assert.equal(new Set(QUESTIONS.map(item => item.q.trim())).size, QUESTIONS.length, "Regular questions must not contain duplicate prompts.");
 assert.equal(new Set(BOSS_QUESTIONS.map(item => item.q.trim())).size, BOSS_QUESTIONS.length, "Boss questions must not contain duplicate prompts.");
 
-console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn slots, lane/tile centers, 3D actor sync, audio hooks, 8 specializations, and 34 validated questions.");
+console.log("Gameplay checks passed: wave escalation through wave 50, boss spawn slots, Phaser lane/tile alignment, audio hooks, 8 specializations, and 34 validated questions.");
 
 // Final pre-device-test regression rerun marker: keep this workflow exercising the complete suite.
 
@@ -168,10 +161,8 @@ assert.match(battle, /this\.questionActive \|\| this\.upgradeChoiceActive \|\| t
 assert.match(battle, /this\.bossAscensionFinal[\s\S]*?this\.endGame\(true\)/, "The final fixed-mode boss must still grant its Ascension reward before victory.");
 
 // Late-wave adaptive rendering keeps combat responsive on mobile devices.
-assert.match(world, /let performanceMode = false/, "3D renderer must support adaptive high-load mode.");
-assert.match(world, /enemies\.length > 22 \|\| projectiles\.length > 48/, "Crowded late waves must trigger reduced 3D detail.");
-assert.match(world, /if \(!performanceMode\) syncList\(enemies, true\)/, "High-load mode must retain lightweight Phaser enemy sprites instead of expensive 3D enemy rigs.");
-assert.match(world, /performanceMode \? \(isSmallScreen \? 100 : 66\)/, "3D rendering cadence must reduce under heavy combat load.");
+assert.match(battle, /const reducedCombatEffects = this\\.mobilePerformanceMode/, "The Phaser scene must reduce nonessential effects on touch devices.");
+assert.match(battle, /const activeEnemyCap = this\\.mobilePerformanceMode/, "The Phaser scene must bound active enemies on touch devices.");
 assert.match(battle, /Math\.min\(delta \/ 1000, 0\.35\)/, "Combat simulation must tolerate larger late-wave frame intervals.");
 
 // Final gameplay-session stress regressions: wall-clock timer, overlay pauses, cleanup, and load shedding.
