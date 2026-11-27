@@ -4,7 +4,7 @@ import { parseDocxQuestions } from "./docx-question-parser.js?v=docx-break-fix-1
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
 let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0, importingDocx=false, savingBank=false;
-let reportRenderTimer=null;
+let reportRenderTimer=null,playerRenderTimer=null;
 function docxHtmlToText(html){
   const marked=String(html??"")
     .replace(/<br\s*\/?\s*>/gi,"\n")
@@ -343,9 +343,11 @@ async function deleteSession(s){
   if(selectedSession?.id===s.id){selectedSession=null;$("session-detail").classList.add("hidden");}
 }
 function openSession(s){
+  if(playerRenderTimer){clearTimeout(playerRenderTimer);playerRenderTimer=null;}
+  if(reportRenderTimer){clearTimeout(reportRenderTimer);reportRenderTimer=null;}
   selectedSession=s;$("session-detail").classList.remove("hidden");renderDetail();
   if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();
-  stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};renderPlayers();scheduleReportRender();},err=>console.warn(err));
+  stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};schedulePlayerRender();scheduleReportRender();},err=>console.warn(err));
   stopResults=dbWatch("sessions/"+s.id+"/results",snap=>{selectedSession.results=snap.val()||{};scheduleReportRender();},err=>console.warn(err));
   stopAttempts=dbWatch("sessions/"+s.id+"/attempts",snap=>{selectedSession.attempts=snap.val()||{};scheduleReportRender();},err=>console.warn(err));
   $("session-detail").scrollIntoView({behavior:"smooth",block:"start"});
@@ -436,6 +438,13 @@ function buildPlayerPerformance(){
 }
 // Coalesce bursts of Firebase updates (for example, 30 students finishing together)
  // into one report rebuild instead of repeatedly sorting and rebuilding the same DOM.
+function schedulePlayerRender(){
+  if(playerRenderTimer)clearTimeout(playerRenderTimer);
+  playerRenderTimer=setTimeout(()=>{
+    playerRenderTimer=null;
+    if(selectedSession&&!$("session-detail").classList.contains("hidden"))renderPlayers();
+  },120);
+}
 function scheduleReportRender(){
   if(reportRenderTimer)clearTimeout(reportRenderTimer);
   reportRenderTimer=setTimeout(()=>{
