@@ -343,7 +343,7 @@ assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/,
 assert.match(css, /body\.student-session-join:not\(\.playing\) \.app-shell > :not\(#student-join-screen\)/, "The QR join-only layout must stop hiding the game once gameplay begins.");
 assert.match(css, /body\.student-session-join #student-join-screen/);
 assert.match(html, /css\/game\.css\?v=phone-deck-safe-area-1/);
-assert.match(html, /src\/main\.js\?v=classroom-session-layout-fix-5/);
+assert.match(html, /src\/main\.js\?v=opaque-canvas-trail-fix-1/);
 
 
 // One public entry point: the homepage introduces the game and provides teacher login.
