@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=classroom-scene-ready-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=classroom-launch-recovery-2";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
@@ -504,6 +504,7 @@ async function launchStudentGame(name, classSection) {
       const joinStatus = document.getElementById("student-join-status");
       if (joinStatus) joinStatus.textContent = error.message || "The battle could not start. Please try again.";
     }
+  }
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
     const key = dbPush("sessions/" + sessionId + "/attempts").key;
