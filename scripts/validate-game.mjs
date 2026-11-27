@@ -259,6 +259,9 @@ assert.ok(battle.includes("Number(saved.baseHealth ?? 100)"), "A zero-health che
 const attemptWriteRule = databaseRules.rules.sessions.$sessionId.attempts.$attemptId[".write"];
 assert.ok(attemptWriteRule.includes("data.child('playerId').val() === auth.uid"), "A student may retry only their own existing question-attempt record.");
 assert.ok(attemptWriteRule.includes("blockedPlayers"), "Blocked students must not be able to submit or retry attempts.");
+const resultRule = databaseRules.rules.sessions.$sessionId.results.$uid;
+assert.ok(resultRule[".write"].includes("auth.uid === $uid") && resultRule[".write"].includes("blockedPlayers"), "Only an active, unblocked student may submit their own final result.");
+assert.ok(resultRule[".validate"].includes("accuracy") && resultRule[".validate"].includes("completedAt") && resultRule[".validate"].includes("isBoolean"), "Final result records must enforce the expected score, status, and timestamp data types.");
 
 
 // Rejoin must preserve existing players even when late joining is disabled.
