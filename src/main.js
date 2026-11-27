@@ -311,10 +311,27 @@ async function reserveClassroomSeat() {
   throw new Error("This classroom session is full (30 students). Please tell your teacher.");
 }
 
+function requestStudentImmersiveMode() {
+  // Call from the student's Join tap; a later Firebase start signal is not a user gesture.
+  try { if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (_) {}
+  const request = document.documentElement.requestFullscreen;
+  if (request && !document.fullscreenElement) {
+    try { Promise.resolve(request.call(document.documentElement)).catch(() => document.getElementById('student-fullscreen-button')?.classList.remove('hidden')); }
+    catch (_) { document.getElementById('student-fullscreen-button')?.classList.remove('hidden'); }
+  } else if (!document.fullscreenElement) {
+    document.getElementById('student-fullscreen-button')?.classList.remove('hidden');
+  }
+}
 async function initializeStudentJoin() {
   const form = document.getElementById("student-join-form");
+  const fullscreenButton = document.getElementById("student-fullscreen-button");
+  fullscreenButton?.addEventListener("click", requestStudentImmersiveMode);
+  document.addEventListener("fullscreenchange", () => {
+    fullscreenButton?.classList.toggle("hidden", Boolean(document.fullscreenElement));
+  });
   form?.addEventListener("submit", async event => {
     event.preventDefault();
+    requestStudentImmersiveMode();
     const audioScene = game.scene.getScene("BattleScene");
     audioScene?.prepareAudio?.();
     if (audioScene) audioScene.soundOn = true;
