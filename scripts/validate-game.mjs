@@ -238,7 +238,7 @@ assert.ok(main.includes("form.requestSubmit()"), "A returning student must be ab
 assert.ok(main.includes("if (scene?.worldReady) game.loop.sleep()") && main.includes("game.loop.wake()"), "Phaser must sleep only after scene creation and wake for gameplay.");
 assert.ok(!main.includes("enableMusic?.()"), "Background music must remain opt-in instead of starting automatically on every student device.");
 assert.ok(main.includes("scene?.battleStarted || studentLaunchStarted || document.body.classList.contains(\"playing\")"), "A visible tab must wake Phaser if a classroom or solo launch is still in progress.");
-assert.ok(main.includes("game.loop.wake();\n          game.scale.refresh();\n          scene.startBattle(settings);"), "Classroom students must wake Phaser immediately before starting the battle after browser fullscreen/orientation transitions.");
+assert.match(main, /game\.loop\.wake\(\);\s*game\.scale\.refresh\(\);\s*scene\.startBattle\(settings\)/, "Classroom students must wake Phaser immediately before starting the battle after browser fullscreen/orientation transitions.");
 assert.ok(main.includes("game.loop.wake();\n          game.scale.refresh();\n          battleScene.startBattle(settings);"), "Solo practice must wake Phaser immediately before starting the battle.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
 assert.ok(firebase.includes("auth.authStateReady()"), "Refresh recovery must wait for Firebase to restore the existing anonymous student UID.");
