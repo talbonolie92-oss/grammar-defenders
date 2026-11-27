@@ -77,6 +77,10 @@ async function revealBattlefield(scene) {
   // asking Phaser's Scale Manager to calculate its canvas size.
   await waitForAnimationFrame();
   await waitForAnimationFrame();
+  // The game boots while this container is display:none on QR entry. A plain
+  // refresh can leave Phaser's CSS canvas size at 0×0, so reapply its logical
+  // size after the student page has been fully revealed, then recalculate FIT.
+  game.scale.resize(960, 420);
   game.scale.refresh();
   await waitForAnimationFrame();
 
