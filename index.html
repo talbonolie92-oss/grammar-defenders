@@ -135,7 +135,7 @@
           <div class="hud-stat lane-life-stat"><span class="hud-label">LANES</span><strong id="lane-value">1:♥♥♥  2:♥♥♥  3:♥♥♥  4:♥♥♥  5:♥♥♥</strong></div>
         </div>
         <div id="game-container" role="img" aria-label="Five-lane fantasy battlefield. Select a defender, then tap an empty tile to deploy it."></div>
-        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">ENDLESS SURVIVAL</span></span><span id="battle-message" role="status" aria-live="polite" aria-atomic="true">Prepare your defenses!</span></div>
+        <div class="battle-footer"><span><i class="status-dot"></i> <span id="battle-mode">ENDLESS SURVIVAL</span></span><span id="battle-message" role="status" aria-live="polite" aria-atomic="true">Prepare your defenses!</span><span id="firebase-connection-status" class="firebase-connection-status hidden" role="status" aria-live="polite">Connection interrupted — your progress is saved on this device. Reconnecting…</span></div>
       </section>
 
 
@@ -202,6 +202,6 @@
       }
     });
   </script>
-  <script type="module" src="src/main.js?v=opaque-canvas-trail-fix-1"></script>
+  <script type="module" src="src/main.js?v=connection-recovery-status-1"></script>
 </body>
 </html>
