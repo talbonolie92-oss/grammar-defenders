@@ -4,6 +4,7 @@ import { parseDocxQuestions } from "./docx-question-parser.js?v=docx-break-fix-1
 const $ = id => document.getElementById(id);
 const loginPanel=$("login-panel"), dashboardPanel=$("dashboard-panel"), notice=$("firebase-notice");
 let teacher=null, stopSessions=null, stopPlayers=null, stopResults=null, stopAttempts=null, stopQuestionBanks=null, selectedSession=null, sessionCache=[], bankCache=[], bankDraft=[], sessionsLoadVersion=0, importingDocx=false, savingBank=false;
+let reportRenderTimer=null;
 function docxHtmlToText(html){
   const marked=String(html??"")
     .replace(/<br\s*\/?\s*>/gi,"\n")
@@ -344,9 +345,9 @@ async function deleteSession(s){
 function openSession(s){
   selectedSession=s;$("session-detail").classList.remove("hidden");renderDetail();
   if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();
-  stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};renderPlayers();},err=>console.warn(err));
-  stopResults=dbWatch("sessions/"+s.id+"/results",snap=>{selectedSession.results=snap.val()||{};renderReport();},err=>console.warn(err));
-  stopAttempts=dbWatch("sessions/"+s.id+"/attempts",snap=>{selectedSession.attempts=snap.val()||{};renderReport();},err=>console.warn(err));
+  stopPlayers=dbWatch("sessions/"+s.id+"/players",snap=>{selectedSession.players=snap.val()||{};renderPlayers();scheduleReportRender();},err=>console.warn(err));
+  stopResults=dbWatch("sessions/"+s.id+"/results",snap=>{selectedSession.results=snap.val()||{};scheduleReportRender();},err=>console.warn(err));
+  stopAttempts=dbWatch("sessions/"+s.id+"/attempts",snap=>{selectedSession.attempts=snap.val()||{};scheduleReportRender();},err=>console.warn(err));
   $("session-detail").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderDetail(){
@@ -387,7 +388,7 @@ async function editSession(s){
   await dbUpdate("sessions/"+s.id+"/public",updated);
   await dbUpdate("teacherSessions/"+teacher.uid+"/"+s.id,{title:clean});
 }
-$("close-detail").addEventListener("click",()=>{$("session-detail").classList.add("hidden");selectedSession=null;if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();});
+$("close-detail").addEventListener("click",()=>{$("session-detail").classList.add("hidden");selectedSession=null;if(reportRenderTimer){clearTimeout(reportRenderTimer);reportRenderTimer=null;}if(stopPlayers)stopPlayers();if(stopResults)stopResults();if(stopAttempts)stopAttempts();});
 function renderPlayers(){
   const players=Object.entries(selectedSession?.players||{});$("player-count").textContent=String(players.length);
   $("players-list").innerHTML=players.length?players.map(([uid,p])=>`
@@ -432,6 +433,15 @@ function buildPlayerPerformance(){
     p.accuracy=p.answered?Math.round(p.correct/p.answered*100):0;
   });
   return Object.values(stats).sort((a,b)=>a.name.localeCompare(b.name));
+}
+// Coalesce bursts of Firebase updates (for example, 30 students finishing together)
+ // into one report rebuild instead of repeatedly sorting and rebuilding the same DOM.
+function scheduleReportRender(){
+  if(reportRenderTimer)clearTimeout(reportRenderTimer);
+  reportRenderTimer=setTimeout(()=>{
+    reportRenderTimer=null;
+    if(selectedSession&&!$("session-detail").classList.contains("hidden"))renderReport();
+  },120);
 }
 function renderReport(){
   const roster=selectedSession?.players||{};
