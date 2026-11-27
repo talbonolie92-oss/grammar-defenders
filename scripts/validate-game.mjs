@@ -289,7 +289,7 @@ assert.ok(main.includes("This classroom session is full (30 students)."), "The j
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
 assert.ok(html.includes("src/main.js?v=single-public-home-1"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("src/main.js?v=single-public-home-1"), "Standalone practice must load the same mobile rendering fixes as the homepage.");
+assert.ok(practice.includes("css/game.css?v=single-public-home-1") && practice.includes("src/main.js?v=single-public-home-1"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=mobile-render-stability-1"), "The BattleScene module cache token must refresh phone question layout changes.");
@@ -339,8 +339,8 @@ assert.match(dashboard, /Teacher: \"\+user\.email\.split\("@"\)\[0\]/);
 assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
 assert.match(css, /body\.student-session-join #student-join-screen/);
-assert.match(html, /css\/game\.css\?v=student-qr-only-1/);
-assert.match(html, /src\/main\.js\?v=student-qr-only-1/);
+assert.match(html, /css\/game\.css\?v=single-public-home-1/);
+assert.match(html, /src\/main\.js\?v=single-public-home-1/);
 
 
 // One public entry point: the homepage introduces the game and provides teacher login.
@@ -348,6 +348,8 @@ assert.match(html, /src\/main\.js\?v=student-qr-only-1/);
 const publicHome = read("../index.html");
 assert.match(publicHome, /id="landing-hero"/, "The shared public link must open the Emerald Frontier game homepage.");
 assert.match(publicHome, /id="teacher-access"/, "Teacher login must be displayed below the game homepage.");
+assert.ok(!publicHome.includes('id="teacher-access" class="teacher-access-section hidden"'), "Teacher login must not be hidden on the public homepage.");
+assert.match(css, /body:not\(\.playing\) \.teacher-access-section/, "Teacher login must remain visible outside active gameplay.");
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.match(publicHome, /teachers\\.grammar-defenders\\.invalid/, "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && !publicHome.includes("play-game-button") && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must not advertise a separate student practice entry or dashboard link.");
