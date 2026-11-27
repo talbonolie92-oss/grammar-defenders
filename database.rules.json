@@ -6,25 +6,25 @@
       "$sessionId": {
         "public": {
           ".read": true,
-          ".write": "auth != null && ((!data.exists() && newData.child('teacherId').val() === auth.uid) || data.child('teacherId').val() === auth.uid)"
+          ".write": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && ((!data.exists() && newData.child('teacherId').val() === auth.uid) || data.child('teacherId').val() === auth.uid)"
         },
         "players": {
-          ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
+          ".read": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$uid": {
-            ".read": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
-            ".write": "auth != null && (root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid || (auth.uid === $uid && root.child('sessions').child($sessionId).child('blockedPlayers').child($uid).val() !== true))",
-            ".validate": "auth != null && (root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid || !data.exists() || (newData.child('name').val() === data.child('name').val() && newData.child('classSection').val() === data.child('classSection').val()))"
+            ".read": "auth != null && (auth.uid === $uid || (root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid))",
+            ".write": "auth != null && ((root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid) || (auth.uid === $uid && root.child('sessions').child($sessionId).child('blockedPlayers').child($uid).val() !== true))",
+            ".validate": "auth != null && ((root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid) || !data.exists() || (newData.child('name').val() === data.child('name').val() && newData.child('classSection').val() === data.child('classSection').val()))"
           }
         },
         "results": {
-          ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
+          ".read": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$uid": {
             ".write": "auth != null && auth.uid === $uid && root.child('sessions').child($sessionId).child('players').child($uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child($uid).val() !== true",
             ".validate": "newData.hasChildren(['questionsAnswered', 'correctAnswers', 'incorrectAnswers', 'accuracy', 'kills', 'wave', 'won', 'mode', 'elapsedSeconds', 'remainingSeconds', 'baseHealth', 'name', 'classSection', 'completedAt']) && newData.child('questionsAnswered').isNumber() && newData.child('questionsAnswered').val() >= 0 && newData.child('correctAnswers').isNumber() && newData.child('correctAnswers').val() >= 0 && newData.child('incorrectAnswers').isNumber() && newData.child('incorrectAnswers').val() >= 0 && newData.child('accuracy').isNumber() && newData.child('accuracy').val() >= 0 && newData.child('accuracy').val() <= 100 && newData.child('kills').isNumber() && newData.child('kills').val() >= 0 && newData.child('wave').isNumber() && newData.child('wave').val() >= 1 && newData.child('won').isBoolean() && newData.child('mode').isString() && (newData.child('mode').val() === 'fixed' || newData.child('mode').val() === 'endless') && newData.child('elapsedSeconds').isNumber() && newData.child('elapsedSeconds').val() >= 0 && newData.child('remainingSeconds').isNumber() && newData.child('remainingSeconds').val() >= 0 && newData.child('baseHealth').isNumber() && newData.child('baseHealth').val() >= 0 && newData.child('baseHealth').val() <= 100 && newData.child('name').isString() && newData.child('name').val().length <= 70 && newData.child('classSection').isString() && newData.child('classSection').val().length <= 70 && newData.child('completedAt').isNumber() && newData.child('completedAt').val() > 0"
           }
         },
         "attempts": {
-          ".read": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
+          ".read": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid",
           "$attemptId": {
             ".write": "auth != null && root.child('sessions').child($sessionId).child('players').child(auth.uid).exists() && root.child('sessions').child($sessionId).child('blockedPlayers').child(auth.uid).val() !== true && (!data.exists() || data.child('playerId').val() === auth.uid)",
             ".validate": "newData.hasChildren(['playerId', 'question', 'selectedAnswer', 'correctAnswer', 'correct', 'createdAt']) && newData.child('playerId').val() === auth.uid && newData.child('correct').isBoolean()"
@@ -32,11 +32,11 @@
         },
         "blockedPlayers": {
           "$uid": {
-            ".read": "auth != null && (auth.uid === $uid || root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid)",
-            ".write": "auth != null && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid"
+            ".read": "auth != null && (auth.uid === $uid || (root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid))",
+            ".write": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && root.child('sessions').child($sessionId).child('public').child('teacherId').val() === auth.uid"
           }
         },
-        ".write": "auth != null && data.child('public').child('teacherId').val() === auth.uid",
+        ".write": "auth != null && root.child('allowedTeachers').child(auth.uid).val() === true && data.child('public').child('teacherId').val() === auth.uid",
         "seats": {
           ".read": true,
           "$seatId": {
@@ -50,6 +50,12 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "allowedTeachers": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
       }
     }
   }
