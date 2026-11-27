@@ -674,3 +674,14 @@ body:not(.playing) .teacher-access-section{padding:10px 0 34px;scroll-margin-top
 .homepage-teacher-login .start-button{min-height:48px;margin-top:3px}
 .homepage-teacher-login #homepage-teacher-status{min-height:18px;margin:0;color:#f0d89e;font-size:12px;overflow-wrap:anywhere}
 .homepage-teacher-login button:disabled{opacity:.65;cursor:wait}
+
+
+/* LANE 5 VISIBILITY — give the full five-lane battlefield a small safe margin
+   on landscape touch screens. Phaser Scale.FIT keeps the complete scene visible. */
+@media (orientation: landscape) and (max-width: 900px) {
+  body.playing #game-container {
+    inset: 1.5% !important;
+    width: auto !important;
+    height: auto !important;
+  }
+}
