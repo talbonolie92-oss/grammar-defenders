@@ -23,7 +23,16 @@ if(!firebaseReady){notice.classList.remove("hidden");loginPanel.classList.add("h
 else{
   $("login-form").addEventListener("submit",async e=>{
     e.preventDefault();setStatus("login-status","Signing in…");
-    try{await teacherSignIn($("login-email").value.trim(),$("login-password").value);setStatus("login-status","");}
+    try{
+      const identifier=$("login-email").value.trim();
+      let loginEmail=identifier;
+      if(!identifier.includes("@")){
+        const username=identifier.toLowerCase();
+        if(!/^[a-z0-9._-]{3,32}$/.test(username))throw new Error("Use a username with 3–32 letters, numbers, dots, underscores, or hyphens.");
+        loginEmail=username+"@teachers.grammar-defenders.invalid";
+      }else loginEmail=identifier.toLowerCase();
+      await teacherSignIn(loginEmail,$("login-password").value);setStatus("login-status","");
+    }
     catch(err){setStatus("login-status",err.message||"Unable to sign in.");}
   });
   $("logout-button").addEventListener("click",()=>teacherSignOut());
@@ -61,7 +70,7 @@ else{
     loginPanel.classList.toggle("hidden",isSignedInTeacher);
     dashboardPanel.classList.toggle("hidden",!isSignedInTeacher);
     $("logout-button").classList.toggle("hidden",!isSignedInTeacher);
-    $("teacher-email").textContent=isSignedInTeacher?user.email:"";
+    $("teacher-email").textContent=isSignedInTeacher?(user.email?.endsWith("@teachers.grammar-defenders.invalid")?"Teacher: "+user.email.split("@")[0].replace(/^./,c=>c.toUpperCase()):user.email):"";
     if(isSignedInTeacher){watchSessions();watchQuestionBanks();}else stopWatching();
   });
 }
