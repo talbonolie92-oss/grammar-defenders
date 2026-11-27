@@ -115,8 +115,15 @@ try {
   const scene = await page.evaluate(async () => {
     const battle = await window.__battleReady;
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const canvas = document.querySelector("#game-container canvas");
-    if (!canvas) throw new Error("Phaser did not append a canvas to #game-container.");
+    const canvas = window.__game?.canvas || document.querySelector("#game-container canvas") || document.querySelector("canvas");
+    if (!canvas) throw new Error("Phaser created no canvas: " + JSON.stringify({
+      gameExists: Boolean(window.__game),
+      gameCanvas: Boolean(window.__game?.canvas),
+      canvasCount: document.querySelectorAll("canvas").length,
+      parentExists: Boolean(document.getElementById("game-container")),
+      parentChildren: [...(document.getElementById("game-container")?.children || [])].map(node => node.tagName + "." + node.className),
+      bodyChildren: [...document.body.children].map(node => node.tagName + "#" + node.id + "." + node.className)
+    }));
     const rect = canvas.getBoundingClientRect();
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) throw new Error("The touch-device renderer did not expose a 2D canvas context.");
