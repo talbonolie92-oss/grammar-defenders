@@ -56,7 +56,9 @@ const html = `<!doctype html>
       parent: "game-container",
       width: 960,
       height: 420,
-      transparent: true,
+      transparent: false,
+      clearBeforeRender: true,
+      backgroundColor: "#142f3b",
       resolution: 1,
       render: { antialias: true, roundPixels: touch },
       fps: { target: 40, min: 24 },
@@ -161,6 +163,7 @@ try {
     }
     return {
       rendererType: window.__game.renderer.type,
+      canvasAlpha: context.getContextAttributes().alpha,
       canvasWidth: canvas.width,
       canvasHeight: canvas.height,
       cssWidth: Math.round(rect.width),
