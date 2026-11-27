@@ -118,8 +118,8 @@ button{font:inherit}
   .panel-heading{margin:0 2px 6px;font-size:9px}
 }
 @media(orientation:landscape) and (max-height:600px){
-  body{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px}
-  .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
+  body.playing{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px}
+  body.playing .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
   .topbar{flex:0 0 25px;margin:0 0 4px;min-height:0;align-items:center}
   .brand{gap:7px}
   .brand-mark{width:23px;height:23px;border-radius:7px;font-size:9px}
@@ -184,8 +184,8 @@ button{font:inherit}
 .deck-tip{display:none}
 #game-container{width:100%;aspect-ratio:16/7;max-height:none}
 @media(orientation:landscape) and (max-height:600px){
-  body{height:100dvh;min-height:100dvh;overflow:hidden;padding:3px 6px}
-  .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
+  body.playing{height:100dvh;min-height:100dvh;overflow:hidden;padding:3px 6px}
+  body.playing .app-shell{height:100%;max-width:none;display:flex;flex-direction:column}
   .topbar{flex:0 0 25px;margin:0 0 3px;min-height:0}
   .game-layout{flex:1;min-height:0;display:flex;flex-direction:column;gap:3px}
   .side-panel{order:0;flex:0 0 64px;min-height:64px;padding:2px 5px}
@@ -458,7 +458,7 @@ body.playing #game-container{
 
 /* PHONE LANDSCAPE: keep all five battle lanes visible without page scrolling. */
 @media (orientation: landscape) and (max-width: 900px) {
-  html, body { width:100%; height:100%; min-height:0; overflow:hidden; }
+  body.playing { width:100%; height:100%; min-height:0; overflow:hidden; }
   body.playing { position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important; min-height:0!important; overflow:hidden!important; }
   body.playing > .app-shell { position:fixed!important; inset:0!important; display:flex!important; flex-direction:column!important; width:100vw!important; height:100dvh!important; min-height:0!important; overflow:hidden!important; }
   body.playing #game-layout, body.playing #game-layout:not(.hidden) { display:flex!important; flex:1 1 auto!important; flex-direction:column!important; gap:3px!important; width:100%!important; height:100%!important; min-height:0!important; max-height:100dvh!important; padding:3px!important; overflow:hidden!important; }
@@ -733,4 +733,12 @@ body:not(.playing) .hero-pills span{padding:5px 7px!important;font-size:8px!impo
  body:not(.playing) #teacher-access .teacher-access-card{padding:16px!important}
  body:not(.playing) #teacher-access .teacher-access-card h2{font-size:25px!important}
  body:not(.playing) #teacher-access .teacher-access-card>p:not(.teacher-access-kicker){font-size:12px!important;margin-bottom:10px!important}
+}
+
+
+/* Homepage must scroll normally even when the device is in short landscape mode. */
+@media(orientation:landscape) and (max-height:600px){
+ body:not(.playing){height:auto!important;min-height:100vh!important;overflow-x:hidden!important;overflow-y:auto!important;padding:12px!important}
+ body:not(.playing)>.app-shell{height:auto!important;min-height:0!important;max-width:1540px!important;display:block!important;overflow:visible!important}
+ body:not(.playing)>.app-shell>.topbar{flex:initial!important;min-height:0!important;margin-bottom:12px!important}
 }
