@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=mobile-render-stability-1";
+import { createGameScene } from "./scenes/BattleScene.js?v=classroom-scene-ready-1";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
@@ -27,9 +27,47 @@ const gameReady = new Promise(resolve => {
   if (game.isBooted) resolve();
   else game.events.once("ready", resolve);
 });
-// The Phaser scene is constructed once, but it must not render continuously
-// behind the join/setup screens while students wait for the teacher.
-gameReady.then(() => game.loop.sleep());
+// Sleep only after the Phaser scene has completed create(). Sleeping on the
+// game boot event can interrupt scene creation and leave a blank battlefield.
+gameReady.then(() => {
+  const scene = game.scene.getScene("BattleScene");
+  if (scene?.worldReady) game.loop.sleep();
+  else scene?.events.once("create", () => {
+    if (!document.body.classList.contains("playing")) game.loop.sleep();
+  });
+});
+
+async function waitForBattleSceneReady() {
+  await gameReady;
+  const scene = game.scene.getScene("BattleScene");
+  if (!scene) throw new Error("The battle scene could not be initialized. Please reload the game.");
+  game.loop.wake();
+  if (scene.worldReady) return scene;
+  await new Promise((resolve, reject) => {
+    let timer = null;
+    const cleanup = () => {
+      scene.events.off("create", onCreate);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+    const onCreate = () => {
+      cleanup();
+      if (scene.worldReady) resolve();
+      else reject(new Error("The battlefield did not finish loading. Please reload the game."));
+    };
+    scene.events.once("create", onCreate);
+    timer = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("The battlefield is taking too long to load. Please reload the game."));
+    }, 12000);
+    if (!scene.sys.isActive()) scene.scene.start();
+  });
+  if (!scene.worldReady) throw new Error("The battlefield is not ready. Please reload the game.");
+  return scene;
+}
+
+function teacherHasStartedSession(session) {
+  return session?.status === "running" && Number(session.startedAt) > 0;
+}
 let studentSession = null;
 let studentUid = null;
 let stopSessionWatch = null;
@@ -178,6 +216,16 @@ if (sessionId) {
 }
 
 function startSoloSetup() {
+  document.getElementById("play-game-button")?.addEventListener("click", () => {
+    landingHero?.classList.add("hidden");
+    setupScreen?.classList.remove("hidden");
+    setupScreen?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("back-home")?.addEventListener("click", () => {
+    setupScreen?.classList.add("hidden");
+    landingHero?.classList.remove("hidden");
+    landingHero?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   document.getElementById("start-game")?.addEventListener("click", async () => {
     const initialScene = game.scene.getScene("BattleScene");
     initialScene?.prepareAudio?.();
@@ -194,18 +242,23 @@ function startSoloSetup() {
     try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
     try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
     try {
-      await gameReady;
-      game.loop.wake();
-      const battleScene = game.scene.getScene("BattleScene");
-      if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
+      const battleScene = await waitForBattleSceneReady();
       setupScreen?.classList.add("hidden");
       landingHero?.classList.add("hidden");
       document.body.classList.add("playing");
       gameLayout?.classList.remove("hidden");
       requestAnimationFrame(() => {
-        game.scale.refresh();
-        if (battleScene.sys.isActive()) battleScene.startBattle(settings);
-        else battleScene.events.once("create", () => battleScene.startBattle(settings));
+        try {
+          game.scale.refresh();
+          battleScene.startBattle(settings);
+        } catch (error) {
+          document.body.classList.remove("playing");
+          gameLayout?.classList.add("hidden");
+          setupScreen?.classList.remove("hidden");
+          const status = document.getElementById("setup-status");
+          if (status) status.textContent = error.message || "The game could not start. Please try again.";
+          console.error("Solo practice failed to start:", error);
+        }
       });
     } catch (error) {
       const status = document.getElementById("setup-status");
@@ -213,8 +266,6 @@ function startSoloSetup() {
       console.error("Emerald Frontier failed to start:", error);
     }
   });
-
-
 }
 startSoloSetup();
 
@@ -275,7 +326,7 @@ async function initializeStudentJoin() {
       const existingPlayer = await dbGet("sessions/" + sessionId + "/players/" + studentUid);
       const hasPendingSaves = pendingAttempts.length > 0 || Boolean(pendingResult);
       if (studentSession.status === "ended" && !hasPendingSaves) throw new Error("This classroom session has already ended.");
-      if (studentSession.status === "running" && !studentSession.allowLateJoin && !existingPlayer.exists() && !hasPendingSaves) {
+      if (teacherHasStartedSession(studentSession) && !studentSession.allowLateJoin && !existingPlayer.exists() && !hasPendingSaves) {
         throw new Error("Your teacher has disabled late joining.");
       }
       if (existingPlayer.exists()) {
@@ -330,7 +381,7 @@ async function initializeStudentJoin() {
           const scene=game.scene.getScene("BattleScene");
           if(scene?.battleStarted&&!scene.gameOver)scene.endGame(false,"SESSION ENDED BY TEACHER");
           else document.getElementById("student-waiting").innerHTML = "<b>Session ended</b><p>Your teacher has ended this game.</p>";
-        } else if (studentSession.status === "running") {
+        } else if (teacherHasStartedSession(studentSession)) {
           launchStudentGame(name, classSection);
         }
       }, err => { status.textContent = err.message; });
@@ -346,7 +397,7 @@ async function initializeStudentJoin() {
         }
       }
       flushPendingAttempts().catch(error => console.warn("Pending question sync will retry:", error));
-      if (studentSession.status === "running") launchStudentGame(name, classSection);
+      if (teacherHasStartedSession(studentSession)) launchStudentGame(name, classSection);
     } catch (error) { status.textContent = error.message || "Unable to join this session."; }
   });
 
@@ -380,11 +431,7 @@ async function launchStudentGame(name, classSection) {
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
   try {
-    await gameReady;
-    game.loop.wake();
-    const battleScene = game.scene.getScene("BattleScene");
-    if (!battleScene) throw new Error("The battle scene could not be initialized. Please reload the game.");
-    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
+    await waitForBattleSceneReady();
   } catch (error) {
     studentLaunchStarted = false;
     delete window.GRAMMAR_DEFENDERS_CONFIG;
@@ -402,17 +449,22 @@ async function launchStudentGame(name, classSection) {
   // Background music stays off by default; students can enable it manually.
   try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
   try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
-  requestAnimationFrame(() => {
-    game.scale.refresh();
-    const scene = game.scene.getScene("BattleScene");
-    if (!scene) {
-      document.getElementById("student-join-status").textContent = "The battle could not start. Please reload and rejoin.";
-      return;
-    }
-    if (scene.sys.isActive()) scene.startBattle(settings);
-    else {
-      scene.events.once("create", () => scene.startBattle(settings));
-      scene.scene.start();
+  requestAnimationFrame(async () => {
+    try {
+      game.scale.refresh();
+      const scene = game.scene.getScene("BattleScene");
+      if (!scene?.worldReady) throw new Error("The battlefield is not ready. Please reload and rejoin.");
+      scene.startBattle(settings);
+      await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
+    } catch (error) {
+      console.error("Student battle startup failed:", error);
+      studentLaunchStarted = false;
+      delete window.GRAMMAR_DEFENDERS_CONFIG;
+      document.body.classList.remove("playing");
+      gameLayout?.classList.add("hidden");
+      document.getElementById("student-join-screen")?.classList.remove("hidden");
+      document.getElementById("student-waiting")?.classList.remove("hidden");
+      document.getElementById("student-join-status").textContent = error.message || "The battle could not start. Please try again.";
     }
   });
   window.GD_SAVE_ATTEMPT = async attempt => {
