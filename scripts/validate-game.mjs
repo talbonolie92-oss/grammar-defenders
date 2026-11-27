@@ -43,11 +43,11 @@ assert.match(battle, /defender\.level >= 3/, "Defenders must have a Tier III cap
 assert.match(battle, /showUpgradeChoices\(defender, nextLevel\)/, "Evolution must offer specialization choices.");
 
 assert.match(main, /transparent: true/, "Phaser canvas must support transparency.");
-assert.match(main, /type: isTouchDevice \\? Phaser\\.CANVAS : Phaser\\.AUTO/, "Touch devices must use the single Phaser Canvas renderer.");
-assert.match(battle, /this\\.drawWorld\\(\\)/, "BattleScene must draw its battlefield during scene creation.");
-assert.match(battle, /const g = this\\.add\\.graphics\\(\\)/, "The battlefield must use Phaser Graphics.");
-assert.match(battle, /for \\(let lane = 0; lane < LANES; lane\\+\\+\\)/, "The battlefield renderer must draw all five lanes.");
-assert.match(battle, /g\\.fillRoundedRect\\(GRID_X, y, GRID_W, TILE_H - 3, 8\\)/, "Each lane must have a visible filled tile row.");
+assert.match(main, /type: isTouchDevice \? Phaser\.CANVAS : Phaser\.AUTO/, "Touch devices must use the single Phaser Canvas renderer.");
+assert.match(battle, /this\.drawWorld\(\)/, "BattleScene must draw its battlefield during scene creation.");
+assert.match(battle, /const g = this\.add\.graphics\(\)/, "The battlefield must use Phaser Graphics.");
+assert.match(battle, /for \(let lane = 0; lane < LANES; lane\+\+\)/, "The battlefield renderer must draw all five lanes.");
+assert.match(battle, /g\.fillRoundedRect\(GRID_X, y, GRID_W, TILE_H - 3, 8\)/, "Each lane must have a visible filled tile row.");
 assert.match(css, /canvas:not.*z-index:3/, "The Phaser gameplay canvas must remain on the top visual layer.");
 assert.match(battle, /group\.setActive\(true\)\.setVisible\(true\)\.setAlpha\(1\)/, "Deployed actors must remain visible.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The classroom build must use one Phaser renderer for stable touch-device performance.");
@@ -161,8 +161,8 @@ assert.match(battle, /this\.questionActive \|\| this\.upgradeChoiceActive \|\| t
 assert.match(battle, /this\.bossAscensionFinal[\s\S]*?this\.endGame\(true\)/, "The final fixed-mode boss must still grant its Ascension reward before victory.");
 
 // Late-wave adaptive rendering keeps combat responsive on mobile devices.
-assert.match(battle, /const reducedCombatEffects = this\\.mobilePerformanceMode/, "The Phaser scene must reduce nonessential effects on touch devices.");
-assert.match(battle, /const activeEnemyCap = this\\.mobilePerformanceMode/, "The Phaser scene must bound active enemies on touch devices.");
+assert.match(battle, /const reducedCombatEffects = this\.mobilePerformanceMode/, "The Phaser scene must reduce nonessential effects on touch devices.");
+assert.match(battle, /const activeEnemyCap = this\.mobilePerformanceMode/, "The Phaser scene must bound active enemies on touch devices.");
 assert.match(battle, /Math\.min\(delta \/ 1000, 0\.35\)/, "Combat simulation must tolerate larger late-wave frame intervals.");
 
 // Final gameplay-session stress regressions: wall-clock timer, overlay pauses, cleanup, and load shedding.
