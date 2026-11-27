@@ -504,7 +504,6 @@ async function launchStudentGame(name, classSection) {
       const joinStatus = document.getElementById("student-join-status");
       if (joinStatus) joinStatus.textContent = error.message || "The battle could not start. Please try again.";
     }
-  }
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
     const key = dbPush("sessions/" + sessionId + "/attempts").key;
