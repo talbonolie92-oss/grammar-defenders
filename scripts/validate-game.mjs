@@ -11,6 +11,10 @@ const html = read("../index.html");
 const practice = read("../practice.html");
 const css = read("../css/game.css");
 const databaseRules = JSON.parse(read("../database.rules.json"));
+assert.equal(databaseRules.rules.sessions.$sessionId.seats[".read"], "auth != null",
+  "Seat ledger must not expose anonymous student UIDs to unauthenticated visitors.");
+assert.match(dashboard, /function scheduleReportRender\\(\\)[\\s\\S]*?},120\\);/,
+  "Dashboard report redraws must be coalesced during bursts of classroom updates.");
 
 assert.match(battle, /const LANES = 5;/, "Battlefield must contain exactly five lanes.");
 assert.match(battle, /const TILE_W = 108;/, "Seven-column tile width must remain defined.");
