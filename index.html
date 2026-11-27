@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#101b35">
   <meta name="description" content="Emerald Frontier — Build. Defend. Survive.">
   <title>Emerald Frontier</title>
-  <link rel="stylesheet" href="css/game.css?v=student-qr-only-1">
+  <link rel="stylesheet" href="css/game.css?v=single-public-home-1">
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -26,24 +26,13 @@
       <div class="hero-copy"><p class="hero-kicker">A FANTASY LANE-DEFENSE ADVENTURE</p><h2>DEFEND THE <span>EMERALD FRONTIER.</span></h2><p>Build your team. Outsmart the monsters. Conquer the Dark Gate and protect the Emerald Keep.</p><div class="hero-pills"><span>5 BATTLE LANES</span><span>HERO DEFENDERS</span><span>MAGIC POWER-UPS</span></div></div>
       <img class="hero-art" src="assets/hero-battle.svg" alt="Fantasy defenders protecting a crystal keep from a fierce monster army">
     </section>
-    <section id="homepage-entry" class="homepage-entry" aria-label="Choose how to enter Emerald Frontier">
-      <div class="homepage-entry-copy">
-        <p class="entry-kicker">ENTER THE FRONTIER</p>
-        <h2>Ready for the adventure?</h2>
-        <p>Play a public practice game, or sign in as a teacher to create and manage a classroom session.</p>
-      </div>
-      <div class="homepage-entry-actions">
-        <button id="play-game-button" class="start-button" type="button">▶ Play Game</button>
-        <a class="link-button" href="#teacher-access">Teacher Dashboard</a>
-      </div>
-    </section>
     <section id="teacher-access" class="teacher-access-section" aria-labelledby="teacher-access-title">
       <div class="teacher-access-card">
         <p class="teacher-access-kicker">TEACHER ACCESS</p>
         <h2 id="teacher-access-title">Welcome back, Teacher</h2>
         <p>Sign in to create sessions, display joining QR codes, monitor students, and review results.</p>
         <form id="homepage-teacher-login" class="homepage-teacher-login">
-          <label>Email address<input id="homepage-teacher-email" type="email" autocomplete="username" required></label>
+          <label>Username or email<input id="homepage-teacher-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. Sarasas" required></label>
           <label>Password<input id="homepage-teacher-password" type="password" autocomplete="current-password" required></label>
           <button class="start-button" type="submit">Sign in</button>
           <p id="homepage-teacher-status" role="status" aria-live="polite"></p>
@@ -174,12 +163,6 @@
     (() => {
       const dialog = document.getElementById("game-instructions");
       document.getElementById("open-instructions")?.addEventListener("click", () => dialog?.showModal());
-      document.getElementById("play-game-button")?.addEventListener("click", () => {
-        document.getElementById("landing-hero")?.classList.add("hidden");
-        document.getElementById("homepage-entry")?.classList.add("hidden");
-        document.getElementById("setup-screen")?.classList.remove("hidden");
-        document.getElementById("setup-title")?.focus?.();
-      });
       document.getElementById("close-instructions")?.addEventListener("click", () => dialog?.close());
       dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
     })();
@@ -195,7 +178,18 @@
       button.disabled = true;
       status.textContent = "Signing in…";
       try {
-        await teacherSignIn(document.getElementById("homepage-teacher-email").value.trim(), document.getElementById("homepage-teacher-password").value);
+        const identifier = document.getElementById("homepage-teacher-email").value.trim();
+        let loginEmail = identifier;
+        if (!identifier.includes("@")) {
+          const username = identifier.toLowerCase();
+          if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+            throw new Error("Use a username with 3–32 letters, numbers, dots, underscores, or hyphens.");
+          }
+          loginEmail = username + "@teachers.grammar-defenders.invalid";
+        } else {
+          loginEmail = identifier.toLowerCase();
+        }
+        await teacherSignIn(loginEmail, document.getElementById("homepage-teacher-password").value);
         status.textContent = "Signed in. Opening Teacher Dashboard…";
         window.location.assign("teacher-dashboard.html");
       } catch (error) {
@@ -204,6 +198,6 @@
       }
     });
   </script>
-  <script type="module" src="src/main.js?v=student-qr-only-1"></script>
+  <script type="module" src="src/main.js?v=single-public-home-1"></script>
 </body>
 </html>
