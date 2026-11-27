@@ -136,6 +136,7 @@ try {
     document.body.classList.remove("student-session-join");
     document.getElementById("game-layout").classList.remove("hidden");
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    window.__game.scale.resize(960, 420);
     window.__game.scale.refresh();
     await new Promise(resolve => requestAnimationFrame(resolve));
     const canvas = window.__game?.canvas || document.querySelector("#game-container canvas") || document.querySelector("canvas");
