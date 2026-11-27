@@ -13,7 +13,7 @@ const css = read("../css/game.css");
 const databaseRules = JSON.parse(read("../database.rules.json"));
 assert.equal(databaseRules.rules.sessions.$sessionId.seats[".read"], "auth != null",
   "Seat ledger must not expose anonymous student UIDs to unauthenticated visitors.");
-assert.match(dashboard, /function scheduleReportRender\\(\\)[\\s\\S]*?},120\\);/,
+assert.ok(dashboard.includes("function scheduleReportRender()") && dashboard.includes("reportRenderTimer=setTimeout") && dashboard.includes("},120);"),
   "Dashboard report redraws must be coalesced during bursts of classroom updates.");
 
 assert.match(battle, /const LANES = 5;/, "Battlefield must contain exactly five lanes.");
@@ -334,7 +334,7 @@ assert.ok(battle.includes('const answerStartY = phoneQuestionLayout ? 190 :') &&
 
 // Teacher username login maps public usernames to Firebase's internal synthetic email identifiers.
 assert.match(read("../teacher-dashboard.html"), /Username or email/);
-assert.match(read("../teacher-dashboard.html"), /teacher-username-login-1/);
+assert.match(read("../teacher-dashboard.html"), /src\/dashboard\.js\?v=report-batch-1/);
 assert.match(dashboard, /username\s*=\s*identifier\.toLowerCase\(\)/);
 assert.match(dashboard, /username\+"@teachers\.grammar-defenders\.invalid"/);
 assert.match(dashboard, /Use a username with 3–32 letters/);
