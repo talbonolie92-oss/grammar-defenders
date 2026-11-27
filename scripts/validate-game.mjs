@@ -200,7 +200,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=student-qr-only-1"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=single-public-home-1"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -353,3 +353,5 @@ assert.match(publicHome, /teachers\\.grammar-defenders\\.invalid/, "Homepage use
 assert.ok(!publicHome.includes('id="homepage-entry"') && !publicHome.includes("play-game-button") && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must not advertise a separate student practice entry or dashboard link.");
 assert.ok(publicHome.includes("css/game.css?v=single-public-home-1"), "The homepage stylesheet cache must refresh for the unified entry point.");
 assert.ok(publicHome.includes("src/main.js?v=single-public-home-1"), "The homepage game module cache must refresh for the unified entry point.");
+
+assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
