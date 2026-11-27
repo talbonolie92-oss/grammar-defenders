@@ -19,6 +19,7 @@ const html = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="stylesheet" href="/css/game.css">
+  <script src="/node_modules/phaser/dist/phaser.min.js"></script>
 </head>
 <body class="playing student-session-join">
   <main class="app-shell">
@@ -46,8 +47,8 @@ const html = `<!doctype html>
     </section>
   </main>
   <script type="module">
-    import Phaser from "/node_modules/phaser/dist/phaser.esm.js";
-    window.Phaser = Phaser;
+    const Phaser = window.Phaser;
+    if (!Phaser) throw new Error("The Phaser browser bundle did not load.");
     const { createGameScene } = await import("/src/scenes/BattleScene.js");
     const touch = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 || matchMedia("(max-width: 900px)").matches;
     const game = new Phaser.Game({
