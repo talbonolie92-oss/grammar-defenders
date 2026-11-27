@@ -351,5 +351,5 @@ assert.match(publicHome, /id="teacher-access"/, "Teacher login must be displayed
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.match(publicHome, /teachers\\.grammar-defenders\\.invalid/, "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && !publicHome.includes("play-game-button") && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must not advertise a separate student practice entry or dashboard link.");
-assert.match(publicHome, /css\\/game\\.css\\?v=single-public-home-1/, "The homepage stylesheet cache must refresh for the unified entry point.");
-assert.match(publicHome, /src\\/main\\.js\\?v=single-public-home-1/, "The homepage game module cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("css/game.css?v=single-public-home-1"), "The homepage stylesheet cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("src/main.js?v=single-public-home-1"), "The homepage game module cache must refresh for the unified entry point.");
