@@ -1,4 +1,4 @@
-import { createGameScene } from "./scenes/BattleScene.js?v=classroom-launch-recovery-2";
+import { createGameScene } from "./scenes/BattleScene.js?v=classroom-canvas-reveal-3";
 import { firebaseReady, studentSignIn, dbGet, dbSet, dbUpdate, dbWatch, dbPush, dbRemove, dbTransaction } from "./firebase.js?v=free-seat-capacity-1";
 import { getSeatReservationPlan } from "./session-capacity.js";
 
@@ -11,7 +11,9 @@ const sessionId = params.get("session");
 const isTouchDevice = Boolean(window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0 || window.matchMedia?.("(max-width: 900px)").matches);
 const pixelRatio = Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1 : 1.5);
 const config = {
-  type: Phaser.AUTO,
+  // Canvas rendering is the compatibility path for classroom phones/tablets;
+  // the battlefield uses 2D primitives and does not require WebGL.
+  type: isTouchDevice ? Phaser.CANVAS : Phaser.AUTO,
   parent: "game-container",
   width: 960,
   height: 420,
@@ -27,15 +29,9 @@ const gameReady = new Promise(resolve => {
   if (game.isBooted) resolve();
   else game.events.once("ready", resolve);
 });
-// Sleep only after the Phaser scene has completed create(). Sleeping on the
-// game boot event can interrupt scene creation and leave a blank battlefield.
-gameReady.then(() => {
-  const scene = game.scene.getScene("BattleScene");
-  if (scene?.worldReady) game.loop.sleep();
-  else scene?.events.once("create", () => {
-    if (!document.body.classList.contains("playing")) game.loop.sleep();
-  });
-});
+// Keep Phaser alive while students wait in the lobby. The scene update loop
+// is lightweight until battleStarted becomes true; avoiding sleep/wake races is
+// more reliable than stopping the renderer and trying to revive it remotely.
 
 function waitForAnimationFrame() {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -44,43 +40,55 @@ function waitForAnimationFrame() {
 async function waitForBattleSceneReady() {
   await gameReady;
   const scene = game.scene.getScene("BattleScene");
-  if (!scene) throw new Error("The battle scene could not be initialized. Please reload the game.");
+  if (!scene) throw new Error("Phaser did not create the battle scene. Reload the page and rejoin.");
 
-  // A browser visibility/fullscreen transition can leave the global loop or
-  // scene asleep even though the first create() completed successfully.
-  game.loop.wake();
-  if (!scene.worldReady || !scene.sys.isActive()) {
+  if (!scene.worldReady) {
     await new Promise((resolve, reject) => {
-      let timer = null;
-      const cleanup = () => {
+      const timer = window.setTimeout(() => {
         scene.events.off("create", onCreate);
-        if (timer !== null) window.clearTimeout(timer);
-      };
-      const onCreate = () => {
-        if (scene.worldReady && scene.sys.isActive()) {
-          cleanup();
-          resolve();
-        }
-      };
-      scene.events.on("create", onCreate);
-      timer = window.setTimeout(() => {
-        cleanup();
-        reject(new Error("The battlefield is taking too long to initialize. Please reload and rejoin."));
+        reject(new Error("The battlefield did not finish initializing. Reload the page and rejoin."));
       }, 15000);
-      if (!scene.sys.isActive()) scene.scene.start();
-      else if (scene.worldReady) {
-        cleanup();
-        resolve();
-      }
+      const onCreate = () => {
+        window.clearTimeout(timer);
+        if (scene.worldReady) resolve();
+        else reject(new Error("The battlefield scene started but did not finish drawing."));
+      };
+      scene.events.once("create", onCreate);
     });
   }
 
   if (!scene.worldReady || !scene.sys.isActive()) {
-    throw new Error("The battlefield is not active yet. Please reload and rejoin.");
+    throw new Error("The battlefield scene is not active. Reload the page and rejoin.");
   }
-  game.loop.wake();
-  await waitForAnimationFrame();
   return scene;
+}
+
+async function revealBattlefield(scene) {
+  document.body.classList.add("playing");
+  gameLayout?.classList.remove("hidden");
+  studentJoinScreen?.classList.add("hidden");
+  setupScreen?.classList.add("hidden");
+  landingHero?.classList.add("hidden");
+
+  // Wait until CSS has laid out the previously hidden game container before
+  // asking Phaser's Scale Manager to calculate its canvas size.
+  await waitForAnimationFrame();
+  await waitForAnimationFrame();
+  game.scale.refresh();
+  await waitForAnimationFrame();
+
+  const container = document.getElementById("game-container");
+  const canvas = container?.querySelector("canvas");
+  const bounds = container?.getBoundingClientRect();
+  if (!canvas) throw new Error("Phaser created no canvas. Check the browser's graphics support and reload.");
+  if (!bounds || bounds.width < 160 || bounds.height < 100 || canvas.width < 160 || canvas.height < 100) {
+    throw new Error("The battlefield canvas has no usable size. Rotate the device to landscape, then reload.");
+  }
+  if (!scene.worldReady || !scene.sys.isActive()) {
+    throw new Error("The battlefield stopped during screen setup. Please reload and rejoin.");
+  }
+  scene.refreshPhoneLayout?.();
+  return { canvas, bounds };
 }
 
 function teacherHasStartedSession(session) {
@@ -452,58 +460,33 @@ async function launchStudentGame(name, classSection) {
     sessionId, playerId: studentUid, playerName: name, classSection
   };
   window.GRAMMAR_DEFENDERS_CONFIG = settings;
+  window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
+
   try {
-    await waitForBattleSceneReady();
+    const scene = await waitForBattleSceneReady();
+    await revealBattlefield(scene);
+    scene.startBattle(settings);
+    if (!scene.battleStarted) throw new Error("Phaser did not enter the battle state. Please reload and rejoin.");
+    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, {
+      status: "playing", active: true, startedPlayingAt: Date.now()
+    });
   } catch (error) {
+    console.error("Student battle startup failed:", error);
     studentLaunchStarted = false;
     delete window.GRAMMAR_DEFENDERS_CONFIG;
-    document.getElementById("student-join-screen")?.classList.remove("hidden");
+    delete window.GRAMMAR_DEFENDERS_SESSION;
+    document.body.classList.remove("playing");
     gameLayout?.classList.add("hidden");
-    document.getElementById("student-join-status").textContent = "Could not join the game. Please try again.";
-    console.warn("Could not start student session:", error);
+    studentJoinScreen?.classList.remove("hidden");
+    document.getElementById("student-waiting")?.classList.remove("hidden");
+    const waiting = document.getElementById("student-waiting");
+    if (waiting) waiting.innerHTML = "<b>Game could not start</b><p>" + String(error?.message || "Please reload and rejoin.") + "</p>";
+    const joinStatus = document.getElementById("student-join-status");
+    if (joinStatus) joinStatus.textContent = "If this continues, tell your teacher to reload the session.";
     return;
   }
-  window.GRAMMAR_DEFENDERS_SESSION = { sessionId, playerId: studentUid, playerName: name, classSection };
-  document.getElementById("student-join-screen")?.classList.add("hidden");
-  landingHero?.classList.add("hidden");
-  document.body.classList.add("playing");
-  gameLayout?.classList.remove("hidden");
-  // Background music stays off by default; students can enable it manually.
-  try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
-  try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
-  try {
-    // Re-check after orientation/fullscreen: those browser transitions can
-    // interrupt Phaser or change the hidden canvas dimensions on mobile.
-    const scene = await waitForBattleSceneReady();
-    await waitForAnimationFrame();
-    document.getElementById("student-join-screen")?.classList.add("hidden");
-    document.body.classList.add("playing");
-    gameLayout?.classList.remove("hidden");
-    await waitForAnimationFrame();
-    game.loop.wake();
-    game.scale.refresh();
-    scene.refreshPhoneLayout?.();
-    if (!scene.sys.isActive() || !scene.worldReady) {
-      throw new Error("The battlefield could not become active. Please reload and rejoin.");
-    }
-    scene.startBattle(settings);
-    if (!scene.battleStarted) throw new Error("The battle did not start. Please try joining again.");
-    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
-    } catch (error) {
-      console.error("Student battle startup failed:", error);
-      studentLaunchStarted = false;
-      delete window.GRAMMAR_DEFENDERS_CONFIG;
-      document.body.classList.remove("playing");
-      gameLayout?.classList.add("hidden");
-      document.getElementById("student-join-screen")?.classList.remove("hidden");
-      document.getElementById("student-waiting")?.classList.remove("hidden");
-      const waiting = document.getElementById("student-waiting");
-      if (waiting) {
-        waiting.innerHTML = "<b>Game could not start</b><p>Please tap Join game again. If it keeps happening, tell your teacher to reload the session.</p>";
-      }
-      const joinStatus = document.getElementById("student-join-status");
-      if (joinStatus) joinStatus.textContent = error.message || "The battle could not start. Please try again.";
-    }
+
+  // Register classroom result hooks only after the student has a live scene.
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
     const key = dbPush("sessions/" + sessionId + "/attempts").key;
@@ -528,16 +511,9 @@ async function launchStudentGame(name, classSection) {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (!game || !game.scene) return;
-  const scene = game.scene.getScene("BattleScene");
-  if (document.hidden) {
-    scene?.saveCheckpoint?.();
-    game.loop.sleep();
-  } else if (scene?.battleStarted || studentLaunchStarted || document.body.classList.contains("playing")) {
-    // A launch can still be in progress when the tab becomes visible again.
-    // Do not leave Phaser asleep just because startBattle has not run yet.
-    game.loop.wake();
-  }
+  // Let Phaser/browser manage frame suspension. We only checkpoint on hide;
+  // no manual game-loop sleep/wake calls are used during classroom startup.
+  if (document.hidden) game.scene.getScene("BattleScene")?.saveCheckpoint?.();
 });
 window.addEventListener("online", () => {
   flushPendingAttempts().catch(error => console.warn("Question attempts will retry when the connection returns:", error));
