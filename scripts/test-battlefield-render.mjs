@@ -199,6 +199,36 @@ try {
   assert.ok(battleState.enemyCount > 0, "At least one attacker must spawn when the battle starts.");
   assert.equal(battleState.wave, 1, "The first battle must begin on wave one.");
 
+  const projectileTrail = await page.evaluate(async () => {
+    const battle = window.__game.scene.getScene("BattleScene");
+    const canvas = window.__game.canvas;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const logicalX = 218, logicalY = 95;
+    const px = Math.round(logicalX * canvas.width / 960);
+    const py = Math.round(logicalY * canvas.height / 420);
+    const before = Array.from(context.getImageData(px, py, 1, 1).data);
+    const target = { x: 820, y: logicalY, group: { active: true } };
+    battle.fireProjectile({
+      x: 200, y: 100, unitType: "archer", level: 1,
+      stats: { color: 0xffe4a5, damage: 10, projectileSpeed: 420 }
+    }, target);
+    const projectile = battle.projectiles[battle.projectiles.length - 1];
+    const start = { x: projectile.x, y: projectile.y };
+    await new Promise(resolve => setTimeout(resolve, 140));
+    const afterMove = { x: projectile.x, y: projectile.y };
+    const after = Array.from(context.getImageData(px, py, 1, 1).data);
+    const active = projectile.active;
+    const index = battle.projectiles.indexOf(projectile);
+    if (index >= 0) battle.projectiles.splice(index, 1);
+    battle.recycleProjectile(projectile);
+    return { before, after, start, afterMove, active };
+  });
+  assert.ok(Math.hypot(projectileTrail.afterMove.x - projectileTrail.start.x, projectileTrail.afterMove.y - projectileTrail.start.y) > 8,
+    "A live projectile must visibly advance during the mobile battle loop: " + JSON.stringify(projectileTrail));
+  assert.ok(projectileTrail.active, "The projectile should remain active during the short trail test.");
+  const pixelDifference = projectileTrail.before.reduce((sum, value, index) => sum + Math.abs(value - projectileTrail.after[index]), 0);
+  assert.ok(pixelDifference < 55, "A projectile must not leave its bright pixels behind after moving; possible Canvas trail: " + JSON.stringify({ ...projectileTrail, pixelDifference }));
+
   await page.evaluate(() => {
     const battle = window.__game.scene.getScene("BattleScene");
     battle.selectedUnit = "sunwell";
