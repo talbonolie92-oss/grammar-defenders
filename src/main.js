@@ -269,28 +269,13 @@ function startSoloSetup() {
     try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
     try {
       const battleScene = await waitForBattleSceneReady();
-      setupScreen?.classList.add("hidden");
-      landingHero?.classList.add("hidden");
-      document.body.classList.add("playing");
-      gameLayout?.classList.remove("hidden");
-      requestAnimationFrame(() => {
-        try {
-          // A browser fullscreen/orientation transition may have slept Phaser
-          // while the student was leaving the lobby. Wake at the final,
-          // synchronous point immediately before battle initialization.
-          game.loop.wake();
-          game.scale.refresh();
-          battleScene.startBattle(settings);
-        } catch (error) {
-          document.body.classList.remove("playing");
-          gameLayout?.classList.add("hidden");
-          setupScreen?.classList.remove("hidden");
-          const status = document.getElementById("setup-status");
-          if (status) status.textContent = error.message || "The game could not start. Please try again.";
-          console.error("Solo practice failed to start:", error);
-        }
-      });
+      await revealBattlefield(battleScene);
+      battleScene.startBattle(settings);
+      if (!battleScene.battleStarted) throw new Error("Phaser did not enter the battle state. Please try again.");
     } catch (error) {
+      document.body.classList.remove("playing");
+      gameLayout?.classList.add("hidden");
+      setupScreen?.classList.remove("hidden");
       const status = document.getElementById("setup-status");
       if (status) status.textContent = error.message || "The game could not start. Please reload and try again.";
       console.error("Emerald Frontier failed to start:", error);
