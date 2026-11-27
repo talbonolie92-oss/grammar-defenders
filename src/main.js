@@ -37,31 +37,49 @@ gameReady.then(() => {
   });
 });
 
+function waitForAnimationFrame() {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
 async function waitForBattleSceneReady() {
   await gameReady;
   const scene = game.scene.getScene("BattleScene");
   if (!scene) throw new Error("The battle scene could not be initialized. Please reload the game.");
+
+  // A browser visibility/fullscreen transition can leave the global loop or
+  // scene asleep even though the first create() completed successfully.
   game.loop.wake();
-  if (scene.worldReady) return scene;
-  await new Promise((resolve, reject) => {
-    let timer = null;
-    const cleanup = () => {
-      scene.events.off("create", onCreate);
-      if (timer !== null) window.clearTimeout(timer);
-    };
-    const onCreate = () => {
-      cleanup();
-      if (scene.worldReady) resolve();
-      else reject(new Error("The battlefield did not finish loading. Please reload the game."));
-    };
-    scene.events.once("create", onCreate);
-    timer = window.setTimeout(() => {
-      cleanup();
-      reject(new Error("The battlefield is taking too long to load. Please reload the game."));
-    }, 12000);
-    if (!scene.sys.isActive()) scene.scene.start();
-  });
-  if (!scene.worldReady) throw new Error("The battlefield is not ready. Please reload the game.");
+  if (!scene.worldReady || !scene.sys.isActive()) {
+    await new Promise((resolve, reject) => {
+      let timer = null;
+      const cleanup = () => {
+        scene.events.off("create", onCreate);
+        if (timer !== null) window.clearTimeout(timer);
+      };
+      const onCreate = () => {
+        if (scene.worldReady && scene.sys.isActive()) {
+          cleanup();
+          resolve();
+        }
+      };
+      scene.events.on("create", onCreate);
+      timer = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("The battlefield is taking too long to initialize. Please reload and rejoin."));
+      }, 15000);
+      if (!scene.sys.isActive()) scene.scene.start();
+      else if (scene.worldReady) {
+        cleanup();
+        resolve();
+      }
+    });
+  }
+
+  if (!scene.worldReady || !scene.sys.isActive()) {
+    throw new Error("The battlefield is not active yet. Please reload and rejoin.");
+  }
+  game.loop.wake();
+  await waitForAnimationFrame();
   return scene;
 }
 
@@ -453,16 +471,24 @@ async function launchStudentGame(name, classSection) {
   // Background music stays off by default; students can enable it manually.
   try { if (screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch (_) {}
   try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
-  requestAnimationFrame(async () => {
-    try {
-      const scene = game.scene.getScene("BattleScene");
-      if (!scene?.worldReady) throw new Error("The battlefield is not ready. Please reload and rejoin.");
-      // Fullscreen/orientation prompts can trigger visibilitychange after the
-      // initial wake. Wake again immediately before showing and starting play.
-      game.loop.wake();
-      game.scale.refresh();
-      scene.startBattle(settings);
-      await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
+  try {
+    // Re-check after orientation/fullscreen: those browser transitions can
+    // interrupt Phaser or change the hidden canvas dimensions on mobile.
+    const scene = await waitForBattleSceneReady();
+    await waitForAnimationFrame();
+    document.getElementById("student-join-screen")?.classList.add("hidden");
+    document.body.classList.add("playing");
+    gameLayout?.classList.remove("hidden");
+    await waitForAnimationFrame();
+    game.loop.wake();
+    game.scale.refresh();
+    scene.refreshPhoneLayout?.();
+    if (!scene.sys.isActive() || !scene.worldReady) {
+      throw new Error("The battlefield could not become active. Please reload and rejoin.");
+    }
+    scene.startBattle(settings);
+    if (!scene.battleStarted) throw new Error("The battle did not start. Please try joining again.");
+    await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
     } catch (error) {
       console.error("Student battle startup failed:", error);
       studentLaunchStarted = false;
@@ -471,9 +497,13 @@ async function launchStudentGame(name, classSection) {
       gameLayout?.classList.add("hidden");
       document.getElementById("student-join-screen")?.classList.remove("hidden");
       document.getElementById("student-waiting")?.classList.remove("hidden");
-      document.getElementById("student-join-status").textContent = error.message || "The battle could not start. Please try again.";
+      const waiting = document.getElementById("student-waiting");
+      if (waiting) {
+        waiting.innerHTML = "<b>Game could not start</b><p>Please tap Join game again. If it keeps happening, tell your teacher to reload the session.</p>";
+      }
+      const joinStatus = document.getElementById("student-join-status");
+      if (joinStatus) joinStatus.textContent = error.message || "The battle could not start. Please try again.";
     }
-  });
   window.GD_SAVE_ATTEMPT = async attempt => {
     if (!studentUid || resultSaved) return;
     const key = dbPush("sessions/" + sessionId + "/attempts").key;
