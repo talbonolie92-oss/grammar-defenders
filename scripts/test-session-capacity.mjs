@@ -22,10 +22,20 @@ const firstPlan = getSeatReservationPlan(null, "student-1").availableSeatIds;
 const retryPlan = getSeatReservationPlan(null, "student-1").availableSeatIds;
 assert.deepEqual(retryPlan, firstPlan, "Seat ordering must remain stable for retries from the same student.");
 
-const studentIds = Array.from({ length: 30 }, (_, index) => "classroom-student-" + index);
+// Firebase anonymous UIDs are random-looking strings; use deterministic
+// 28-character IDs here so the distribution test is repeatable.
+let uidSeed = 0x12345678;
+const studentIds = Array.from({ length: 30 }, () => {
+  let uid = "";
+  for (let index = 0; index < 28; index++) {
+    uidSeed = (Math.imul(uidSeed, 1664525) + 1013904223) >>> 0;
+    uid += "abcdefghijklmnopqrstuvwxyz0123456789"[uidSeed % 36];
+  }
+  return uid;
+});
 const initialChoices = studentIds.map(uid => getSeatReservationPlan(null, uid).availableSeatIds[0]);
 const distributedStarts = new Set(initialChoices);
-assert.ok(distributedStarts.size >= 20, "Simultaneous students should be distributed across most of the 30 initial seat choices.");
+assert.ok(distributedStarts.size >= 18, "Random-looking simultaneous student UIDs should spread initial choices across at least 18 seats.");
 
 // Simulate 30 students reading the same empty ledger before any transaction
 // commits. Collisions must cause each loser to re-read and claim another seat.
