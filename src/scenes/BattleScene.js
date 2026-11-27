@@ -118,6 +118,7 @@ export function createGameScene() {
     }
 
     create() {
+      this.worldReady = false;
       this.drawWorld();
       this.refreshPhoneLayout();
       this.cameras.main.centerOn(480, 210);
@@ -146,6 +147,8 @@ export function createGameScene() {
         }
         this.threeWorld?.dispose();
         this.threeWorld = null;
+        this.worldReady = false;
+        this.battleStarted = false;
       });
       this.updateHud();
       this.worldReady = true;
