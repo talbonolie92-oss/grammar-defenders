@@ -287,7 +287,7 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includ
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
-assert.ok(html.includes("src/main.js?v=classroom-canvas-reveal-3"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(html.includes("src/main.js?v=classroom-session-layout-fix-4"), "The entry module cache token must refresh after tablet stability changes.");
 assert.ok(practice.includes("css/game.css?v=student-game-layout-fix-4") && practice.includes("src/main.js?v=classroom-canvas-reveal-3"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
