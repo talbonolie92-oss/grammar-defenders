@@ -110,9 +110,23 @@ try {
   });
   const page = await context.newPage();
   const runtimeErrors = [];
+  const browserMessages = [];
   page.on("pageerror", error => runtimeErrors.push(error.message));
+  page.on("console", message => {
+    if (message.type() === "error") browserMessages.push(message.text());
+  });
+  page.on("requestfailed", request => browserMessages.push("Request failed: " + request.url() + " — " + request.failure()?.errorText));
   await page.goto(`http://127.0.0.1:${address.port}/harness.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => Boolean(window.__battleReady), { timeout: 15000 });
+  try {
+    await page.waitForFunction(() => Boolean(window.__battleReady), null, { timeout: 15000 });
+  } catch (error) {
+    throw new Error("Phaser harness did not initialize. " + JSON.stringify({
+      runtimeErrors, browserMessages,
+      gameExists: await page.evaluate(() => Boolean(window.__game)),
+      scriptCount: await page.locator("script").count(),
+      containerExists: await page.locator("#game-container").count()
+    }) + " Original: " + error.message);
+  }
   const scene = await page.evaluate(async () => {
     const battle = await window.__battleReady;
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
