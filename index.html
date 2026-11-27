@@ -26,17 +26,31 @@
       <div class="hero-copy"><p class="hero-kicker">A FANTASY LANE-DEFENSE ADVENTURE</p><h2>DEFEND THE <span>EMERALD FRONTIER.</span></h2><p>Build your team. Outsmart the monsters. Conquer the Dark Gate and protect the Emerald Keep.</p><div class="hero-pills"><span>5 BATTLE LANES</span><span>HERO DEFENDERS</span><span>MAGIC POWER-UPS</span></div></div>
       <img class="hero-art" src="assets/hero-battle.svg" alt="Fantasy defenders protecting a crystal keep from a fierce monster army">
     </section>
-    <section class="homepage-entry" aria-label="Choose how to enter Emerald Frontier">
+    <section id="homepage-entry" class="homepage-entry" aria-label="Choose how to enter Emerald Frontier">
       <div class="homepage-entry-copy">
         <p class="entry-kicker">ENTER THE FRONTIER</p>
         <h2>Ready for the adventure?</h2>
         <p>Play a public practice game, or sign in as a teacher to create and manage a classroom session.</p>
       </div>
       <div class="homepage-entry-actions">
-        <button id="play-game-button" class="start-button" type="button">▶ Start Game</button>
-        <a class="link-button" href="teacher-dashboard.html">Teacher Login</a>
+        <button id="play-game-button" class="start-button" type="button">▶ Play Game</button>
+        <a class="link-button" href="#teacher-access">Teacher Dashboard</a>
       </div>
     </section>
+    <section id="teacher-access" class="teacher-access-section" aria-labelledby="teacher-access-title">
+      <div class="teacher-access-card">
+        <p class="teacher-access-kicker">TEACHER ACCESS</p>
+        <h2 id="teacher-access-title">Welcome back, Teacher</h2>
+        <p>Sign in to create sessions, display joining QR codes, monitor students, and review results.</p>
+        <form id="homepage-teacher-login" class="homepage-teacher-login">
+          <label>Email address<input id="homepage-teacher-email" type="email" autocomplete="username" required></label>
+          <label>Password<input id="homepage-teacher-password" type="password" autocomplete="current-password" required></label>
+          <button class="start-button" type="submit">Sign in</button>
+          <p id="homepage-teacher-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
     <section id="setup-screen" class="setup-screen hidden" aria-labelledby="setup-title">
       <div class="setup-card">
         <p class="setup-kicker">SOLO PRACTICE • NO LOGIN REQUIRED</p>
@@ -162,12 +176,33 @@
       document.getElementById("open-instructions")?.addEventListener("click", () => dialog?.showModal());
       document.getElementById("play-game-button")?.addEventListener("click", () => {
         document.getElementById("landing-hero")?.classList.add("hidden");
+        document.getElementById("homepage-entry")?.classList.add("hidden");
         document.getElementById("setup-screen")?.classList.remove("hidden");
         document.getElementById("setup-title")?.focus?.();
       });
       document.getElementById("close-instructions")?.addEventListener("click", () => dialog?.close());
       dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
     })();
+  </script>
+  <script type="module">
+    import { firebaseReady, teacherSignIn } from "./src/firebase.js";
+    const form = document.getElementById("homepage-teacher-login");
+    const status = document.getElementById("homepage-teacher-status");
+    form?.addEventListener("submit", async event => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      if (!firebaseReady) { status.textContent = "Teacher sign-in is unavailable because Firebase is not configured."; return; }
+      button.disabled = true;
+      status.textContent = "Signing in…";
+      try {
+        await teacherSignIn(document.getElementById("homepage-teacher-email").value.trim(), document.getElementById("homepage-teacher-password").value);
+        status.textContent = "Signed in. Opening Teacher Dashboard…";
+        window.location.assign("teacher-dashboard.html");
+      } catch (error) {
+        status.textContent = error?.message || "Unable to sign in. Check your email and password.";
+        button.disabled = false;
+      }
+    });
   </script>
   <script type="module" src="src/main.js?v=solo-entry-2"></script>
 </body>
