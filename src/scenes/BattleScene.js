@@ -1603,7 +1603,15 @@ export function createGameScene() {
           }
           this.recycleProjectile(p);
         } else {
-          p.x += dx / dist * p.projectileSpeed * dt; p.y += dy / dist * p.projectileSpeed * dt;
+          const nextX = p.x + dx / dist * p.projectileSpeed * dt;
+          const nextY = p.y + dy / dist * p.projectileSpeed * dt;
+          // Keep fast-moving mobile projectiles on whole logical pixels.
+          // This reduces sub-pixel Canvas resampling shimmer without changing
+          // projectile speed, targeting, damage, or desktop rendering.
+          p.setPosition(
+            this.mobilePerformanceMode ? Math.round(nextX) : nextX,
+            this.mobilePerformanceMode ? Math.round(nextY) : nextY
+          );
         }
       }
       // Build the lane lookup once per frame instead of scanning every defender
