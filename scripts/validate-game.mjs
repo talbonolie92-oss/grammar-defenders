@@ -298,7 +298,7 @@ assert.ok(main.includes("This classroom session is full (30 students)."), "The j
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
 assert.ok(html.includes("src/main.js?v=classroom-canvas-reveal-3"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("css/game.css?v=homepage-play-button-fix-2") && practice.includes("src/main.js?v=classroom-canvas-reveal-3"), "Standalone practice must load the current shared gameplay assets.");
+assert.ok(practice.includes("css/game.css?v=student-game-layout-fix-4") && practice.includes("src/main.js?v=classroom-canvas-reveal-3"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=classroom-canvas-reveal-3"), "The BattleScene module cache token must refresh phone question layout changes.");
@@ -347,7 +347,7 @@ assert.match(dashboard, /Teacher: \"\+user\.email\.split\("@"\)\[0\]/);
 // QR-code student entry must show only the Join Class Session form.
 assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/, "Student session links must remove teacher access from the join page.");
-assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
+assert.match(css, /body\.student-session-join:not\(\.playing\) \.app-shell > :not\(#student-join-screen\)/, "The QR join-only layout must stop hiding the game once gameplay begins.");
 assert.match(css, /body\.student-session-join #student-join-screen/);
 assert.match(html, /css\/game\.css\?v=homepage-play-button-fix-2/);
 assert.match(html, /src\/main\.js\?v=classroom-canvas-reveal-3/);
@@ -372,7 +372,7 @@ assert.match(css, /#teacher-access \.teacher-access-card\{display:block!importan
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('<section class="homepage-play-section"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a standalone no-login solo Play Game action outside the clipped hero.");
-assert.ok(publicHome.includes("css/game.css?v=homepage-play-button-fix-2"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
+assert.ok(publicHome.includes("css/game.css?v=student-game-layout-fix-4"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
 assert.ok(publicHome.includes("src/main.js?v=classroom-canvas-reveal-3"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
