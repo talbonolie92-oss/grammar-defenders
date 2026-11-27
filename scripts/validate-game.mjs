@@ -235,7 +235,7 @@ assert.ok(battle.includes("saveCheckpoint()"), "The battle must periodically per
 assert.ok(battle.includes("delay: 3500, loop: true, callback: () => this.saveCheckpoint()"), "Progress checkpoints must be written throughout active play.");
 assert.ok(battle.includes("emerald-frontier:"), "Checkpoints must be scoped to a session and player.");
 assert.ok(main.includes("form.requestSubmit()"), "A returning student must be able to rejoin automatically after refresh.");
-assert.ok(main.includes("gameReady.then(() => game.loop.sleep())") && main.includes("game.loop.wake()"), "Phaser must sleep behind the setup/lobby screen and wake only for gameplay.");
+assert.ok(main.includes("if (scene?.worldReady) game.loop.sleep()") && main.includes("game.loop.wake()"), "Phaser must sleep only after scene creation and wake for gameplay.");
 assert.ok(!main.includes("enableMusic?.()"), "Background music must remain opt-in instead of starting automatically on every student device.");
 assert.ok(main.includes("else if (scene?.battleStarted) game.loop.wake()"), "Returning to a lobby tab must not wake the hidden Phaser render loop.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
