@@ -169,13 +169,16 @@ try {
       containerHeight: Math.round(document.querySelector("#game-container").getBoundingClientRect().height),
       lanePixels,
       worldGraphicsVisible: Boolean(battle.worldGraphics?.visible),
-      laneLifeLabels: battle.laneLifeLabels?.length || 0
+      laneLifeLabels: battle.laneLifeLabels?.length || 0,
+      battlefieldBottom: Math.round(document.querySelector("#game-container").getBoundingClientRect().bottom),
+      deckTop: Math.round(document.querySelector(".side-panel").getBoundingClientRect().top)
     };
   });
   assert.equal(scene.rendererType,  CanvasRendererType(), "Touch devices must use Phaser's Canvas renderer.");
   assert.ok(scene.canvasWidth >= 160 && scene.canvasHeight >= 100, "The Phaser backing canvas must have usable dimensions.");
   assert.ok(scene.cssWidth >= 160 && scene.cssHeight >= 100, "The Phaser canvas must be visible at a usable CSS size after the QR transition: " + JSON.stringify(scene));
   assert.equal(scene.laneLifeLabels, 5, "The scene must create all five lane labels.");
+  assert.ok(scene.battlefieldBottom <= scene.deckTop, "The phone landscape battlefield must end above the defender deck: " + JSON.stringify(scene));
   assert.ok(scene.worldGraphicsVisible, "The battlefield graphics object must remain visible.");
   for (let lane = 0; lane < 5; lane++) {
     assert.ok(scene.lanePixels[lane][3] > 0, `Battlefield lane ${lane + 1} rendered no visible pixels: ${JSON.stringify(scene.lanePixels[lane])}`);
@@ -200,9 +203,13 @@ try {
   });
   const deployment = await page.evaluate(() => {
     const battle = window.__game.scene.getScene("BattleScene");
-    return { count: battle.defenders.length, lane: battle.defenders[0]?.lane, col: battle.defenders[0]?.col };
+    const defender = battle.defenders[0];
+    return {
+      count: battle.defenders.length, lane: defender?.lane, col: defender?.col,
+      deploymentTweens: defender ? battle.tweens.getTweensOf(defender.group).length : -1
+    };
   });
-  assert.deepEqual(deployment, { count: 1, lane: 0, col: 0 }, "A defender must deploy on a classroom battlefield tile after the QR transition.");
+  assert.deepEqual(deployment, { count: 1, lane: 0, col: 0, deploymentTweens: 0 }, "A phone defender must deploy without fractional scale/bob tweens that can create rendering trails.");
   assert.deepEqual(runtimeErrors, [], `Browser runtime errors: ${runtimeErrors.join("; ")}`);
   console.log("Mobile battlefield browser smoke test passed:", JSON.stringify({ scene, battleState }));
   await context.close();
