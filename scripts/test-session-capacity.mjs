@@ -18,4 +18,13 @@ assert.equal(returning.existingSeatId, "09");
 assert.equal(returning.availableSeatIds.length, 0);
 
 assert.equal(getSeatReservationPlan(null, "first").availableSeatIds.length, 30);
+assert.deepEqual(
+  getSeatReservationPlan(null, "student-1").availableSeatIds,
+  getSeatReservationPlan(null, "student-1").availableSeatIds,
+  "Seat ordering must be stable for retries from the same student."
+);
+const distributedStarts = new Set(Array.from({ length: 30 }, (_, index) =>
+  getSeatReservationPlan(null, "student-" + index).availableSeatIds[0]
+));
+assert.ok(distributedStarts.size >= 20, "Simultaneous students should be distributed across most of the 30 initial seat choices.");
 console.log("Free classroom seat tests passed: 30-seat boundary, full-session rejection, returning-student recognition.");
