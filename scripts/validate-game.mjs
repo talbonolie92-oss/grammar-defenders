@@ -340,7 +340,7 @@ assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/,
 assert.match(css, /body\.student-session-join:not\(\.playing\) \.app-shell > :not\(#student-join-screen\)/, "The QR join-only layout must stop hiding the game once gameplay begins.");
 assert.match(css, /body\.student-session-join #student-join-screen/);
 assert.match(html, /css\/game\.css\?v=student-game-layout-fix-4/);
-assert.match(html, /src\/main\.js\?v=classroom-canvas-reveal-3/);
+assert.match(html, /src\/main\.js\?v=classroom-session-layout-fix-4/);
 
 
 // One public entry point: the homepage introduces the game and provides teacher login.
@@ -363,7 +363,7 @@ assert.match(publicHome, /Username or email/, "The homepage teacher login must s
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('<section class="homepage-play-section"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a standalone no-login solo Play Game action outside the clipped hero.");
 assert.ok(publicHome.includes("css/game.css?v=student-game-layout-fix-4"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
-assert.ok(publicHome.includes("src/main.js?v=classroom-canvas-reveal-3"), "The homepage game module cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("src/main.js?v=classroom-session-layout-fix-4"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
 
