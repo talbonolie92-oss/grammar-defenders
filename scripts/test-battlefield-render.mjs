@@ -21,9 +21,9 @@ const html = `<!doctype html>
   <link rel="stylesheet" href="/css/game.css">
   <script src="/node_modules/phaser/dist/phaser.min.js"></script>
 </head>
-<body class="playing student-session-join">
-  <main class="app-shell">
-    <section id="game-layout" class="game-layout" aria-label="Game">
+<body class="student-session-join">
+  <main class="app-shell">\n    <section id="student-join-screen">Student waiting room</section>
+    <section id="game-layout" class="game-layout hidden" aria-label="Game">
       <div class="top-actions game-controls">
         <button id="music-toggle">Music</button><button id="sound-toggle">SFX</button>
         <button id="upgrade-mode-button">Upgrade</button><button id="remove-mode-button">Remove</button>
@@ -130,7 +130,14 @@ try {
   }
   const scene = await page.evaluate(async () => {
     const battle = await window.__battleReady;
+    // Reproduce the real QR-student transition: the canvas is initialized
+    // while its parent is hidden and the join-only body layout is active.
+    document.body.classList.add("playing");
+    document.body.classList.remove("student-session-join");
+    document.getElementById("game-layout").classList.remove("hidden");
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    window.__game.scale.refresh();
+    await new Promise(resolve => requestAnimationFrame(resolve));
     const canvas = window.__game?.canvas || document.querySelector("#game-container canvas") || document.querySelector("canvas");
     if (!canvas) throw new Error("Phaser created no canvas: " + JSON.stringify({
       gameExists: Boolean(window.__game),
@@ -175,7 +182,7 @@ try {
 
   await page.evaluate(() => {
     const battle = window.__game.scene.getScene("BattleScene");
-    battle.startBattle({ mode: "endless", timeLimitMinutes: 10, questionIntervalSeconds: 45, difficulty: "normal" });
+    battle.startBattle({ mode: "endless", timeLimitMinutes: 10, questionIntervalSeconds: 45, difficulty: "normal", studentLaunch: true, sessionId: "browser-test-session", playerId: "browser-test-student", questions: [] });
   });
   const battleState = await page.evaluate(() => {
     const battle = window.__game.scene.getScene("BattleScene");
