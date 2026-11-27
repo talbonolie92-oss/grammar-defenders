@@ -165,6 +165,7 @@ if (sessionId) {
   // QR-code visitors get a focused student-only join page, not the public homepage.
   document.body.classList.add("student-session-join");
   landingHero?.classList.add("hidden");
+  document.getElementById("teacher-access")?.remove();
   setupScreen?.classList.add("hidden");
   studentJoinScreen?.classList.remove("hidden");
   gameLayout?.classList.add("hidden");
