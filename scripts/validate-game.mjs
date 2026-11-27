@@ -6,6 +6,7 @@ const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
 const battle = read("../src/scenes/BattleScene.js");
 const main = read("../src/main.js");
 const firebase = read("../src/firebase.js");
+const dashboard = read("../src/dashboard.js");
 const world = read("../src/three-world.js");
 const html = read("../index.html");
 const css = read("../css/game.css");
@@ -272,6 +273,7 @@ assert.equal(Object.keys(databaseRules.rules.sessions.$sessionId.seats).includes
 assert.ok(databaseRules.rules.sessions.$sessionId.seats[".read"] === true, "Students must be able to inspect anonymous seat occupancy without reading other students' personal records.");
 assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includes("!data.exists()"), "A seat may only be claimed while it is empty.");
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
+assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
 assert.ok(html.includes("src/main.js?v=mobile-render-stability-1"), "The entry module cache token must refresh after tablet stability changes.");
 
