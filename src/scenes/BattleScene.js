@@ -50,6 +50,7 @@ export function createGameScene() {
       this.questionClock = 0;
       this.soundOn = false;
       this.battleStarted = false;
+      this.worldReady = false;
       this.enemyPressureUntil = 0;
       this.passiveEnergyClock = 0;
       this.questionIntervalSeconds = 45;
@@ -147,8 +148,7 @@ export function createGameScene() {
         this.threeWorld = null;
       });
       this.updateHud();
-      const launchConfig = window.GRAMMAR_DEFENDERS_CONFIG;
-      if (launchConfig && launchConfig.studentLaunch) this.startBattle(launchConfig);
+      this.worldReady = true;
     }
 
     startBattle(config = {}) {
