@@ -685,3 +685,24 @@ body:not(.playing) .teacher-access-section{padding:10px 0 34px;scroll-margin-top
     height: auto !important;
   }
 }
+
+
+/* QR classroom entry: students see only the session join card. */
+body.student-session-join .app-shell > :not(#student-join-screen) {
+  display: none !important;
+}
+body.student-session-join {
+  min-height: 100svh;
+  display: grid;
+  align-items: center;
+}
+body.student-session-join .app-shell {
+  width: 100%;
+}
+body.student-session-join #student-join-screen {
+  min-height: min(88svh, 760px);
+  padding: 18px;
+}
+body.student-session-join .student-join-card {
+  width: min(520px, 100%);
+}
