@@ -17,6 +17,14 @@ A landscape-first fantasy lane-defense classroom game. Students deploy eleven di
 - Progressive enemy waves with scaling health, armor, speed, and attack strength; lane guard lives; and an energy-producing Sunwell defender.
 - A fantasy illustrated landing page introducing the defenders, keep, and enemy army.
 
+## Public demo and evaluation
+
+- **[Open Emerald Frontier](./index.html)** — the public homepage and no-login practice setup.
+- **[Open standalone practice](./practice.html)** — a direct public practice route for reviewers and students.
+- **[Teacher Dashboard](./teacher-dashboard.html)** — protected by teacher email/password sign-in; no teacher password is needed to evaluate public practice mode.
+
+Reviewers can launch and play the game without creating an account. Firebase teacher credentials are only required to create and manage classroom sessions.
+
 ## Teacher dashboard
 
 Open **[Teacher Dashboard](./teacher-dashboard.html)**.
@@ -62,12 +70,13 @@ The Firebase web configuration is intended to be included in a browser app. Neve
 ```
 teacherSessions/{teacherUid}/{sessionId}
 sessions/{sessionId}/public
+sessions/{sessionId}/seats/{seatId}
 sessions/{sessionId}/players/{studentUid}
 sessions/{sessionId}/attempts/{attemptId}
 sessions/{sessionId}/results/{studentUid}
 ```
 
-Rules keep teacher session indexes and private rosters/results scoped to the authenticated teacher. Students use anonymous authentication and can write only their own player/result records. Session settings are readable by the joining game so it can load the teacher's configuration.
+Rules keep teacher session indexes and private rosters/results scoped to the authenticated teacher. Students use anonymous authentication and can write only their own player/result records. The 30-seat ledger prevents ordinary over-capacity classroom joins. Final result records are validated for required score fields and data types. Session settings are readable by the joining game so it can load the teacher's configuration.
 
 ## Local development
 
