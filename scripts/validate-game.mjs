@@ -340,7 +340,7 @@ assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/, "Student session links must remove teacher access from the join page.");
 assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
 assert.match(css, /body\.student-session-join #student-join-screen/);
-assert.match(html, /css\/game\.css\?v=classroom-lobby-fix-1/);
+assert.match(html, /css\/game\.css\?v=homepage-play-button-fix-2/);
 assert.match(html, /src\/main\.js\?v=classroom-lobby-fix-1/);
 
 
