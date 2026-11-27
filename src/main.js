@@ -162,6 +162,8 @@ async function syncPendingResult() {
 }
 
 if (sessionId) {
+  // QR-code visitors get a focused student-only join page, not the public homepage.
+  document.body.classList.add("student-session-join");
   landingHero?.classList.add("hidden");
   setupScreen?.classList.add("hidden");
   studentJoinScreen?.classList.remove("hidden");
