@@ -64,7 +64,10 @@ async function waitForBattleSceneReady() {
 }
 
 async function revealBattlefield(scene) {
+  // The QR join page uses body-level grid styling. Remove that page mode
+  // completely once the game starts so it cannot constrain Phaser's canvas.
   document.body.classList.add("playing");
+  document.body.classList.remove("student-session-join");
   gameLayout?.classList.remove("hidden");
   studentJoinScreen?.classList.add("hidden");
   setupScreen?.classList.add("hidden");
@@ -461,6 +464,7 @@ async function launchStudentGame(name, classSection) {
     delete window.GRAMMAR_DEFENDERS_CONFIG;
     delete window.GRAMMAR_DEFENDERS_SESSION;
     document.body.classList.remove("playing");
+    document.body.classList.add("student-session-join");
     gameLayout?.classList.add("hidden");
     studentJoinScreen?.classList.remove("hidden");
     document.getElementById("student-waiting")?.classList.remove("hidden");
