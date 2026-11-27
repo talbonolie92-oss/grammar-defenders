@@ -362,8 +362,8 @@ assert.match(css, /body:not\(\.playing\) \.landing-hero\{min-height:190px!import
 assert.match(css, /#teacher-access \.teacher-access-card\{display:block!important;visibility:visible!important;opacity:1!important;width:min\(650px,100%\)!important;margin:0 auto!important;padding:18px 24px!important\}/, "The teacher login card must remain visible with compact homepage spacing.");
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
-assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a no-login solo Play Game entry without exposing a separate dashboard link.");
-assert.ok(publicHome.includes("css/game.css?v=classroom-lobby-fix-1"), "The homepage stylesheet cache must refresh for the unified entry point.");
+assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('<section class="homepage-play-section"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a standalone no-login solo Play Game action outside the clipped hero.");
+assert.ok(publicHome.includes("css/game.css?v=homepage-play-button-fix-2"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
 assert.ok(publicHome.includes("src/main.js?v=classroom-lobby-fix-1"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
@@ -379,3 +379,10 @@ assert.match(html, /id="play-game-button"/, "The public homepage must restore th
 assert.match(main, /document\.getElementById\("play-game-button"\)/, "The solo Play Game button must open practice setup.");
 assert.match(main, /document\.getElementById\("back-home"\)/, "Solo setup must provide a return-to-home control.");
 assert.match(css, /body\.playing #teacher-access/, "Teacher login must be hidden during active solo or classroom gameplay.");
+
+
+// Homepage solo-play button visibility regression checks.
+assert.match(html, /<section class="homepage-play-section"[\s\S]*?id="play-game-button"[\s\S]*?<\/section>/, "The solo Play Game button must be placed in its own visible section outside the hero.");
+assert.match(css, /body:not\(\.playing\) \.homepage-play-section\{[^}]*display:flex!important/, "The homepage Play Game section must remain visible outside active gameplay.");
+assert.match(css, /\.homepage-play-button\{[^}]*min-height:48px!important/, "The homepage Play Game button must have a clear, usable tap target.");
+assert.match(css, /@media\(max-width:760px\)\{body:not\(\.playing\) \.homepage-play-section\{flex-direction:column/, "The homepage Play Game action must stack cleanly on narrow screens.");
