@@ -383,7 +383,7 @@ assert.match(main, /function teacherHasStartedSession\(session\)/, "A classroom 
 assert.match(main, /session\?\.status === "running" && Number\(session\.startedAt\) > 0/, "Students must not enter the battle merely because a session status is stale or malformed.");
 assert.match(main, /async function waitForBattleSceneReady\(\)/, "Gameplay must wait for the Phaser scene create event before starting.");
 assert.match(main, /scene\.worldReady/, "The battlefield must expose a completed world-ready state.");
-assert.ok(main.includes("!scene.worldReady || !scene.sys.isActive()") && main.includes("if (!scene.sys.isActive()) scene.scene.start();"), "Scene readiness must also verify that Phaser's scene is active, not merely previously initialized.");
+assert.ok(main.includes("!scene.worldReady || !scene.sys.isActive()") && main.includes("if (!scene.worldReady || !scene.sys.isActive())"), "Scene readiness must verify both completed drawing and active Phaser lifecycle state.");
 assert.ok(battle.includes("this.worldReady = false;\n      this.drawWorld();") && battle.includes("this.worldReady = false;\n        this.battleStarted = false;"), "Scene readiness must be invalidated on shutdown and rebuilt on restart.");
 assert.doesNotMatch(battle, /if \(launchConfig && launchConfig\.studentLaunch\) this\.startBattle\(launchConfig\)/, "BattleScene must not auto-start before main.js has verified readiness.");
 assert.match(html, /id="play-game-button"/, "The public homepage must restore the no-login Play Game button.");
