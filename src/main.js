@@ -101,12 +101,22 @@ async function flushPendingAttempts() {
         persistPendingAttempts();
       } catch (error) {
         console.warn("Question attempt remains safely queued for sync:", error);
+        scheduleAttemptRetry();
         break;
       }
     }
   })();
   try { await attemptFlushPromise; }
-  finally { attemptFlushPromise = null; }
+  finally {
+    attemptFlushPromise = null;
+    if (!pendingAttempts.length) {
+      attemptRetryDelay = 1500;
+      if (attemptRetryTimer) {
+        window.clearTimeout(attemptRetryTimer);
+        attemptRetryTimer = null;
+      }
+    }
+  }
 }
 async function syncPendingResult() {
   if (!studentUid || !pendingResult || !pendingResultMeta) return;
@@ -127,6 +137,11 @@ async function syncPendingResult() {
         pendingResult = null;
         pendingResultMeta = null;
         localStorage.removeItem(resultStorageKey());
+        resultRetryDelay = 2000;
+        if (resultRetryTimer) {
+          window.clearTimeout(resultRetryTimer);
+          resultRetryTimer = null;
+        }
         return;
       } catch (error) {
         lastError = error;
@@ -139,6 +154,7 @@ async function syncPendingResult() {
   catch (error) {
     const message = document.getElementById("battle-message");
     if (message) message.textContent = "Result saved on this device; reconnect to sync it with your teacher.";
+    scheduleResultRetry();
     throw error;
   } finally {
     resultSavePromise = null;
