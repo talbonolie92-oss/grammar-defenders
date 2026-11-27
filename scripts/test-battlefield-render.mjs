@@ -173,7 +173,7 @@ try {
   });
   assert.equal(scene.rendererType,  CanvasRendererType(), "Touch devices must use Phaser's Canvas renderer.");
   assert.ok(scene.canvasWidth >= 160 && scene.canvasHeight >= 100, "The Phaser backing canvas must have usable dimensions.");
-  assert.ok(scene.cssWidth >= 160 && scene.cssHeight >= 100, "The Phaser canvas must be visible at a usable CSS size.");
+  assert.ok(scene.cssWidth >= 160 && scene.cssHeight >= 100, "The Phaser canvas must be visible at a usable CSS size after the QR transition: " + JSON.stringify(scene));
   assert.equal(scene.laneLifeLabels, 5, "The scene must create all five lane labels.");
   assert.ok(scene.worldGraphicsVisible, "The battlefield graphics object must remain visible.");
   for (let lane = 0; lane < 5; lane++) {
