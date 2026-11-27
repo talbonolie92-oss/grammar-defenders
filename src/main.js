@@ -249,6 +249,10 @@ function startSoloSetup() {
       gameLayout?.classList.remove("hidden");
       requestAnimationFrame(() => {
         try {
+          // A browser fullscreen/orientation transition may have slept Phaser
+          // while the student was leaving the lobby. Wake at the final,
+          // synchronous point immediately before battle initialization.
+          game.loop.wake();
           game.scale.refresh();
           battleScene.startBattle(settings);
         } catch (error) {
@@ -451,9 +455,12 @@ async function launchStudentGame(name, classSection) {
   try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen(); } catch (_) {}
   requestAnimationFrame(async () => {
     try {
-      game.scale.refresh();
       const scene = game.scene.getScene("BattleScene");
       if (!scene?.worldReady) throw new Error("The battlefield is not ready. Please reload and rejoin.");
+      // Fullscreen/orientation prompts can trigger visibilitychange after the
+      // initial wake. Wake again immediately before showing and starting play.
+      game.loop.wake();
+      game.scale.refresh();
       scene.startBattle(settings);
       await dbUpdate("sessions/" + sessionId + "/players/" + studentUid, { status: "playing", active: true, startedPlayingAt: Date.now() });
     } catch (error) {
@@ -496,7 +503,11 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     scene?.saveCheckpoint?.();
     game.loop.sleep();
-  } else if (scene?.battleStarted) game.loop.wake();
+  } else if (scene?.battleStarted || studentLaunchStarted || document.body.classList.contains("playing")) {
+    // A launch can still be in progress when the tab becomes visible again.
+    // Do not leave Phaser asleep just because startBattle has not run yet.
+    game.loop.wake();
+  }
 });
 window.addEventListener("online", () => {
   flushPendingAttempts().catch(error => console.warn("Question attempts will retry when the connection returns:", error));
