@@ -54,6 +54,8 @@ assert.ok(!battle.includes('import("../three-world.js")'), "The classroom build 
 assert.match(css, /PHONE LANDSCAPE/, "Mobile landscape layout rules must remain present.");
 assert.match(css, /body\.playing #game-container/, "Active mobile battlefield must use available screen height.");
 assert.match(css, /overflow-x:auto!important/, "Defender deck must remain horizontally scrollable on phones.");
+assert.match(css, /inset: 0 0 49px 0 !important/, "Phone landscape battlefield must reserve space above the bottom defender deck.");
+assert.match(battle, /if \(this\.mobilePerformanceMode\) \{\s*group\.setScale\(1\);\s*\} else \{\s*this\.tweens\.add/, "Phone defender deployment must avoid fractional scale/bob tweens that can leave long rendering trails.");
 
 console.log("Game structure checks passed: 5 lanes, 7 columns, 12 defender cards, Tier III upgrades, single Phaser renderer, and mobile landscape layout.");
 
@@ -190,7 +192,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=student-game-layout-fix-4"), "Student join-to-game CSS visibility fix must be cache-busted.");
+assert.ok(html.includes("game.css?v=phone-deck-safe-area-1"), "Student join-to-game CSS visibility fix must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -203,7 +205,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=student-game-layout-fix-4"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=phone-deck-safe-area-1"), "The phone deck safe-area stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
@@ -288,10 +290,10 @@ assert.ok(main.includes("This classroom session is full (30 students)."), "The j
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
 assert.ok(html.includes("src/main.js?v=classroom-session-layout-fix-5"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("css/game.css?v=student-game-layout-fix-4") && practice.includes("src/main.js?v=classroom-canvas-reveal-3"), "Standalone practice must load the current shared gameplay assets.");
+assert.ok(practice.includes("css/game.css?v=phone-deck-safe-area-1") && practice.includes("src/main.js?v=phone-deploy-render-stability-1"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=classroom-canvas-reveal-3"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=phone-deploy-render-stability-1"), "The BattleScene module cache token must refresh mobile defender rendering changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
@@ -300,7 +302,7 @@ assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveC
 assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=classroom-canvas-reveal-3"), "The BattleScene cache token must refresh after phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=phone-deploy-render-stability-1"), "The BattleScene cache token must refresh after mobile defender rendering changes.");
 
 
 // 960x420 overlay geometry and phone answer-control regression checks.
@@ -339,7 +341,7 @@ assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/, "Student session links must remove teacher access from the join page.");
 assert.match(css, /body\.student-session-join:not\(\.playing\) \.app-shell > :not\(#student-join-screen\)/, "The QR join-only layout must stop hiding the game once gameplay begins.");
 assert.match(css, /body\.student-session-join #student-join-screen/);
-assert.match(html, /css\/game\.css\?v=student-game-layout-fix-4/);
+assert.match(html, /css\/game\.css\?v=phone-deck-safe-area-1/);
 assert.match(html, /src\/main\.js\?v=classroom-session-layout-fix-5/);
 
 
@@ -362,7 +364,7 @@ assert.match(css, /#teacher-access \.teacher-access-card\{display:block!importan
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('<section class="homepage-play-section"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a standalone no-login solo Play Game action outside the clipped hero.");
-assert.ok(publicHome.includes("css/game.css?v=student-game-layout-fix-4"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
+assert.ok(publicHome.includes("css/game.css?v=phone-deck-safe-area-1"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
 assert.ok(publicHome.includes("src/main.js?v=classroom-session-layout-fix-5"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
