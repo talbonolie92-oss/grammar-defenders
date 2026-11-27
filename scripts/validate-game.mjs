@@ -235,13 +235,18 @@ assert.ok(battle.includes("saveCheckpoint()"), "The battle must periodically per
 assert.ok(battle.includes("delay: 3500, loop: true, callback: () => this.saveCheckpoint()"), "Progress checkpoints must be written throughout active play.");
 assert.ok(battle.includes("emerald-frontier:"), "Checkpoints must be scoped to a session and player.");
 assert.ok(main.includes("form.requestSubmit()"), "A returning student must be able to rejoin automatically after refresh.");
-assert.ok(main.includes("if (scene?.worldReady) game.loop.sleep()") && main.includes("game.loop.wake()"), "Phaser must sleep only after scene creation and wake for gameplay.");
+assert.ok(!main.includes("game.loop.sleep()") && !main.includes("game.loop.wake()"), "The Phaser game loop must not be manually slept or woken during classroom startup.");
+assert.ok(main.includes("type: isTouchDevice ? Phaser.CANVAS : Phaser.AUTO"), "Touch devices must use the compatible 2D renderer to avoid fragile mobile WebGL startup.");
+assert.ok(main.includes("async function revealBattlefield(scene)") && main.includes("bounds.width < 160") && main.includes("canvas.height < 100"), "The game must reveal and validate a real, non-zero canvas before starting play.");
 assert.ok(!main.includes("enableMusic?.()"), "Background music must remain opt-in instead of starting automatically on every student device.");
-assert.ok(main.includes("scene?.battleStarted || studentLaunchStarted || document.body.classList.contains(\"playing\")"), "A visible tab must wake Phaser if a classroom or solo launch is still in progress.");
-assert.ok(main.includes("const scene = await waitForBattleSceneReady();") && main.includes("scene.refreshPhoneLayout?.();") && main.includes("scene.startBattle(settings);"), "Classroom launch must revalidate and refresh the Phaser scene after browser fullscreen/orientation transitions.");
-assert.ok(main.includes("await waitForAnimationFrame();\n    game.loop.wake();\n    game.scale.refresh();"), "The classroom canvas must be visible for a frame before Phaser recalculates its size.");
+assert.ok(main.includes("if (document.hidden) game.scene.getScene(\"BattleScene\")?.saveCheckpoint?.();"), "Visibility changes must checkpoint progress without manually suspending the Phaser loop.");
+assert.ok(main.includes("const scene = await waitForBattleSceneReady();") && main.includes("await revealBattlefield(scene);") && main.includes("scene.startBattle(settings);"), "Classroom launch must reveal and validate the canvas before starting the battle.");
+assert.ok(!main.slice(main.indexOf("async function launchStudentGame"), main.indexOf("window.GD_SAVE_ATTEMPT", main.indexOf("async function launchStudentGame"))).includes("requestFullscreen") &&
+  !main.slice(main.indexOf("async function launchStudentGame"), main.indexOf("window.GD_SAVE_ATTEMPT", main.indexOf("async function launchStudentGame"))).includes("orientation.lock"),
+  "Classroom launch must not request fullscreen or orientation from a background Firebase callback.");
+assert.ok(main.includes("await waitForAnimationFrame();\n  await waitForAnimationFrame();\n  game.scale.refresh();"), "The game canvas must be measured only after its hidden parent becomes visible.");
 assert.ok(main.includes('waiting.innerHTML = "<b>Game could not start</b>'), "A failed classroom launch must show a visible recovery message instead of leaving a blank screen.");
-assert.ok(main.includes("game.loop.wake();\n          game.scale.refresh();\n          battleScene.startBattle(settings);"), "Solo practice must wake Phaser immediately before starting the battle.");
+assert.ok(main.includes("await revealBattlefield(battleScene);\n      battleScene.startBattle(settings);"), "Solo practice must use the same verified canvas startup path as classroom play.");
 assert.ok(main.includes("saveCheckpoint?.()"), "The current checkpoint must be saved when the page is hidden or exited.");
 assert.ok(firebase.includes("auth.authStateReady()"), "Refresh recovery must wait for Firebase to restore the existing anonymous student UID.");
 
@@ -292,11 +297,11 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includ
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
-assert.ok(html.includes("src/main.js?v=classroom-launch-recovery-2"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("css/game.css?v=homepage-play-button-fix-2") && practice.includes("src/main.js?v=classroom-launch-recovery-2"), "Standalone practice must load the current shared gameplay assets.");
+assert.ok(html.includes("src/main.js?v=classroom-canvas-reveal-3"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(practice.includes("css/game.css?v=homepage-play-button-fix-2") && practice.includes("src/main.js?v=classroom-canvas-reveal-3"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
-assert.ok(main.includes("BattleScene.js?v=classroom-launch-recovery-2"), "The BattleScene module cache token must refresh phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=classroom-canvas-reveal-3"), "The BattleScene module cache token must refresh phone question layout changes.");
 
 // Important player actions must checkpoint immediately, not only on the periodic timer.
 assert.ok(battle.includes("this.saveCheckpoint();\n      } catch (error)"), "A successful defender deployment must immediately persist the checkpoint.");
@@ -305,7 +310,7 @@ assert.ok(battle.includes("this.lastAscensionWave = this.wave;\n      this.saveC
 assert.ok(battle.includes("this.updateHud();\n      this.saveCheckpoint();\n    }\n\n    showSunwellEnergy"), "Starting the next wave must immediately persist the new wave number.");
 assert.ok(battle.includes('this.playSound("remove");\n      this.updateHud();\n      this.saveCheckpoint();'), "Removing a defender must immediately persist the checkpoint.");
 assert.ok(battle.includes("// Persist the answered question and resulting battle state immediately") && battle.includes("this.saveCheckpoint();\n      const feedback"), "Answering a question must immediately persist the updated score and battle state.");
-assert.ok(main.includes("BattleScene.js?v=classroom-launch-recovery-2"), "The BattleScene cache token must refresh after phone question layout changes.");
+assert.ok(main.includes("BattleScene.js?v=classroom-canvas-reveal-3"), "The BattleScene cache token must refresh after phone question layout changes.");
 
 
 // 960x420 overlay geometry and phone answer-control regression checks.
@@ -345,7 +350,7 @@ assert.match(main, /document\.getElementById\("teacher-access"\)\?\.remove\(\)/,
 assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
 assert.match(css, /body\.student-session-join #student-join-screen/);
 assert.match(html, /css\/game\.css\?v=homepage-play-button-fix-2/);
-assert.match(html, /src\/main\.js\?v=classroom-launch-recovery-2/);
+assert.match(html, /src\/main\.js\?v=classroom-canvas-reveal-3/);
 
 
 // One public entry point: the homepage introduces the game and provides teacher login.
@@ -368,7 +373,7 @@ assert.match(publicHome, /Username or email/, "The homepage teacher login must s
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && publicHome.includes('<section class="homepage-play-section"') && publicHome.includes('id="play-game-button"') && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must provide a standalone no-login solo Play Game action outside the clipped hero.");
 assert.ok(publicHome.includes("css/game.css?v=homepage-play-button-fix-2"), "The homepage stylesheet cache must refresh for the standalone Play Game action.");
-assert.ok(publicHome.includes("src/main.js?v=classroom-launch-recovery-2"), "The homepage game module cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("src/main.js?v=classroom-canvas-reveal-3"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
 
