@@ -224,6 +224,7 @@ assert.ok(battle.includes("phoneQuestionLayout ? 190") && battle.includes('phone
 assert.ok(main.includes("fps: { target: isTouchDevice ? ((navigator.hardwareConcurrency || 4) <= 4 ? 30 : 40) : 60"), "Phones must use a stable 30–40 FPS target while desktop retains 60 FPS.");
 assert.ok(main.includes("antialias: true") && main.includes("roundPixels: isTouchDevice"), "All devices must use consistent smooth vector rendering without pixel snapping artifacts.");
 assert.ok(main.includes("isTouchDevice ? 1 : 1.5"), "Touch devices must receive a modestly improved render resolution without excessive GPU load.");
+assert.ok(battle.includes("this.mobilePerformanceMode ? Math.round(e.x) : e.x") && battle.includes("this.mobilePerformanceMode ? Math.round(renderY) : renderY"), "Moving enemy containers must use whole logical pixels on touch GPUs to prevent edge trails.");
 assert.ok(!battle.includes("const speedTrail = this.add.rectangle"), "Enemy runner accessories must not use thin moving rectangles that can stretch into visual streaks on some GPUs.");
 assert.ok(!battle.slice(battle.indexOf("const enemyParts = [shadow"), battle.indexOf("group.setActive(true).setVisible(true)", battle.indexOf("const enemyParts = [shadow"))).includes("child.setVisible(true)"), "Dense-wave visibility culling must not be undone during enemy container initialization.");
 
