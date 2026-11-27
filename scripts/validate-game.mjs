@@ -200,7 +200,7 @@ assert.match(main, /mode: Phaser\.Scale\.FIT/, "Phaser must fit the battlefield 
 assert.doesNotMatch(css, /#game-container canvas\{[^}]*width:100%!important;height:100%!important/, "CSS must not override Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:auto!important;height:auto!important/, "Phone CSS must not reset Phaser's fitted canvas dimensions.");
 assert.doesNotMatch(css, /body\.playing #game-container canvas:not\(\.three-world-canvas\)\s*\{[^}]*width:100%!important;height:100%!important/, "Mobile landscape CSS must not stretch the Phaser canvas.");
-assert.ok(html.includes("game.css?v=teacher-access-visible-3"), "Phone canvas sizing correction must be cache-busted.");
+assert.ok(html.includes("game.css?v=teacher-access-visible-4"), "Phone canvas sizing correction must be cache-busted.");
 
 // Preserve the 960:420 game canvas aspect ratio on narrow landscape screens.
 assert.match(css, /object-fit:contain/, "The battlefield canvas must preserve its aspect ratio instead of stretching to fill the screen.");
@@ -213,7 +213,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=teacher-access-visible-3"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=teacher-access-visible-4"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
@@ -288,8 +288,8 @@ assert.ok(databaseRules.rules.sessions.$sessionId.seats.$seatId[".write"].includ
 assert.ok(main.includes("This classroom session is full (30 students)."), "The join flow must clearly reject students when all 30 seats are reserved.");
 assert.ok(dashboard.includes('dbGet(sessionPath+"/seats")') && dashboard.includes('dbRemove(sessionPath+"/seats/"+reservedSeat[0])'), "Removing a student must release their reserved seat for a replacement.");
 
-assert.ok(html.includes("src/main.js?v=teacher-access-visible-3"), "The entry module cache token must refresh after tablet stability changes.");
-assert.ok(practice.includes("css/game.css?v=teacher-access-visible-3") && practice.includes("src/main.js?v=teacher-access-visible-3"), "Standalone practice must load the current shared gameplay assets.");
+assert.ok(html.includes("src/main.js?v=teacher-access-visible-4"), "The entry module cache token must refresh after tablet stability changes.");
+assert.ok(practice.includes("css/game.css?v=teacher-access-visible-4") && practice.includes("src/main.js?v=teacher-access-visible-4"), "Standalone practice must load the current shared gameplay assets.");
 
 // Ensure nested gameplay module also bypasses stale browser caches.
 assert.ok(main.includes("BattleScene.js?v=mobile-render-stability-1"), "The BattleScene module cache token must refresh phone question layout changes.");
@@ -339,8 +339,8 @@ assert.match(dashboard, /Teacher: \"\+user\.email\.split\("@"\)\[0\]/);
 assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
 assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
 assert.match(css, /body\.student-session-join #student-join-screen/);
-assert.match(html, /css\/game\.css\?v=teacher-access-visible-3/);
-assert.match(html, /src\/main\.js\?v=teacher-access-visible-3/);
+assert.match(html, /css\/game\.css\?v=teacher-access-visible-4/);
+assert.match(html, /src\/main\.js\?v=teacher-access-visible-4/);
 
 
 // One public entry point: the homepage introduces the game and provides teacher login.
@@ -353,13 +353,16 @@ assert.match(css, /body:not\(\.playing\) \.teacher-access-section/, "Teacher log
 assert.match(css, /#teacher-access\.teacher-access-section\{display:block!important/, "Teacher login must be explicitly visible on the public homepage.");
 assert.match(css, /height:190px!important/, "Desktop homepage hero must be compact enough to reveal teacher login.");
 assert.match(css, /height:170px!important/, "Mobile homepage hero must be compact enough to reveal teacher login.");
+assert.match(css, /body\.playing\{min-height:100dvh;height:100dvh;overflow:hidden;padding:3px 6px\}/, "Short-landscape viewport locking must be limited to active gameplay.");
+assert.match(css, /body\.playing \.app-shell\{height:100%;max-width:none;display:flex;flex-direction:column\}/, "Short-landscape app-shell sizing must not clip the public homepage.");
+assert.doesNotMatch(css, /html, body \{ width:100%; height:100%; min-height:0; overflow:hidden; \}/, "Public homepage must retain vertical scrolling on landscape touch devices.");
 assert.ok(html.includes('id="homepage-teacher-email"') && html.includes('id="homepage-teacher-password"'), "Public homepage must expose both teacher login fields.");
 assert.match(css, /body:not\(\.playing\) \.landing-hero\{\s*min-height:270px/, "The public hero must be compact enough to reveal teacher login beneath it.");
 assert.match(css, /body:not\(\.playing\) \.teacher-access-card\{padding:22px 28px\}/, "The teacher login card must use compact homepage spacing.");
 assert.match(publicHome, /Username or email/, "The homepage teacher login must support the existing username accounts.");
 assert.ok(publicHome.includes("@teachers.grammar-defenders.invalid"), "Homepage username login must map to the same internal teacher account format.");
 assert.ok(!publicHome.includes('id="homepage-entry"') && !publicHome.includes("play-game-button") && !publicHome.includes("Teacher Dashboard</a>"), "The public homepage must not advertise a separate student practice entry or dashboard link.");
-assert.ok(publicHome.includes("css/game.css?v=teacher-access-visible-3"), "The homepage stylesheet cache must refresh for the unified entry point.");
-assert.ok(publicHome.includes("src/main.js?v=teacher-access-visible-3"), "The homepage game module cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("css/game.css?v=teacher-access-visible-4"), "The homepage stylesheet cache must refresh for the unified entry point.");
+assert.ok(publicHome.includes("src/main.js?v=teacher-access-visible-4"), "The homepage game module cache must refresh for the unified entry point.");
 
 assert.ok(dashboard.includes('window.location.replace("./#teacher-access")'), "Unauthenticated dashboard visitors must be sent to the single public homepage login.");
