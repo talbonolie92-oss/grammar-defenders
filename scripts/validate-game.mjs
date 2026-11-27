@@ -213,7 +213,7 @@ assert.ok(battle.includes("passiveEnergyBonus: this.passiveEnergyBonus || 0") &&
 assert.ok(battle.includes("retaliateCooldown: item.retaliateCooldown || 0"), "Refresh checkpoints must preserve defender retaliation upgrades.");
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must not create a second WebGL renderer beside Phaser.");
 assert.ok(battle.includes("const TILE_H = 68;") && battle.includes("const GRID_Y = 48;"), "Five lanes must have increased physical height on phones.");
-assert.ok(html.includes("game.css?v=homepage-play-button-fix-2"), "The corrected canvas sizing stylesheet must be cache-busted.");
+assert.ok(html.includes("game.css?v=student-game-layout-fix-4"), "The corrected canvas sizing stylesheet must be cache-busted.");
 
 // Mobile rendering and question readability regression checks.
 assert.ok(!battle.includes('import("../three-world.js")'), "The game must use one renderer instead of creating a second WebGL context.");
