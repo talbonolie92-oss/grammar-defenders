@@ -351,6 +351,7 @@ async function initializeStudentJoin() {
       stopConnectionWatch = dbWatch(".info/connected", snap => {
         const connected = snap.val() === true;
         document.body.dataset.firebaseConnection = connected ? "connected" : "disconnected";
+        document.getElementById("firebase-connection-status")?.classList.toggle("hidden", connected);
         if (connected) {
           flushPendingAttempts().catch(error => console.warn("Pending question sync will retry:", error));
           if (pendingResult) syncPendingResult().catch(error => console.warn("Pending result sync will retry:", error));
