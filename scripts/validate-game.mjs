@@ -333,3 +333,11 @@ assert.match(dashboard, /username\s*=\s*identifier\.toLowerCase\(\)/);
 assert.match(dashboard, /username\+"@teachers\.grammar-defenders\.invalid"/);
 assert.match(dashboard, /Use a username with 3–32 letters/);
 assert.match(dashboard, /Teacher: \"\+user\.email\.split\("@"\)\[0\]/);
+
+
+// QR-code student entry must show only the Join Class Session form.
+assert.match(main, /document\.body\.classList\.add\("student-session-join"\)/);
+assert.match(css, /body\.student-session-join \.app-shell > :not\(#student-join-screen\)/);
+assert.match(css, /body\.student-session-join #student-join-screen/);
+assert.match(html, /css\/game\.css\?v=student-qr-only-1/);
+assert.match(html, /src\/main\.js\?v=student-qr-only-1/);
